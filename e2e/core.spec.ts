@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 const PASSWORD = "e2e-password-123";
 const run = Date.now().toString(36);
@@ -7,42 +7,80 @@ const admin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
-const email = `e2e-core-${run}@example.com`;
+const emails = {
+  admin: `e2e-core-admin-${run}@example.com`,
+  customer: `e2e-core-${run}@example.com`,
+};
+const orgName = `E2E Core ${run}`;
 let orgId: string;
-let userId: string;
 
-test.beforeAll(async () => {
-  const { data: org, error } = await admin
-    .from("organizations")
-    .insert({ name: `E2E Core ${run}`, slug: `e2e-core-${run}` })
-    .select("id")
-    .single();
-  if (error) throw error;
-  orgId = org.id;
-  const { data, error: userError } = await admin.auth.admin.createUser({
-    email,
-    password: PASSWORD,
-    email_confirm: true,
-    app_metadata: { role: "customer", organization_id: orgId },
-    user_metadata: { full_name: "Core Customer" },
-  });
-  if (userError) throw userError;
-  userId = data.user.id;
-});
-
-test.afterAll(async () => {
-  await admin.auth.admin.deleteUser(userId);
-  await admin.from("organizations").delete().eq("id", orgId);
-});
-
-test("customer creates a job and candidates, moves a card and filters", async ({
-  page,
-}) => {
+async function signIn(page: Page, email: string) {
   await page.goto("/login");
   await page.getByLabel("E-post").fill(email);
   await page.getByLabel("Lösenord").fill(PASSWORD);
   await page.getByRole("button", { name: "Logga in" }).click();
   await expect(page).toHaveURL(/\/dashboard$/);
+}
+
+test.beforeAll(async () => {
+  const { error } = await admin.auth.admin.createUser({
+    email: emails.admin,
+    password: PASSWORD,
+    email_confirm: true,
+    app_metadata: { role: "admin" },
+    user_metadata: { full_name: "Core Admin" },
+  });
+  if (error) throw error;
+});
+
+test.afterAll(async () => {
+  const { data } = await admin
+    .from("profiles")
+    .select("id")
+    .in("email", Object.values(emails));
+  for (const { id } of data ?? []) await admin.auth.admin.deleteUser(id);
+  await admin.from("organizations").delete().eq("slug", `e2e-core-${run}`);
+});
+
+test("admin creates a customer, who creates a job and candidates, moves a card and filters", async ({
+  page,
+}) => {
+  // Admin creates the customer organization and its first user
+  await signIn(page, emails.admin);
+  await page.goto("/admin/organizations");
+  await page.getByRole("button", { name: "Ny organisation" }).click();
+  await page.getByLabel("Organisationens namn").fill(orgName);
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Ny organisation" })
+    .click();
+  await expect(
+    page.getByRole("cell", { name: `e2e-core-${run}` }),
+  ).toBeVisible();
+  const { data: org } = await admin
+    .from("organizations")
+    .select("id")
+    .eq("slug", `e2e-core-${run}`)
+    .single();
+  orgId = org!.id;
+
+  await page.goto("/admin/users");
+  await page.getByRole("button", { name: "Ny användare" }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByLabel("Namn").fill("Core Customer");
+  await dialog.getByLabel("E-post").fill(emails.customer);
+  await dialog.getByLabel("Organisation").click();
+  await page.getByRole("option", { name: orgName }).click();
+  await dialog.getByLabel("Tillfälligt lösenord").fill(PASSWORD);
+  await dialog.getByRole("button", { name: "Skapa" }).click();
+  await expect(
+    page.getByRole("row", { name: new RegExp(emails.customer) }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Logga ut" }).click();
+  await expect(page).toHaveURL(/\/login$/);
+
+  // The customer signs in with the temporary password
+  await signIn(page, emails.customer);
 
   // Job
   await page.goto("/jobs");
