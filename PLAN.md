@@ -1,6 +1,6 @@
 # PLAN: Mini ATS
 
-> **Status:** Phase 2 done, reviewed and migrated to the cloud. Next: Phase 3 (auth and admin).
+> **Status:** Phase 3 (auth and admin) done and reviewed on `feat/auth-admin`, PR pending. Next: Phase 4.
 > **Deadline:** Friday 30 October 2026. **Live URL:** https://ats.t4ngo.com
 > Usage budget and model routing: [BUDGET.md](./BUDGET.md). Review process: [REVIEW.md](./REVIEW.md).
 
@@ -61,14 +61,15 @@ Additions to the table above: `applications` and `activity_log` also carry `orga
 
 ## Phase 3: Auth and admin (Sun 25)
 
-* [ ] Email and password login, password reset, protected routes via middleware
-* [ ] Admin panel: create organizations; create accounts on the server with `auth.admin.createUser` (email, name, role, organization and a temporary password), where the service role key never reaches the browser; list, deactivate and reset accounts
-* [ ] Team list per organization, showing every user in it
-* [ ] Profile settings: name, language and change password
-* [ ] **Act as customer:** an organization switcher for admins, so the whole app runs in the chosen customer's context. Actions are logged under the admin's own identity.
+* [x] Email and password login, password reset, protected routes via middleware
+* [x] Admin panel: create organizations; create accounts on the server with `auth.admin.createUser` (email, name, role, organization and a temporary password), where the service role key never reaches the browser; list, deactivate and reset accounts
+* [x] Team list per organization, showing every user in it
+* [x] Profile settings: name, language and change password
+* [x] **Act as customer:** an organization switcher for admins, so the whole app runs in the chosen customer's context. Actions are logged under the admin's own identity.
 
 ## Phase 4: Core customer features (Sun 25 to Mon 26)
 
+* [ ] **Organization scope:** one helper that every data query and insert goes through, scoped to `getActiveOrganization()`. RLS gives admins every organization, so act as customer only works if no query forgets the filter (review finding, Phase 3).
 * [ ] **Jobs:** list, create, edit and change status, with candidate counts per stage
 * [ ] **Candidates:** create and edit with profile fields (LinkedIn and more), an optional CV upload (PDF), and attaching a candidate to one or more jobs
 * [ ] **Kanban:** compact columns per stage, drag and drop with optimistic updates and saved order. Cards show initials, job tag, days in stage and a LinkedIn icon.

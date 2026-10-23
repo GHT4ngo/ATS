@@ -1,0 +1,198 @@
+import { createClient } from "@supabase/supabase-js";
+import { expect, test, type Page } from "@playwright/test";
+
+const PASSWORD = "e2e-password-123";
+const run = Date.now().toString(36);
+const admin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+);
+
+const emails = {
+  admin: `e2e-admin-${run}@example.com`,
+  customer: `e2e-customer-${run}@example.com`,
+  mate: `e2e-mate-${run}@example.com`,
+  created: `e2e-created-${run}@example.com`,
+};
+let orgId: string;
+const userIds: string[] = [];
+
+async function createUser(
+  email: string,
+  name: string,
+  role: string,
+  org?: string,
+) {
+  const { data, error } = await admin.auth.admin.createUser({
+    email,
+    password: PASSWORD,
+    email_confirm: true,
+    app_metadata: { role, ...(org ? { organization_id: org } : {}) },
+    user_metadata: { full_name: name },
+  });
+  if (error) throw error;
+  userIds.push(data.user.id);
+}
+
+async function signIn(
+  page: Page,
+  email: string,
+  password = PASSWORD,
+  expectDashboard = true,
+) {
+  await page.goto("/login");
+  await page.getByLabel("E-post").fill(email);
+  await page.getByLabel("Lösenord").fill(password);
+  await page.getByRole("button", { name: "Logga in" }).click();
+  if (expectDashboard) await expect(page).toHaveURL(/\/dashboard$/);
+}
+
+test.beforeAll(async () => {
+  const { data, error } = await admin
+    .from("organizations")
+    .insert({ name: `E2E Org ${run}`, slug: `e2e-org-${run}` })
+    .select("id")
+    .single();
+  if (error) throw error;
+  orgId = data.id;
+  await createUser(emails.admin, "E2E Admin", "admin");
+  await createUser(emails.customer, "E2E Customer", "customer", orgId);
+  await createUser(emails.mate, "E2E Teammate", "customer", orgId);
+});
+
+test.afterAll(async () => {
+  const { data } = await admin
+    .from("profiles")
+    .select("id")
+    .eq("email", emails.created);
+  for (const id of [...userIds, ...(data ?? []).map((p) => p.id)]) {
+    await admin.auth.admin.deleteUser(id);
+  }
+  await admin.from("organizations").delete().eq("id", orgId);
+  await admin.from("organizations").delete().eq("slug", `e2e-new-org-${run}`);
+});
+
+test("signed out visitors are sent to the login page", async ({ page }) => {
+  await page.goto("/team");
+  await expect(page).toHaveURL(/\/login$/);
+});
+
+test("wrong password shows an error", async ({ page }) => {
+  await signIn(page, emails.customer, "wrong-password-1", false);
+  await expect(page.locator("p[role=alert]")).toHaveText(
+    "Fel e-postadress eller lösenord.",
+  );
+});
+
+test("customer signs in, sees the team and cannot reach the admin pages", async ({
+  page,
+}) => {
+  await signIn(page, emails.customer);
+  await expect(page).toHaveURL(/\/dashboard$/);
+  await page.getByRole("link", { name: "Team" }).click();
+  await expect(page.getByRole("cell", { name: emails.mate })).toBeVisible();
+  await expect(page.getByRole("cell", { name: emails.customer })).toBeVisible();
+
+  await page.goto("/admin/users");
+  await expect(page).toHaveURL(/\/dashboard$/);
+
+  await page.getByRole("button", { name: "Logga ut" }).click();
+  await expect(page).toHaveURL(/\/login$/);
+});
+
+test("customer changes language and name in the settings", async ({ page }) => {
+  await signIn(page, emails.mate);
+  await page.goto("/settings");
+  await page.getByLabel("Fullständigt namn").fill("E2E Renamed");
+  await page.getByLabel("Språk").click();
+  await page.getByRole("option", { name: "English" }).click();
+  await page.getByRole("button", { name: "Spara", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
+  await expect(page.getByText("Saved")).toBeVisible();
+});
+
+test("admin creates an organization and a user, acts as the customer and deactivates the user", async ({
+  page,
+}) => {
+  await signIn(page, emails.admin);
+  await page.goto("/admin/organizations");
+  await page.getByRole("button", { name: "Ny organisation" }).click();
+  await page.getByLabel("Organisationens namn").fill(`E2E New Org ${run}`);
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Ny organisation" })
+    .click();
+  await expect(
+    page.getByRole("cell", { name: `e2e-new-org-${run}` }),
+  ).toBeVisible();
+
+  await page.goto("/admin/users");
+  await page.getByRole("button", { name: "Ny användare" }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByLabel("Namn").fill("E2E Created");
+  await dialog.getByLabel("E-post").fill(emails.created);
+  await dialog.getByLabel("Organisation").click();
+  await page.getByRole("option", { name: `E2E Org ${run}` }).click();
+  await dialog.getByRole("button", { name: "Generera" }).click();
+  await dialog.getByRole("button", { name: "Skapa" }).click();
+  const row = page.getByRole("row", { name: new RegExp(emails.created) });
+  await expect(row).toBeVisible();
+
+  // Act as the customer organization.
+  await page.getByLabel("Agera som kund").click();
+  await page.getByRole("option", { name: `E2E Org ${run}` }).click();
+  await expect(page.getByText(`Visar som E2E Org ${run}`)).toBeVisible();
+  await page.goto("/team");
+  await expect(page.getByRole("cell", { name: emails.created })).toBeVisible();
+
+  // Deactivate the new user.
+  await page.goto("/admin/users");
+  await row.getByRole("button", { name: "Inaktivera" }).click();
+  await expect(row.getByText("Inaktiverad")).toBeVisible();
+});
+
+test("a deactivated user cannot sign in", async ({ page }) => {
+  await signIn(page, emails.created, PASSWORD, false);
+  await expect(page.locator("p[role=alert]")).toHaveText(
+    "Kontot har inaktiverats. Kontakta din administratör.",
+  );
+});
+
+test("a user resets a forgotten password through the email link", async ({
+  page,
+}) => {
+  await page.goto("/forgot-password");
+  await page.getByLabel("E-post").fill(emails.customer);
+  await page.getByRole("button", { name: "Skicka länk" }).click();
+  await expect(page.getByRole("status")).toBeVisible();
+
+  // Read the reset link from the local Mailpit inbox.
+  let link: string | undefined;
+  await expect
+    .poll(async () => {
+      const res = await fetch(
+        `http://127.0.0.1:54324/api/v1/search?query=${encodeURIComponent(`to:${emails.customer}`)}`,
+      );
+      const { messages } = await res.json();
+      if (!messages?.length) return undefined;
+      const msg = await (
+        await fetch(`http://127.0.0.1:54324/api/v1/message/${messages[0].ID}`)
+      ).json();
+      link = msg.Text.match(/https?:\/\/\S+verify\S+/)?.[0];
+      return link;
+    })
+    .toBeTruthy();
+
+  await page.goto(link!);
+  await expect(page).toHaveURL(/\/reset-password$/);
+  const newPassword = "e2e-new-password-456";
+  await page.getByLabel("Nytt lösenord").fill(newPassword);
+  await page.getByLabel("Bekräfta lösenord").fill(newPassword);
+  await page.getByRole("button", { name: "Spara lösenord" }).click();
+  await expect(page.getByRole("status")).toHaveText(
+    "Ditt lösenord har ändrats.",
+  );
+
+  await page.context().clearCookies();
+  await signIn(page, emails.customer, newPassword);
+});
