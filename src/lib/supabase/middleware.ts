@@ -29,11 +29,11 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // getClaims verifies the JWT (locally when the project uses asymmetric keys)
+  // and refreshes an expired session. Server code still calls getUser().
+  const { data } = await supabase.auth.getClaims();
 
-  if (!user && !isPublic(request.nextUrl.pathname)) {
+  if (!data?.claims && !isPublic(request.nextUrl.pathname)) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.search = "";

@@ -307,6 +307,21 @@ def test_nobody_can_write_the_profile_email(world: World, login):
 def test_profile_email_follows_an_email_change(world: World, service):
     new_email = f"changed-{uuid.uuid4().hex[:8]}@example.com"
     service.auth.admin.update_user_by_id(world.teammate_a.id, {"email": new_email})
-    row = service.table("profiles").select("email").eq("id", world.teammate_a.id).single().execute()
-    assert row.data["email"] == new_email
-    service.auth.admin.update_user_by_id(world.teammate_a.id, {"email": world.teammate_a.email})
+    try:
+        row = (
+            service.table("profiles")
+            .select("email")
+            .eq("id", world.teammate_a.id)
+            .single()
+            .execute()
+        )
+        assert row.data["email"] == new_email
+    finally:
+        service.auth.admin.update_user_by_id(world.teammate_a.id, {"email": world.teammate_a.email})
+
+
+def test_public_signup_is_disabled(anon):
+    with pytest.raises(AuthApiError):
+        anon.auth.sign_up(
+            {"email": f"signup-{uuid.uuid4().hex[:8]}@example.com", "password": "signup-password-1"}
+        )

@@ -11,7 +11,7 @@ export function NavLinks({
 }) {
   const pathname = usePathname();
   return (
-    <nav className="flex items-center gap-1">
+    <nav className="order-last flex w-full items-center gap-1 overflow-x-auto sm:order-none sm:w-auto">
       {links.map(({ href, label }) => {
         const active = pathname === href || pathname.startsWith(`${href}/`);
         return (
@@ -20,7 +20,7 @@ export function NavLinks({
             href={href}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "rounded-md px-3 py-1.5 text-sm transition-colors",
+              "rounded-md px-3 py-1.5 text-sm whitespace-nowrap transition-colors",
               active
                 ? "bg-muted text-foreground font-medium"
                 : "text-muted-foreground hover:text-foreground",

@@ -13,9 +13,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { generatePassword } from "./generate-password";
+import { TemporaryPasswordField } from "./temporary-password-field";
 
 export function UserActions({
   userId,
@@ -64,32 +62,11 @@ export function UserActions({
           </DialogHeader>
           <form action={action} className="grid gap-4">
             <input type="hidden" name="userId" value={userId} />
-            <div className="grid gap-2">
-              <Label htmlFor={`reset-${userId}`}>
-                {t("temporaryPassword")}
-              </Label>
-              <div className="flex gap-2">
-                <Input
-                  id={`reset-${userId}`}
-                  name="password"
-                  value={password}
-                  onChange={(ev) => setPassword(ev.target.value)}
-                  minLength={10}
-                  required
-                  autoComplete="off"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setPassword(generatePassword())}
-                >
-                  {t("generatePassword")}
-                </Button>
-              </div>
-              <p className="text-muted-foreground text-xs">
-                {t("temporaryPasswordHint")}
-              </p>
-            </div>
+            <TemporaryPasswordField
+              id={`reset-${userId}`}
+              value={password}
+              onChange={setPassword}
+            />
             <FormMessage state={state} />
             <SubmitButton>{t("resetPassword")}</SubmitButton>
           </form>

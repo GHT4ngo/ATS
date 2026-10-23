@@ -8,7 +8,8 @@ import {
   organizationSchema,
   resetPasswordSchema,
   slugify,
-  userIdSchema,
+  setActingOrganizationSchema,
+  setUserActiveSchema,
   type ActionState,
 } from "@/lib/auth/schemas";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -79,22 +80,29 @@ export async function setUserActive(
   active: boolean,
 ): Promise<ActionState> {
   const { profile } = await requireAdmin();
-  const parsed = userIdSchema.safeParse({ userId });
+  const parsed = setUserActiveSchema.safeParse({ userId, active });
   if (!parsed.success) return { error: "invalidInput" };
   if (parsed.data.userId === profile.id)
     return { error: "cannotDeactivateSelf" };
 
+  // The profile flag cuts off RLS access; the ban blocks new logins and token
+  // refreshes. If the ban fails, the profile is put back so both stay in step.
   const admin = createAdminClient();
-  // Banning blocks new logins and token refreshes; the profile flag cuts off RLS access.
-  const { error } = await admin.auth.admin.updateUserById(parsed.data.userId, {
-    ban_duration: active ? "none" : BAN_FOREVER,
-  });
-  if (error) return { error: "generic" };
-  const { error: profileError } = await admin
-    .from("profiles")
-    .update({ is_active: active })
-    .eq("id", parsed.data.userId);
+  const setProfile = (value: boolean) =>
+    admin
+      .from("profiles")
+      .update({ is_active: value })
+      .eq("id", parsed.data.userId);
+
+  const { error: profileError } = await setProfile(parsed.data.active);
   if (profileError) return { error: "generic" };
+  const { error } = await admin.auth.admin.updateUserById(parsed.data.userId, {
+    ban_duration: parsed.data.active ? "none" : BAN_FOREVER,
+  });
+  if (error) {
+    await setProfile(!parsed.data.active);
+    return { error: "generic" };
+  }
 
   revalidatePath("/admin/users");
   return { ok: true };
@@ -123,8 +131,10 @@ export async function setActingOrganization(
   organizationId: string,
 ): Promise<void> {
   await requireAdmin();
+  const parsed = setActingOrganizationSchema.safeParse({ organizationId });
+  if (!parsed.success) return;
   const store = await cookies();
-  if (!organizationId) {
+  if (!parsed.data.organizationId) {
     store.delete(ACTING_ORG_COOKIE);
   } else {
     const { data } = await (
@@ -132,7 +142,7 @@ export async function setActingOrganization(
     )
       .from("organizations")
       .select("id")
-      .eq("id", organizationId)
+      .eq("id", parsed.data.organizationId)
       .maybeSingle();
     if (!data) return;
     store.set(ACTING_ORG_COOKIE, data.id, {

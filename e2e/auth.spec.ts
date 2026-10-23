@@ -153,5 +153,46 @@ test("admin creates an organization and a user, acts as the customer and deactiv
 
 test("a deactivated user cannot sign in", async ({ page }) => {
   await signIn(page, emails.created, PASSWORD, false);
-  await expect(page.locator("p[role=alert]")).toBeVisible();
+  await expect(page.locator("p[role=alert]")).toHaveText(
+    "Kontot har inaktiverats. Kontakta din administratör.",
+  );
+});
+
+test("a user resets a forgotten password through the email link", async ({
+  page,
+}) => {
+  await page.goto("/forgot-password");
+  await page.getByLabel("E-post").fill(emails.customer);
+  await page.getByRole("button", { name: "Skicka länk" }).click();
+  await expect(page.getByRole("status")).toBeVisible();
+
+  // Read the reset link from the local Mailpit inbox.
+  let link: string | undefined;
+  await expect
+    .poll(async () => {
+      const res = await fetch(
+        `http://127.0.0.1:54324/api/v1/search?query=${encodeURIComponent(`to:${emails.customer}`)}`,
+      );
+      const { messages } = await res.json();
+      if (!messages?.length) return undefined;
+      const msg = await (
+        await fetch(`http://127.0.0.1:54324/api/v1/message/${messages[0].ID}`)
+      ).json();
+      link = msg.Text.match(/https?:\/\/\S+verify\S+/)?.[0];
+      return link;
+    })
+    .toBeTruthy();
+
+  await page.goto(link!);
+  await expect(page).toHaveURL(/\/reset-password$/);
+  const newPassword = "e2e-new-password-456";
+  await page.getByLabel("Nytt lösenord").fill(newPassword);
+  await page.getByLabel("Bekräfta lösenord").fill(newPassword);
+  await page.getByRole("button", { name: "Spara lösenord" }).click();
+  await expect(page.getByRole("status")).toHaveText(
+    "Ditt lösenord har ändrats.",
+  );
+
+  await page.context().clearCookies();
+  await signIn(page, emails.customer, newPassword);
 });

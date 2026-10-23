@@ -1,9 +1,9 @@
 "use server";
 
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentUser } from "@/lib/auth/session";
+import { ACTING_ORG_COOKIE, getCurrentUser } from "@/lib/auth/session";
 import { setLocaleCookie } from "@/lib/auth/locale";
 import {
   emailSchema,
@@ -41,6 +41,7 @@ export async function login(
 export async function logout() {
   const supabase = await createClient();
   await supabase.auth.signOut();
+  (await cookies()).delete(ACTING_ORG_COOKIE);
   redirect("/login");
 }
 

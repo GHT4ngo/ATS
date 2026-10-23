@@ -7,6 +7,7 @@ import { setNewPassword } from "@/app/actions/auth";
 import { FormMessage, SubmitButton } from "@/components/form-bits";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PASSWORD_MIN } from "@/lib/auth/schemas";
 
 /** Used on the reset page and in the settings. */
 export function PasswordForm({ showContinue }: { showContinue?: boolean }) {
@@ -22,7 +23,7 @@ export function PasswordForm({ showContinue }: { showContinue?: boolean }) {
           name="password"
           type="password"
           autoComplete="new-password"
-          minLength={10}
+          minLength={PASSWORD_MIN}
           required
         />
       </div>
@@ -33,7 +34,7 @@ export function PasswordForm({ showContinue }: { showContinue?: boolean }) {
           name="confirm"
           type="password"
           autoComplete="new-password"
-          minLength={10}
+          minLength={PASSWORD_MIN}
           required
         />
       </div>

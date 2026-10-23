@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { generatePassword } from "./generate-password";
+import { TemporaryPasswordField } from "./temporary-password-field";
 
 export function CreateUserDialog({
   organizations,
@@ -109,30 +109,11 @@ export function CreateUserDialog({
               </Select>
             </div>
           )}
-          <div className="grid gap-2">
-            <Label htmlFor="user-password">{t("temporaryPassword")}</Label>
-            <div className="flex gap-2">
-              <Input
-                id="user-password"
-                name="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                minLength={10}
-                required
-                autoComplete="off"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setPassword(generatePassword())}
-              >
-                {t("generatePassword")}
-              </Button>
-            </div>
-            <p className="text-muted-foreground text-xs">
-              {t("temporaryPasswordHint")}
-            </p>
-          </div>
+          <TemporaryPasswordField
+            id="user-password"
+            value={password}
+            onChange={setPassword}
+          />
           <FormMessage state={state} />
           <SubmitButton>{c("create")}</SubmitButton>
         </form>

@@ -41,7 +41,14 @@ export const createUserSchema = z
     message: "required",
   });
 
-export const userIdSchema = z.object({ userId: z.uuid() });
+export const setUserActiveSchema = z.object({
+  userId: z.uuid(),
+  active: z.boolean(),
+});
+
+export const setActingOrganizationSchema = z.object({
+  organizationId: z.union([z.uuid(), z.literal("")]),
+});
 
 export const resetPasswordSchema = z.object({
   userId: z.uuid(),
