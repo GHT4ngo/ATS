@@ -37,7 +37,11 @@
     "slugTaken": "An organization with a similar name already exists.",
     "emailTaken": "A user with this email already exists.",
     "cannotDeactivateSelf": "You cannot deactivate your own account.",
-    "generic": "Something went wrong. Try again."
+    "generic": "Something went wrong. Try again.",
+    "duplicateEmail": "A candidate with this email already exists.",
+    "cvTooLarge": "The CV is larger than 4 MB.",
+    "cvNotPdf": "The CV must be a PDF file.",
+    "cvUploadFailed": "The candidate was saved, but the CV could not be uploaded."
   },
   "Auth": {
     "loginTitle": "Sign in",
@@ -67,12 +71,19 @@
     "actAs": "Act as customer",
     "actAsNone": "No customer selected",
     "viewingAs": "Viewing as {name}",
-    "exitViewing": "Exit"
+    "exitViewing": "Exit",
+    "jobs": "Jobs",
+    "candidates": "Candidates",
+    "pipeline": "Pipeline"
   },
   "Dashboard": {
     "welcome": "Welcome, {name}",
     "pickOrganization": "Choose a customer in the switcher above to see their recruitment.",
-    "comingSoon": "Jobs, candidates and the pipeline arrive in the next phase."
+    "comingSoon": "Jobs, candidates and the pipeline arrive in the next phase.",
+    "openJobs": "Open jobs",
+    "activeCandidates": "Active candidates",
+    "hiresThisMonth": "Hires this month",
+    "funnel": "Pipeline funnel"
   },
   "Team": {
     "title": "Team",
@@ -113,5 +124,83 @@
     "userDeactivated": "User deactivated.",
     "userReactivated": "User reactivated.",
     "adminNoOrganization": "Internal"
+  },
+  "Stages": {
+    "applied": "Applied",
+    "screening": "Screening",
+    "interview": "Interview",
+    "offer": "Offer",
+    "hired": "Hired",
+    "rejected": "Rejected"
+  },
+  "Jobs": {
+    "heading": "Jobs",
+    "title": "Title",
+    "new": "New job",
+    "edit": "Edit",
+    "save": "Save job",
+    "created": "Job created",
+    "updated": "Job updated",
+    "location": "Location",
+    "employmentType": "Employment type",
+    "statusLabel": "Status",
+    "description": "Description",
+    "empty": "No jobs yet. Create the first one.",
+    "type": {
+      "full_time": "Full time",
+      "part_time": "Part time",
+      "contract": "Contract",
+      "internship": "Internship"
+    },
+    "status": {
+      "open": "Open",
+      "paused": "Paused",
+      "closed": "Closed"
+    }
+  },
+  "Filters": {
+    "search": "Search candidates",
+    "jobs": "Filter by job",
+    "clear": "Clear"
+  },
+  "Candidates": {
+    "heading": "Candidates",
+    "new": "New candidate",
+    "created": "Candidate created",
+    "updated": "Candidate updated",
+    "save": "Save candidate",
+    "phone": "Phone",
+    "location": "Location",
+    "jobs": "Jobs",
+    "noJobs": "Create a job first to attach candidates to it.",
+    "cv": "CV (PDF)",
+    "replaceCv": "Replace CV (PDF)",
+    "cvHint": "PDF, up to 4 MB.",
+    "empty": "No candidates found.",
+    "noContact": "No contact details",
+    "openCv": "Open CV",
+    "cvMissing": "The CV could not be opened.",
+    "editProfile": "Edit profile",
+    "cancelEdit": "Cancel editing",
+    "applications": "Applications",
+    "noApplications": "Not attached to any job.",
+    "daysInStage": "{days, plural, one {# day} other {# days}} in stage",
+    "notes": "Notes",
+    "saveNotes": "Save notes",
+    "notesSaved": "Notes saved",
+    "notesFailed": "The notes could not be saved.",
+    "timeline": "Activity",
+    "activity": {
+      "moved": "{job}: {from} to {to}",
+      "created": "Candidate created",
+      "updated": "Profile updated",
+      "notes": "Notes updated"
+    },
+    "daysShort": "{days}d",
+    "linkedin": "LinkedIn",
+    "linkedinShort": "in"
+  },
+  "Pipeline": {
+    "heading": "Pipeline"
   }
 }

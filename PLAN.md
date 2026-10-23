@@ -1,6 +1,6 @@
 # PLAN: Mini ATS
 
-> **Status:** Phase 3 (auth and admin) done and reviewed on `feat/auth-admin`, PR pending. Next: Phase 4.
+> **Status:** Phase 4 (core customer features) built and reviewed on `feat/core-features`, PR pending. Next: Phase 5.
 > **Deadline:** Friday 30 October 2026. **Live URL:** https://ats.t4ngo.com
 > Usage budget and model routing: [BUDGET.md](./BUDGET.md). Review process: [REVIEW.md](./REVIEW.md).
 
@@ -69,13 +69,13 @@ Additions to the table above: `applications` and `activity_log` also carry `orga
 
 ## Phase 4: Core customer features (Sun 25 to Mon 26)
 
-* [ ] **Organization scope:** one helper that every data query and insert goes through, scoped to `getActiveOrganization()`. RLS gives admins every organization, so act as customer only works if no query forgets the filter (review finding, Phase 3).
-* [ ] **Jobs:** list, create, edit and change status, with candidate counts per stage
-* [ ] **Candidates:** create and edit with profile fields (LinkedIn and more), an optional CV upload (PDF), and attaching a candidate to one or more jobs
-* [ ] **Kanban:** compact columns per stage, drag and drop with optimistic updates and saved order. Cards show initials, job tag, days in stage and a LinkedIn icon.
-* [ ] **Filters:** job (choose several) and candidate name (search as you type), kept in the URL so filtered views can be shared
-* [ ] **Candidate drawer:** profile, applications, notes and an activity timeline
-* [ ] **Dashboard:** key numbers (open jobs, active candidates, hires this month) and a pipeline funnel
+* [x] **Organization scope:** one helper that every data query and insert goes through, scoped to `getActiveOrganization()`. RLS gives admins every organization, so act as customer only works if no query forgets the filter (review finding, Phase 3).
+* [x] **Jobs:** list, create, edit and change status, with candidate counts per stage
+* [x] **Candidates:** create and edit with profile fields (LinkedIn and more), an optional CV upload (PDF), and attaching a candidate to one or more jobs
+* [x] **Kanban:** compact columns per stage, drag and drop with optimistic updates and saved order. Cards show initials, job tag, days in stage and a LinkedIn icon.
+* [x] **Filters:** job (choose several) and candidate name (search as you type), kept in the URL so filtered views can be shared
+* [x] **Candidate drawer:** profile, applications, notes and an activity timeline
+* [x] **Dashboard:** key numbers (open jobs, active candidates, hires this month) and a pipeline funnel
 
 ## Phase 5: Polish (Tue 27)
 

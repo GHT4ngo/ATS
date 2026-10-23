@@ -37,7 +37,11 @@
     "slugTaken": "Det finns redan en organisation med liknande namn.",
     "emailTaken": "Det finns redan en användare med den e-postadressen.",
     "cannotDeactivateSelf": "Du kan inte inaktivera ditt eget konto.",
-    "generic": "Något gick fel. Försök igen."
+    "generic": "Något gick fel. Försök igen.",
+    "duplicateEmail": "Det finns redan en kandidat med den e-postadressen.",
+    "cvTooLarge": "CV:t är större än 4 MB.",
+    "cvNotPdf": "CV:t måste vara en PDF-fil.",
+    "cvUploadFailed": "Kandidaten sparades, men CV:t kunde inte laddas upp."
   },
   "Auth": {
     "loginTitle": "Logga in",
@@ -67,12 +71,19 @@
     "actAs": "Agera som kund",
     "actAsNone": "Ingen kund vald",
     "viewingAs": "Visar som {name}",
-    "exitViewing": "Avsluta"
+    "exitViewing": "Avsluta",
+    "jobs": "Tjänster",
+    "candidates": "Kandidater",
+    "pipeline": "Pipeline"
   },
   "Dashboard": {
     "welcome": "Välkommen, {name}",
     "pickOrganization": "Välj en kund i växlaren ovan för att se deras rekrytering.",
-    "comingSoon": "Jobb, kandidater och pipeline kommer i nästa fas."
+    "comingSoon": "Jobb, kandidater och pipeline kommer i nästa fas.",
+    "openJobs": "Öppna tjänster",
+    "activeCandidates": "Aktiva kandidater",
+    "hiresThisMonth": "Anställda denna månad",
+    "funnel": "Pipelinetratt"
   },
   "Team": {
     "title": "Team",
@@ -113,5 +124,83 @@
     "userDeactivated": "Användaren har inaktiverats.",
     "userReactivated": "Användaren är aktiv igen.",
     "adminNoOrganization": "Internt"
+  },
+  "Stages": {
+    "applied": "Ansökt",
+    "screening": "Screening",
+    "interview": "Intervju",
+    "offer": "Erbjudande",
+    "hired": "Anställd",
+    "rejected": "Avslagen"
+  },
+  "Jobs": {
+    "heading": "Tjänster",
+    "title": "Titel",
+    "new": "Ny tjänst",
+    "edit": "Redigera",
+    "save": "Spara tjänst",
+    "created": "Tjänsten skapades",
+    "updated": "Tjänsten uppdaterades",
+    "location": "Plats",
+    "employmentType": "Anställningsform",
+    "statusLabel": "Status",
+    "description": "Beskrivning",
+    "empty": "Inga tjänster ännu. Skapa den första.",
+    "type": {
+      "full_time": "Heltid",
+      "part_time": "Deltid",
+      "contract": "Konsult",
+      "internship": "Praktik"
+    },
+    "status": {
+      "open": "Öppen",
+      "paused": "Pausad",
+      "closed": "Stängd"
+    }
+  },
+  "Filters": {
+    "search": "Sök kandidater",
+    "jobs": "Filtrera på tjänst",
+    "clear": "Rensa"
+  },
+  "Candidates": {
+    "heading": "Kandidater",
+    "new": "Ny kandidat",
+    "created": "Kandidaten skapades",
+    "updated": "Kandidaten uppdaterades",
+    "save": "Spara kandidat",
+    "phone": "Telefon",
+    "location": "Plats",
+    "jobs": "Tjänster",
+    "noJobs": "Skapa en tjänst först för att koppla kandidater till den.",
+    "cv": "CV (PDF)",
+    "replaceCv": "Ersätt CV (PDF)",
+    "cvHint": "PDF, högst 4 MB.",
+    "empty": "Inga kandidater hittades.",
+    "noContact": "Inga kontaktuppgifter",
+    "openCv": "Öppna CV",
+    "cvMissing": "CV:t kunde inte öppnas.",
+    "editProfile": "Redigera profil",
+    "cancelEdit": "Avbryt redigering",
+    "applications": "Ansökningar",
+    "noApplications": "Inte kopplad till någon tjänst.",
+    "daysInStage": "{days, plural, one {# dag} other {# dagar}} i steget",
+    "notes": "Anteckningar",
+    "saveNotes": "Spara anteckningar",
+    "notesSaved": "Anteckningarna sparades",
+    "notesFailed": "Anteckningarna kunde inte sparas.",
+    "timeline": "Aktivitet",
+    "activity": {
+      "moved": "{job}: {from} till {to}",
+      "created": "Kandidat skapad",
+      "updated": "Profilen uppdaterades",
+      "notes": "Anteckningarna uppdaterades"
+    },
+    "daysShort": "{days} d",
+    "linkedin": "LinkedIn",
+    "linkedinShort": "in"
+  },
+  "Pipeline": {
+    "heading": "Pipeline"
   }
 }

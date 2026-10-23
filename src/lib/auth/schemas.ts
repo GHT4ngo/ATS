@@ -64,4 +64,8 @@ export function slugify(name: string) {
     .replace(/^-+|-+$/g, "");
 }
 
+/**
+ * The result of a form action. `ok` with an `error` means the main change was
+ * saved but a follow up step (such as a CV upload) failed.
+ */
 export type ActionState = { error?: string; ok?: boolean };
