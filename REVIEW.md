@@ -30,4 +30,4 @@ One review per phase (or per larger PR), not per commit; that keeps the usage bu
 
 | Date | Phase | Commits | Reviewer and model | Findings | Status |
 |:-----|:------|:--------|:-------------------|:---------|:-------|
-| | | | | | |
+| 2026-10-23 | 2: data model and RLS | a781c99..e915f7a (PR #1) | `/code-review high`, Opus 5.5 | 10: cv_path could point at another organization's CV; deleted profile could be recreated from stale app_metadata; deactivated users could edit their profile; forgeable created_by and stage_changed_at; unsanitized user metadata; activity entries could reference other organizations; per row helper calls in policies; untested storage update and admin delete policies; cloud signup still open | Fixed, except cloud signup (manual step) |
