@@ -277,3 +277,36 @@ def test_user_metadata_is_sanitized(world: World, service):
         assert row == {"full_name": "x" * 200, "locale": "sv"}
     finally:
         service.auth.admin.delete_user(user.id)
+
+
+# profile email --------------------------------------------------------------
+
+
+def test_profile_email_is_copied_from_the_login(world: World, login):
+    row = (
+        login(world.customer_a)
+        .table("profiles")
+        .select("email")
+        .eq("id", world.customer_a.id)
+        .single()
+        .execute()
+        .data
+    )
+    assert row["email"] == world.customer_a.email
+
+
+def test_nobody_can_write_the_profile_email(world: World, login):
+    for user in (world.customer_a, world.admin):
+        with pytest.raises(APIError) as exc:
+            login(user).table("profiles").update({"email": "x@example.com"}).eq(
+                "id", world.customer_a.id
+            ).execute()
+        assert exc.value.code == "42501"
+
+
+def test_profile_email_follows_an_email_change(world: World, service):
+    new_email = f"changed-{uuid.uuid4().hex[:8]}@example.com"
+    service.auth.admin.update_user_by_id(world.teammate_a.id, {"email": new_email})
+    row = service.table("profiles").select("email").eq("id", world.teammate_a.id).single().execute()
+    assert row.data["email"] == new_email
+    service.auth.admin.update_user_by_id(world.teammate_a.id, {"email": world.teammate_a.email})
