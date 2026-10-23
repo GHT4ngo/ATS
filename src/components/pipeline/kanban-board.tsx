@@ -87,8 +87,12 @@ function CardBody({
           </span>
         )}
         <div className="mt-1 flex flex-wrap items-center gap-1.5">
-          <Badge variant="secondary" className="max-w-32 truncate">
-            {card.jobTitle}
+          <Badge
+            variant="secondary"
+            className="max-w-32 justify-start"
+            title={card.jobTitle}
+          >
+            <span className="truncate">{card.jobTitle}</span>
           </Badge>
           <span className="text-muted-foreground text-xs">
             {t("daysShort", { days: daysSince(card.stageChangedAt) })}

@@ -1,6 +1,6 @@
 # PLAN: Mini ATS
 
-> **Status:** Phase 4 (core customer features) merged (PR #3). Phase 5 (polish) built on `feat/polish`, awaiting review. Next: Phase 6.
+> **Status:** Phase 4 (core customer features) merged (PR #3). Phase 5 (polish) merged (PR #4). Phase 6 tests, CI and seed script done on `feat/ship-v1` (PR #5); production seeded on 2026-10-23; v1 delivery pending.
 > **Deadline:** Friday 30 October 2026. **Live URL:** https://ats.t4ngo.com
 > Usage budget and model routing: [BUDGET.md](./BUDGET.md). Review process: [REVIEW.md](./REVIEW.md).
 
@@ -88,9 +88,9 @@ Additions to the table above: `applications` and `activity_log` also carry `orga
 
 ## Phase 6: Test and ship v1 (Tue 27)
 
-* [ ] Playwright end to end test: admin creates a customer, the customer logs in, creates a job, adds a candidate, drags the card and filters
-* [ ] GitHub Actions CI: lint, typecheck, Vitest, Playwright and the pytest RLS suite
-* [ ] Seed script (Python in the venv, service role key, runs against local and production): a fictional Stockholm tech company with 4 jobs (frontend developer, backend developer, product designer, customer success manager) and about 20 candidates spread across the stages, with sample CVs
+* [x] Playwright end to end test: admin creates a customer, the customer logs in, creates a job, adds a candidate, drags the card and filters
+* [x] GitHub Actions CI: lint, typecheck, Vitest, Playwright and the pytest RLS suite
+* [x] Seed script (Python in the venv, service role key, runs against local and production): a fictional Stockholm tech company with 4 jobs (frontend developer, backend developer, product designer, customer success manager) and about 20 candidates spread across the stages, with sample CVs
 * [ ] **Delivery v1:** admin login, live URL and repo link
 
 ## Phase 7: AI CV assessment (Wed 28)

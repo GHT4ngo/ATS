@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Lint, typecheck and unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+
+  integration:
+    name: RLS, seed and end to end tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - run: pnpm install --frozen-lockfile
+      - name: Python venv
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install -r requirements-dev.txt
+      - run: .venv/bin/ruff check
+      - name: Start Supabase
+        run: pnpm exec supabase start -x studio,edge-runtime,logflare,vector,supavisor,imgproxy
+      - run: .venv/bin/pytest
+      - name: Seed the demo data
+        run: .venv/bin/python scripts/seed.py
+        env:
+          SEED_PASSWORD: ci-seed-password-1
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-results
+          path: test-results/
+          retention-days: 7
