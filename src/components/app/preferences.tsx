@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
+import { toast } from "sonner";
 import { Languages, Monitor, Moon, Sun } from "lucide-react";
 import { setLanguage } from "@/app/actions/profile";
 import { Button } from "@/components/ui/button";
@@ -51,6 +52,7 @@ export function ThemeToggle() {
 export function LanguageToggle() {
   const c = useTranslations("Common");
   const n = useTranslations("Nav");
+  const e = useTranslations("Errors");
   const locale = useLocale();
   const [pending, startTransition] = useTransition();
 
@@ -72,7 +74,10 @@ export function LanguageToggle() {
         <DropdownMenuRadioGroup
           value={locale}
           onValueChange={(value) =>
-            startTransition(() => setLanguage(String(value)))
+            startTransition(async () => {
+              const result = await setLanguage(String(value));
+              if (result.error) toast.error(e(result.error));
+            })
           }
         >
           <DropdownMenuRadioItem value="sv">

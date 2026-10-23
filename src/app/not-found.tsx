@@ -12,7 +12,9 @@ export default async function NotFound() {
           {c("notFoundTitle")}
         </h1>
         <p className="text-muted-foreground">{c("notFoundBody")}</p>
-        <Button render={<Link href="/dashboard" />}>{c("goHome")}</Button>
+        <Button nativeButton={false} render={<Link href="/dashboard" />}>
+          {c("goHome")}
+        </Button>
       </div>
     </div>
   );

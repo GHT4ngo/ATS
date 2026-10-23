@@ -94,7 +94,10 @@
     "jobsGroup": "Jobs",
     "language": "Language",
     "theme": "Theme",
-    "skipToContent": "Skip to content"
+    "skipToContent": "Skip to content",
+    "closeMenu": "Close menu",
+    "shortcut": "Ctrl K",
+    "menu": "Menu"
   },
   "Dashboard": {
     "welcome": "Welcome, {name}",

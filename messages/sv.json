@@ -94,7 +94,10 @@
     "jobsGroup": "Tjänster",
     "language": "Språk",
     "theme": "Tema",
-    "skipToContent": "Hoppa till innehållet"
+    "skipToContent": "Hoppa till innehållet",
+    "closeMenu": "Stäng menyn",
+    "shortcut": "Ctrl K",
+    "menu": "Meny"
   },
   "Dashboard": {
     "welcome": "Välkommen, {name}",

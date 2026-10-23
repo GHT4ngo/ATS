@@ -114,4 +114,19 @@ test("customer creates a job and candidates, moves a card and filters", async ({
   await page.getByRole("link", { name: "Anna Andersson" }).click();
   await expect(page.getByRole("dialog")).toContainText("Frontendutvecklare");
   await expect(page.getByRole("dialog")).toContainText("Ansökt till Screening");
+
+  // Command palette works with the sidebar collapsed, and opens the candidate
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "Fäll ihop sidofältet" }).click();
+  await page.keyboard.press("Control+k");
+  await page.getByRole("combobox").fill("Bo B");
+  await expect(page.getByRole("option", { name: "Bo Berg" })).toBeVisible();
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/candidate=/);
+  await expect(page.getByRole("dialog")).toContainText("Bo Berg");
+  await page.reload();
+  await expect(
+    page.getByRole("button", { name: "Fäll ut sidofältet" }),
+  ).toBeVisible();
 });

@@ -1,15 +1,14 @@
+import { cookies } from "next/headers";
+import { LogOut } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { logout } from "@/app/actions/auth";
 import { setActingOrganization } from "@/app/actions/admin";
 import { AppShell } from "@/components/app/app-shell";
-import {
-  CommandPalette,
-  type PaletteItem,
-} from "@/components/app/command-palette";
 import { LanguageToggle, ThemeToggle } from "@/components/app/preferences";
 import { OrgSwitcher } from "@/components/app/org-switcher";
 import { Button } from "@/components/ui/button";
 import { getActiveOrganization, requireUser } from "@/lib/auth/session";
+import { SIDEBAR_COOKIE } from "@/lib/sidebar";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function AppLayout({
@@ -50,49 +49,13 @@ export default async function AppLayout({
       : []),
   ];
 
-  const paletteItems: PaletteItem[] = links.map((l) => ({
-    id: l.href,
-    group: "pages",
-    label: l.label,
-    href: l.href,
-  }));
-  if (activeOrg) {
-    const supabase = await createClient();
-    const [{ data: candidates }, { data: jobs }] = await Promise.all([
-      supabase
-        .from("candidates")
-        .select("id, full_name")
-        .eq("organization_id", activeOrg.id)
-        .order("full_name")
-        .limit(500),
-      supabase
-        .from("jobs")
-        .select("id, title")
-        .eq("organization_id", activeOrg.id)
-        .order("title")
-        .limit(200),
-    ]);
-    for (const cand of candidates ?? [])
-      paletteItems.push({
-        id: cand.id,
-        group: "candidates",
-        label: cand.full_name,
-        href: `/candidates?candidate=${cand.id}`,
-      });
-    for (const job of jobs ?? [])
-      paletteItems.push({
-        id: job.id,
-        group: "jobs",
-        label: job.title,
-        href: `/pipeline?jobs=${job.id}`,
-      });
-  }
+  const defaultCollapsed = (await cookies()).get(SIDEBAR_COOKIE)?.value === "1";
 
   return (
     <AppShell
       links={links}
       appName={c("appName")}
-      search={<CommandPalette items={paletteItems} />}
+      defaultCollapsed={defaultCollapsed}
       banner={
         isAdmin && activeOrg ? (
           <div className="bg-amber-100 text-amber-950 dark:bg-amber-950 dark:text-amber-100">
@@ -106,6 +69,23 @@ export default async function AppLayout({
             </div>
           </div>
         ) : undefined
+      }
+      compactFooter={
+        <div className="flex flex-col items-center gap-1">
+          <ThemeToggle />
+          <LanguageToggle />
+          <form action={logout}>
+            <Button
+              type="submit"
+              variant="ghost"
+              size="icon-sm"
+              aria-label={t("signOut")}
+              title={t("signOut")}
+            >
+              <LogOut className="size-4" />
+            </Button>
+          </form>
+        </div>
       }
       footer={
         <div className="grid gap-3">
