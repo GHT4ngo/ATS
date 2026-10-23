@@ -78,16 +78,37 @@ See **[PLAN.md](./PLAN.md)** for the full plan. In short:
 
 ## Getting started
 
-Setup instructions will be added once the project is scaffolded.
+Requirements: Node.js 24, pnpm 11, Python 3.14 and Docker (for the local Supabase stack).
 
 ```bash
 git clone https://github.com/GHT4ngo/ATS.git
 cd ATS
-python3 -m venv .venv && source .venv/bin/activate
 pnpm install
-pnpm supabase start
-pnpm dev
+python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
+pnpm exec supabase start          # local Postgres, Auth and Storage in Docker
+cp .env.example .env.local        # fill in the values from `pnpm exec supabase status`
+pnpm dev                          # http://localhost:3000
 ```
+
+Demo data (a fictional Stockholm company with 4 jobs and 20 candidates with CVs):
+
+```bash
+SEED_PASSWORD=choose-one .venv/bin/python scripts/seed.py         # local
+SEED_PASSWORD=choose-one .venv/bin/python scripts/seed.py --prod  # the project in .env.local, asks first
+```
+
+AI CV assessment needs `ANTHROPIC_API_KEY` in `.env.local`. Without a key, set `AI_FAKE=1` for a fixed test result.
+
+### Tests
+
+```bash
+pnpm lint && pnpm typecheck && pnpm test     # ESLint, TypeScript, Vitest
+.venv/bin/pytest                             # RLS policies against the local Supabase
+pnpm e2e                                     # Playwright, starts its own dev server on port 3100
+.venv/bin/python scripts/eval_assessment.py  # AI score consistency, calls the API (about 0.20 USD)
+```
+
+GitHub Actions runs everything except the eval on every pull request.
 
 <details>
 <summary><b>Originaluppgiften (svenska)</b></summary>

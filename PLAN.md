@@ -4,6 +4,16 @@
 > **Deadline:** Friday 30 October 2026. **Live URL:** https://ats.t4ngo.com
 > Usage budget and model routing: [BUDGET.md](./BUDGET.md). Review process: [REVIEW.md](./REVIEW.md).
 
+## Where we left off (23 Oct, evening)
+
+* **Production:** all four migrations are applied to the cloud database; the Nordlys Tech demo data is seeded (logins `sara.lindqvist@nordlys.example` and `johan.ek@nordlys.example`, password kept outside the repo); `ANTHROPIC_API_KEY` is set on Vercel (Production only, not Preview).
+* **Open items:**
+  * Send the v1 delivery (admin login, live URL, repo link).
+  * Smoke test one real CV assessment on the live site (about a cent per run).
+  * One unexplained failure of the core e2e test (`e2e/core.spec.ts`), not reproduced in two full runs since; watch CI.
+  * The admin organization switcher needs the sidebar expanded; empty states are plain text.
+* **Next:** prioritize the Phase 8 extras together, then Phase 9 deliverables.
+
 ## Goal
 
 A professional, production quality mini ATS on Supabase that a first customer can use right away. The priority order:
@@ -128,6 +138,8 @@ To be prioritized together:
 * A candidate belongs to one organization and can apply to several of its jobs.
 * Pipeline stages are fixed in v1.
 * Data is hosted in the EU (Supabase EU region) because of GDPR.
+* CVs are text based PDFs. Scanned CVs (images only) are not assessed; the app says so instead of guessing.
+* The AI assessment is decision support only. The CV text is sent to Anthropic for processing, which the UI states; every decision stays with a person.
 
 ## Workflow
 
@@ -143,3 +155,16 @@ To be prioritized together:
 * **AI trigger:** a button click only, for cost control and a human in the loop.
 * **Onboarding:** the admin sets a temporary password, so no email setup is needed for v1.
 * **Demo:** a seed script provides realistic data; the user records the Loom video by hand.
+
+## Decisions log (Phases 5 to 7)
+
+* **Command palette:** searches on the server as you type (pages, candidates, jobs in the active organization) instead of loading every row into the layout.
+* **Sidebar state:** kept in a cookie and read on the server, so a collapsed sidebar does not flash open on load.
+* **Seed data:** a Python script that wipes and recreates only the demo organization, with generated PDF CVs, so it can run against production safely and again at any time.
+* **CI:** two jobs: fast checks (lint, typecheck, Vitest), then Supabase with the RLS suite, the seed script and Playwright.
+* **AI model:** Claude Sonnet 5.5 at medium effort with structured output; server side refusal fallback. The eval showed a spread of at most 6 points over three runs.
+* **Assessment writes:** users can only read `cv_assessments`; the server writes rows with the service role after checking access as the user, so a score cannot be forged through the API.
+* **Concurrency:** one running assessment per candidate and job, claimed atomically in the database before the paid call; stale claims expire after 3 minutes.
+* **History:** every assessment run is kept; the `latest_cv_assessments` view (security invoker, so RLS applies) gives the newest per pair.
+* **Shared prompt:** the prompt lives in `src/lib/ai/assessment-prompt.json`, read by both the app and the Python eval, so they cannot drift apart.
+* **Tests without the API:** `AI_FAKE=1` returns a fixed assessment in e2e and CI; it is ignored in production builds.
