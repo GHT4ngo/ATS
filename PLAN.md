@@ -1,6 +1,6 @@
 # PLAN: Mini ATS
 
-> **Status:** Phase 1 done. Next: Phase 2 (data model and RLS).
+> **Status:** Phase 2 done (pending review). Next: Phase 3 (auth and admin).
 > **Deadline:** Friday 30 October 2026. **Live URL:** https://ats.t4ngo.com
 > Usage budget and model routing: [BUDGET.md](./BUDGET.md). Review process: [REVIEW.md](./REVIEW.md).
 
@@ -50,10 +50,14 @@ A professional, production quality mini ATS on Supabase that a first customer ca
 | `applications` | candidate_id, job_id, stage, position (kanban order), rating; unique per candidate and job |
 | `activity_log` | actor_id, entity, entity_id, action, payload |
 
-* **Stages in v1 (fixed):** Applied, Screening, Interview, Offer, Hired, Rejected
-* **RLS on every table.** A security definer helper `is_admin()` checks the role. Customers have full access only within their own organization; admins can do everything.
-* **Storage:** a private `cvs` bucket with path policies per organization.
-* **Tests (pytest):** customer A cannot read or write organization B's data, and an admin can.
+* [x] **Stages in v1 (fixed):** Applied, Screening, Interview, Offer, Hired, Rejected
+* [x] **RLS on every table.** Security definer helpers `is_admin()`, `current_org_id()` and `can_access_org()`. Customers have full access only within their own organization; admins can do everything; deactivated users get nothing.
+* [x] **Storage:** a private `cvs` bucket (PDF only, 10 MB) with path policies per organization (`<organization_id>/<candidate_id>/<file>`).
+* [x] **Tests (pytest):** customer A cannot read or write organization B's data, and an admin can (`tests/rls/`).
+* [x] Profiles are created by a trigger from `app_metadata` (role, organization), which only the service role can set; public signup is disabled.
+* [x] Generated TypeScript types in `src/lib/supabase/database.types.ts` (`pnpm db:types`).
+
+Additions to the table above: `applications` and `activity_log` also carry `organization_id` (composite foreign keys keep the candidate, job and application in the same organization), `applications.stage_changed_at` drives "days in stage", and `jobs` and `candidates` have `created_by`. The activity log is append only.
 
 ## Phase 3: Auth and admin (Sun 25)
 
