@@ -4,7 +4,11 @@ import { useActionState, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { createJob, updateJob } from "@/app/actions/jobs";
-import { FormMessage, SubmitButton } from "@/components/form-bits";
+import {
+  FormMessage,
+  SubmitButton,
+  submitKeepingValues,
+} from "@/components/form-bits";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -30,7 +34,7 @@ export type JobFormValues = {
 export function JobFormDialog({ job }: { job?: JobFormValues }) {
   const t = useTranslations("Jobs");
   const [open, setOpen] = useState(false);
-  const [state, action] = useActionState(
+  const [state, action, pending] = useActionState(
     job ? updateJob.bind(null, job.id) : createJob,
     {},
   );
@@ -58,7 +62,7 @@ export function JobFormDialog({ job }: { job?: JobFormValues }) {
         <DialogHeader>
           <DialogTitle>{job ? t("edit") : t("new")}</DialogTitle>
         </DialogHeader>
-        <form action={action} className="grid gap-4">
+        <form onSubmit={submitKeepingValues(action)} className="grid gap-4">
           <div className="grid gap-2">
             <Label htmlFor="job-title">{t("title")}</Label>
             <Input
@@ -120,7 +124,7 @@ export function JobFormDialog({ job }: { job?: JobFormValues }) {
             />
           </div>
           <FormMessage state={state} />
-          <SubmitButton>{t("save")}</SubmitButton>
+          <SubmitButton pending={pending}>{t("save")}</SubmitButton>
         </form>
       </DialogContent>
     </Dialog>

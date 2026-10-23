@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
+import { getFormatter, getTranslations } from "next-intl/server";
 import { CandidateDrawerLoader } from "@/components/candidates/candidate-drawer-loader";
 import { NewCandidateDialog } from "@/components/candidates/new-candidate-dialog";
 import { FilterBar } from "@/components/filters/filter-bar";
@@ -22,6 +22,7 @@ export default async function CandidatesPage({
   const { q, candidate } = await searchParams;
   const t = await getTranslations("Candidates");
   const c = await getTranslations("Common");
+  const format = await getFormatter();
   const scope = await getScope();
 
   let query = scope.candidates().order("created_at", { ascending: false });
@@ -35,6 +36,13 @@ export default async function CandidatesPage({
       scope.applications().select("candidate_id, job_id"),
     ]);
   const jobTitle = new Map((jobs ?? []).map((j) => [j.id, j.title]));
+  const jobsOf = new Map<string, string[]>();
+  for (const a of apps ?? []) {
+    jobsOf.set(a.candidate_id, [
+      ...(jobsOf.get(a.candidate_id) ?? []),
+      a.job_id,
+    ]);
+  }
 
   return (
     <div className="grid gap-6">
@@ -70,18 +78,18 @@ export default async function CandidatesPage({
                 </TableCell>
                 <TableCell>
                   <div className="flex flex-wrap gap-1">
-                    {(apps ?? [])
-                      .filter((a) => a.candidate_id === cand.id)
-                      .map((a) => (
-                        <Badge key={a.job_id} variant="secondary">
-                          {jobTitle.get(a.job_id)}
-                        </Badge>
-                      ))}
+                    {(jobsOf.get(cand.id) ?? []).map((jobId) => (
+                      <Badge key={jobId} variant="secondary">
+                        {jobTitle.get(jobId)}
+                      </Badge>
+                    ))}
                   </div>
                 </TableCell>
                 <TableCell>{cand.location ?? ""}</TableCell>
                 <TableCell>
-                  {new Date(cand.created_at).toLocaleDateString()}
+                  {format.dateTime(new Date(cand.created_at), {
+                    dateStyle: "medium",
+                  })}
                 </TableCell>
               </TableRow>
             ))}

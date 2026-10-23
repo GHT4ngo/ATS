@@ -16,6 +16,12 @@ export const STAGES = [
   "rejected",
 ] as const;
 
+/**
+ * CVs go through a server action, and Vercel caps request bodies at 4.5 MB,
+ * so the browser checks this limit before sending.
+ */
+export const MAX_CV_BYTES = 4 * 1024 * 1024;
+
 export type Stage = (typeof STAGES)[number];
 
 export const jobSchema = z.object({

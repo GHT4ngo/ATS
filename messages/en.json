@@ -196,7 +196,9 @@
       "updated": "Profile updated",
       "notes": "Notes updated"
     },
-    "daysShort": "{days}d"
+    "daysShort": "{days}d",
+    "linkedin": "LinkedIn",
+    "linkedinShort": "in"
   },
   "Pipeline": {
     "heading": "Pipeline"

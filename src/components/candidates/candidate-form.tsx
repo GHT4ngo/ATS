@@ -1,11 +1,17 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { createCandidate, updateCandidate } from "@/app/actions/candidates";
-import { FormMessage, SubmitButton } from "@/components/form-bits";
+import {
+  FormMessage,
+  SubmitButton,
+  submitKeepingValues,
+} from "@/components/form-bits";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import type { ActionState } from "@/lib/auth/schemas";
+import { MAX_CV_BYTES } from "@/lib/data/schemas";
 
 export type CandidateFormValues = {
   id: string;
@@ -27,21 +33,40 @@ export function CandidateForm({
 }: {
   candidate?: CandidateFormValues;
   jobs: JobOption[];
-  onDone: () => void;
+  onDone: (state: ActionState) => void;
 }) {
   const t = useTranslations("Candidates");
   const c = useTranslations("Common");
-  const [state, action] = useActionState(
+  const [state, action, pending] = useActionState(
     candidate ? updateCandidate.bind(null, candidate.id) : createCandidate,
     {},
   );
+  const [localError, setLocalError] = useState<string>();
 
   useEffect(() => {
-    if (state.ok) onDone();
+    if (state.ok) onDone(state);
   }, [state, onDone]);
 
+  const checkCv = (formData: FormData) => {
+    const cv = formData.get("cv");
+    if (!(cv instanceof File) || cv.size === 0) return null;
+    if (cv.size > MAX_CV_BYTES) return "cvTooLarge";
+    if (cv.type !== "application/pdf") return "cvNotPdf";
+    return null;
+  };
+
   return (
-    <form action={action} className="grid gap-4">
+    <form
+      onSubmit={submitKeepingValues(
+        (formData) => {
+          setLocalError(undefined);
+          action(formData);
+        },
+        checkCv,
+        setLocalError,
+      )}
+      className="grid gap-4"
+    >
       <div className="grid gap-2">
         <Label htmlFor="cand-name">{c("name")}</Label>
         <Input
@@ -82,7 +107,7 @@ export function CandidateForm({
           />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="cand-linkedin">LinkedIn</Label>
+          <Label htmlFor="cand-linkedin">{t("linkedin")}</Label>
           <Input
             id="cand-linkedin"
             name="linkedinUrl"
@@ -121,8 +146,10 @@ export function CandidateForm({
         <Input id="cand-cv" name="cv" type="file" accept="application/pdf" />
         <p className="text-muted-foreground text-xs">{t("cvHint")}</p>
       </div>
-      <FormMessage state={state} />
-      <SubmitButton>{t("save")}</SubmitButton>
+      <FormMessage
+        state={localError ? { error: localError } : state.ok ? {} : state}
+      />
+      <SubmitButton pending={pending}>{t("save")}</SubmitButton>
     </form>
   );
 }

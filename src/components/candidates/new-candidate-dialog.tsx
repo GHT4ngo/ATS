@@ -11,15 +11,21 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import type { ActionState } from "@/lib/auth/schemas";
 import { CandidateForm, type JobOption } from "./candidate-form";
 
 export function NewCandidateDialog({ jobs }: { jobs: JobOption[] }) {
   const t = useTranslations("Candidates");
   const [open, setOpen] = useState(false);
-  const done = useCallback(() => {
-    setOpen(false);
-    toast.success(t("created"));
-  }, [t]);
+  const e = useTranslations("Errors");
+  const done = useCallback(
+    (state: ActionState) => {
+      setOpen(false);
+      if (state.error) toast.warning(e(state.error));
+      else toast.success(t("created"));
+    },
+    [t, e],
+  );
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

@@ -196,7 +196,9 @@
       "updated": "Profilen uppdaterades",
       "notes": "Anteckningarna uppdaterades"
     },
-    "daysShort": "{days} d"
+    "daysShort": "{days} d",
+    "linkedin": "LinkedIn",
+    "linkedinShort": "in"
   },
   "Pipeline": {
     "heading": "Pipeline"

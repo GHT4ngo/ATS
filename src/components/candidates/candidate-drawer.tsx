@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import type { ActionState } from "@/lib/auth/schemas";
 import { Separator } from "@/components/ui/separator";
 import {
   CandidateForm,
@@ -58,6 +59,16 @@ export function CandidateDrawer({
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(notes);
   const [pending, startTransition] = useTransition();
+
+  const e = useTranslations("Errors");
+  const onEdited = useCallback(
+    (state: ActionState) => {
+      setEditing(false);
+      if (state.error) toast.warning(e(state.error));
+      else toast.success(t("updated"));
+    },
+    [t, e],
+  );
 
   const close = useCallback(() => {
     const next = new URLSearchParams(params.toString());
@@ -106,7 +117,7 @@ export function CandidateDrawer({
                 />
               }
             >
-              LinkedIn
+              {t("linkedin")}
             </Button>
           )}
           {candidate.hasCv && (
@@ -132,14 +143,7 @@ export function CandidateDrawer({
         </div>
 
         {editing && (
-          <CandidateForm
-            candidate={candidate}
-            jobs={jobs}
-            onDone={() => {
-              setEditing(false);
-              toast.success(t("updated"));
-            }}
-          />
+          <CandidateForm candidate={candidate} jobs={jobs} onDone={onEdited} />
         )}
 
         <Separator />

@@ -19,13 +19,8 @@ export async function createJob(
   if (!parsed.success) return { error: "invalidInput" };
   const { employmentType, ...rest } = parsed.data;
 
-  const { data, error } = await scope.supabase
-    .from("jobs")
-    .insert({
-      ...rest,
-      employment_type: employmentType,
-      organization_id: scope.orgId,
-    })
+  const { data, error } = await scope
+    .insertJob({ ...rest, employment_type: employmentType })
     .select("id")
     .single();
   if (error || !data) return { error: "generic" };

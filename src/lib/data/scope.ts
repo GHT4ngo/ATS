@@ -35,10 +35,25 @@ export async function getScope() {
     insertCandidate: (
       row: Omit<Tables["candidates"]["Insert"], "organization_id">,
     ) => supabase.from("candidates").insert({ ...row, organization_id: orgId }),
-    insertApplication: (
-      row: Omit<Tables["applications"]["Insert"], "organization_id">,
+    insertApplications: (
+      rows: Omit<Tables["applications"]["Insert"], "organization_id">[],
     ) =>
-      supabase.from("applications").insert({ ...row, organization_id: orgId }),
+      supabase
+        .from("applications")
+        .insert(rows.map((row) => ({ ...row, organization_id: orgId }))),
+    deleteCandidate: (id: string) =>
+      supabase
+        .from("candidates")
+        .delete()
+        .eq("id", id)
+        .eq("organization_id", orgId),
+    deleteApplications: (candidateId: string, jobIds: string[]) =>
+      supabase
+        .from("applications")
+        .delete()
+        .eq("organization_id", orgId)
+        .eq("candidate_id", candidateId)
+        .in("job_id", jobIds),
     updateJob: (id: string, patch: Tables["jobs"]["Update"]) =>
       supabase
         .from("jobs")

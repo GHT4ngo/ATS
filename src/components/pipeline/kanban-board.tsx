@@ -19,6 +19,7 @@ import {
 } from "@dnd-kit/core";
 import {
   SortableContext,
+  arrayMove,
   sortableKeyboardCoordinates,
   useSortable,
   verticalListSortingStrategy,
@@ -99,11 +100,11 @@ function CardBody({
           href={card.linkedinUrl}
           target="_blank"
           rel="noopener noreferrer"
-          aria-label="LinkedIn"
+          aria-label={t("linkedin")}
           className="text-muted-foreground hover:text-foreground shrink-0 text-xs font-semibold"
           onPointerDown={(e) => e.stopPropagation()}
         >
-          in
+          {t("linkedinShort")}
         </a>
       )}
     </>
@@ -193,11 +194,14 @@ export function KanbanBoard({ initialCards }: { initialCards: BoardCard[] }) {
   const pathname = usePathname();
   const params = useSearchParams();
   const [cards, setCards] = useState(initialCards);
+  // What the database holds, as far as this board knows.
   const [synced, setSynced] = useState(initialCards);
+  const [received, setReceived] = useState(initialCards);
   const [activeId, setActiveId] = useState<string | null>(null);
 
   // Take new server data (after a filter change or a refresh) when it arrives.
-  if (initialCards !== synced) {
+  if (initialCards !== received) {
+    setReceived(initialCards);
     setSynced(initialCards);
     setCards(initialCards);
   }
@@ -246,45 +250,54 @@ export function KanbanBoard({ initialCards }: { initialCards: BoardCard[] }) {
     const to = stageOf(over.id);
     if (!card || !to) return;
 
-    const column = cards
-      .filter((c) => c.stage === to && c.id !== card.id)
-      .sort(byPosition);
+    // The column in its current order, including the dragged card (onDragOver
+    // has already moved it here). Dropping on a card takes that card's place,
+    // as arrayMove does, so a card dropped on one below it lands after it.
+    // Dropping on the column itself appends.
+    const column = cards.filter((c) => c.stage === to).sort(byPosition);
+    const from = column.findIndex((c) => c.id === card.id);
     const overIndex = column.findIndex((c) => c.id === over.id);
-    // Dropping on a card puts the dragged card at that card's place; dropping
-    // on the column itself appends it.
-    const index = overIndex === -1 ? column.length : overIndex;
-    const before = column[index - 1]?.position;
-    const after = column[index]?.position;
+    const ordered =
+      overIndex === -1
+        ? [...column.filter((c) => c.id !== card.id), card]
+        : arrayMove(column, from, overIndex);
+    const index = ordered.findIndex((c) => c.id === card.id);
+    const before = ordered[index - 1]?.position;
+    const after = ordered[index + 1]?.position;
     const position =
       before === undefined && after === undefined
-        ? Date.now()
+        ? card.position
         : before === undefined
           ? after! - 1000
           : after === undefined
             ? before + 1000
             : (before + after) / 2;
 
-    const unchanged =
-      card.position === position &&
-      synced.find((c) => c.id === card.id)?.stage === to;
-    if (unchanged) return;
+    const saved = synced.find((c) => c.id === card.id);
+    if (!saved) return;
+    if (saved.stage === to && saved.position === position) {
+      setCards((prev) => prev.map((c) => (c.id === card.id ? saved : c)));
+      return;
+    }
 
-    const previous = cards;
     const moved = { ...card, stage: to, position };
     setCards((prev) => prev.map((c) => (c.id === card.id ? moved : c)));
 
-    const res = await moveApplication({
-      applicationId: card.id,
-      stage: to,
-      position,
-    });
-    if (!res.ok) {
-      setCards(previous);
-      toast.error(e("generic"));
-    } else {
-      setSynced((s) =>
-        s.map((c) => (c.id === card.id ? { ...c, stage: to, position } : c)),
+    let ok = false;
+    try {
+      ok = Boolean(
+        (await moveApplication({ applicationId: card.id, stage: to, position }))
+          .ok,
       );
+    } catch {
+      ok = false;
+    }
+    if (ok) {
+      setSynced((prev) => prev.map((c) => (c.id === card.id ? moved : c)));
+    } else {
+      // Put the card back where the database still has it.
+      setCards((prev) => prev.map((c) => (c.id === card.id ? saved : c)));
+      toast.error(e("generic"));
     }
   }
 

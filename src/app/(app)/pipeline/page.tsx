@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import { z } from "zod";
 import { CandidateDrawerLoader } from "@/components/candidates/candidate-drawer-loader";
 import { FilterBar } from "@/components/filters/filter-bar";
 import {
@@ -16,7 +17,10 @@ export default async function PipelinePage({
   const t = await getTranslations("Pipeline");
   const scope = await getScope();
 
-  const jobFilter = (jobsParam ?? "").split(",").filter(Boolean);
+  // Ids come from a shared URL, so drop anything that is not a uuid.
+  const jobFilter = (jobsParam ?? "")
+    .split(",")
+    .filter((id) => z.uuid().safeParse(id).success);
   const term = q?.trim().toLowerCase();
 
   const [{ data: jobs }, { data: candidates }, { data: apps }] =
