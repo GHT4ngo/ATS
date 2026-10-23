@@ -37,6 +37,12 @@ export async function getOptionalScope() {
       supabase.from("candidates").select("*").eq("organization_id", orgId),
     applications: () =>
       supabase.from("applications").select("*").eq("organization_id", orgId),
+    /** The newest assessment per candidate and job. */
+    latestAssessments: () =>
+      supabase
+        .from("latest_cv_assessments")
+        .select("*")
+        .eq("organization_id", orgId),
     insertJob: (row: Omit<Tables["jobs"]["Insert"], "organization_id">) =>
       supabase.from("jobs").insert({ ...row, organization_id: orgId }),
     insertCandidate: (

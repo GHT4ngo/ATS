@@ -49,7 +49,16 @@
     "duplicateEmail": "A candidate with this email already exists.",
     "cvTooLarge": "The CV is larger than 4 MB.",
     "cvNotPdf": "The CV must be a PDF file.",
-    "cvUploadFailed": "The candidate was saved, but the CV could not be uploaded."
+    "cvUploadFailed": "The candidate was saved, but the CV could not be uploaded.",
+    "cvMissing": "The candidate has no CV.",
+    "cvNoText": "No text could be read from the CV. It may be a scanned image.",
+    "cvTooLong": "The CV is too long to assess.",
+    "aiUnavailable": "AI assessment is not configured.",
+    "aiRefused": "The AI declined to assess this CV.",
+    "aiFailed": "The assessment failed. Try again.",
+    "cvDownloadFailed": "The CV could not be read from storage. Try again.",
+    "cvUnreadable": "The CV file could not be opened. It may be damaged or password protected.",
+    "assessmentRunning": "An assessment is already running for this candidate and job."
   },
   "Auth": {
     "loginTitle": "Sign in",
@@ -219,7 +228,8 @@
       "moved": "{job}: {from} to {to}",
       "created": "Candidate created",
       "updated": "Profile updated",
-      "notes": "Notes updated"
+      "notes": "Notes updated",
+      "assessed": "{job}: AI assessment, score {score}"
     },
     "daysShort": "{days}d",
     "linkedin": "LinkedIn",
@@ -227,5 +237,25 @@
   },
   "Pipeline": {
     "heading": "Pipeline"
+  },
+  "Assessment": {
+    "heading": "AI assessment",
+    "run": "Assess CV",
+    "rerun": "Assess again",
+    "running": "Assessing...",
+    "done": "Assessment ready",
+    "needsCv": "Upload a CV to assess the candidate.",
+    "strengths": "Strengths",
+    "gaps": "Gaps",
+    "skills": "Skill match",
+    "questions": "Suggested interview questions",
+    "match": {
+      "strong": "Strong",
+      "partial": "Partial",
+      "missing": "Missing"
+    },
+    "scoreLabel": "AI score {score} of 100",
+    "meta": "{date} · {model}",
+    "disclaimer": "The AI assessment is decision support, not a decision. It can be wrong and may reflect bias, so read the CV yourself and let a person make every decision. The CV text is sent to Anthropic for processing."
   }
 }
