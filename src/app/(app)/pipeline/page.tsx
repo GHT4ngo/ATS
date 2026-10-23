@@ -22,6 +22,11 @@ export default async function PipelinePage({
     .split(",")
     .filter((id) => z.uuid().safeParse(id).success);
   const term = q?.trim().toLowerCase();
+  const latestScores = () =>
+    scope.supabase
+      .from("latest_cv_assessments")
+      .select("candidate_id, job_id, score")
+      .eq("organization_id", scope.orgId);
 
   const [
     { data: jobs },
@@ -34,13 +39,11 @@ export default async function PipelinePage({
     jobFilter.length
       ? scope.applications().in("job_id", jobFilter)
       : scope.applications(),
-    scope.assessments().order("created_at", { ascending: false }),
+    jobFilter.length ? latestScores().in("job_id", jobFilter) : latestScores(),
   ]);
-  const score = new Map<string, number>();
-  for (const a of assessments ?? []) {
-    const key = `${a.candidate_id}:${a.job_id}`;
-    if (!score.has(key)) score.set(key, a.score);
-  }
+  const score = new Map(
+    (assessments ?? []).map((a) => [`${a.candidate_id}:${a.job_id}`, a.score]),
+  );
 
   const jobTitle = new Map((jobs ?? []).map((j) => [j.id, j.title]));
   const byId = new Map((candidates ?? []).map((c) => [c.id, c]));

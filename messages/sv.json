@@ -55,7 +55,10 @@
     "cvTooLong": "CV:t är för långt för att bedömas.",
     "aiUnavailable": "AI-bedömning är inte konfigurerad.",
     "aiRefused": "AI:n avböjde att bedöma CV:t.",
-    "aiFailed": "Bedömningen misslyckades. Försök igen."
+    "aiFailed": "Bedömningen misslyckades. Försök igen.",
+    "cvDownloadFailed": "CV:t kunde inte hämtas. Försök igen.",
+    "cvUnreadable": "CV-filen kunde inte öppnas. Den kan vara skadad eller lösenordsskyddad.",
+    "assessmentRunning": "En bedömning pågår redan för den här kandidaten och tjänsten."
   },
   "Auth": {
     "loginTitle": "Logga in",

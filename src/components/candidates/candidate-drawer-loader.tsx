@@ -24,15 +24,9 @@ export async function CandidateDrawerLoader({
     await Promise.all([
       scope.applications().eq("candidate_id", candidate.id),
       scope.jobs().order("title"),
-      scope
-        .assessments()
-        .eq("candidate_id", candidate.id)
-        .order("created_at", { ascending: false }),
+      scope.latestAssessments().eq("candidate_id", candidate.id),
     ]);
-  // Newest first, so the first row per job is the latest assessment.
-  const latest = new Map<string, NonNullable<typeof assessments>[number]>();
-  for (const a of assessments ?? [])
-    if (!latest.has(a.job_id)) latest.set(a.job_id, a);
+  const latest = new Map((assessments ?? []).map((a) => [a.job_id, a]));
   const appIds = (apps ?? []).map((a) => a.id);
   const jobTitle = new Map((jobs ?? []).map((j) => [j.id, j.title]));
 
@@ -95,18 +89,19 @@ export async function CandidateDrawerLoader({
   );
 }
 
-function toView(
-  row: Database["public"]["Tables"]["cv_assessments"]["Row"] | undefined,
-): AssessmentView | null {
-  if (!row) return null;
+type LatestRow = Database["public"]["Views"]["latest_cv_assessments"]["Row"];
+
+// View columns are typed as nullable, but each one comes from a not null column.
+function toView(row: LatestRow | undefined): AssessmentView | null {
+  if (!row || row.score === null || row.created_at === null) return null;
   return {
     score: row.score,
-    summary: row.summary,
-    strengths: row.strengths as string[],
-    gaps: row.gaps as string[],
-    skillMatches: row.skill_matches as AssessmentView["skillMatches"],
-    interviewQuestions: row.interview_questions as string[],
-    model: row.model,
+    summary: row.summary ?? "",
+    strengths: (row.strengths ?? []) as string[],
+    gaps: (row.gaps ?? []) as string[],
+    skillMatches: (row.skill_matches ?? []) as AssessmentView["skillMatches"],
+    interviewQuestions: (row.interview_questions ?? []) as string[],
+    model: row.model ?? "",
     createdAt: row.created_at,
   };
 }

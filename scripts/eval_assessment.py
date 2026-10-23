@@ -62,13 +62,17 @@ def cv_text(name: str) -> str:
     return "\n".join(p.extract_text() for p in PdfReader(io.BytesIO(pdf)).pages).strip()
 
 
+def neutralise_tags(text: str) -> str:
+    return re.sub(r"<\s*/?\s*(cv|job|language)\b[^>]*>", "", text, flags=re.IGNORECASE)
+
+
 def user_prompt(cv: str) -> str:
     job = JOBS["frontend"]
     values = {
         "language": "Swedish",
-        "title": job["title"],
-        "description": job["description"],
-        "cv": cv,
+        "title": neutralise_tags(job["title"]),
+        "description": neutralise_tags(job["description"]),
+        "cv": neutralise_tags(cv),
     }
     # One pass, like buildUserPrompt in src/lib/ai/prompt.ts
     return re.sub(r"\{(language|title|description|cv)\}", lambda m: values[m[1]], PROMPT["user"])

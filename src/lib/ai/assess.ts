@@ -11,7 +11,12 @@ export const ASSESSMENT_MODEL = "claude-sonnet-5-5";
 export const MAX_CV_CHARS = 50_000;
 
 export type AssessmentErrorCode =
-  "cvNoText" | "cvTooLong" | "aiUnavailable" | "aiRefused" | "aiFailed";
+  | "cvNoText"
+  | "cvTooLong"
+  | "cvUnreadable"
+  | "aiUnavailable"
+  | "aiRefused"
+  | "aiFailed";
 
 export class AssessmentError extends Error {
   constructor(public code: AssessmentErrorCode) {
@@ -20,15 +25,25 @@ export class AssessmentError extends Error {
 }
 
 export async function pdfToText(pdf: ArrayBuffer): Promise<string> {
-  const doc = await getDocumentProxy(new Uint8Array(pdf));
-  const { text } = await extractText(doc, { mergePages: true });
-  const clean = text
-    .replace(/[ \t]+/g, " ")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
-  if (clean.length < 50) throw new AssessmentError("cvNoText");
-  if (clean.length > MAX_CV_CHARS) throw new AssessmentError("cvTooLong");
-  return clean;
+  let doc;
+  try {
+    doc = await getDocumentProxy(new Uint8Array(pdf));
+  } catch {
+    // Corrupt or password protected: retrying will not help.
+    throw new AssessmentError("cvUnreadable");
+  }
+  try {
+    const { text } = await extractText(doc, { mergePages: true });
+    const clean = text
+      .replace(/[ \t]+/g, " ")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+    if (clean.length < 50) throw new AssessmentError("cvNoText");
+    if (clean.length > MAX_CV_CHARS) throw new AssessmentError("cvTooLong");
+    return clean;
+  } finally {
+    await doc.loadingTask.destroy();
+  }
 }
 
 /** A fixed result for e2e tests and local work without an API key. */
@@ -72,7 +87,9 @@ export async function assessCv(input: {
     });
   } catch (error) {
     if (error instanceof Anthropic.APIError) {
-      console.error("CV assessment failed", error.status, error.message);
+      console.error("CV assessment API error", error.status, error.message);
+    } else {
+      console.error("CV assessment failed", error);
     }
     throw new AssessmentError("aiFailed");
   }
@@ -81,6 +98,7 @@ export async function assessCv(input: {
     throw new AssessmentError("aiRefused");
   const result = response.parsed_output;
   if (response.stop_reason !== "end_turn" || !result) {
+    console.error("CV assessment unusable", response.stop_reason);
     throw new AssessmentError("aiFailed");
   }
   return { result, model: response.model };

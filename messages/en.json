@@ -55,7 +55,10 @@
     "cvTooLong": "The CV is too long to assess.",
     "aiUnavailable": "AI assessment is not configured.",
     "aiRefused": "The AI declined to assess this CV.",
-    "aiFailed": "The assessment failed. Try again."
+    "aiFailed": "The assessment failed. Try again.",
+    "cvDownloadFailed": "The CV could not be read from storage. Try again.",
+    "cvUnreadable": "The CV file could not be opened. It may be damaged or password protected.",
+    "assessmentRunning": "An assessment is already running for this candidate and job."
   },
   "Auth": {
     "loginTitle": "Sign in",

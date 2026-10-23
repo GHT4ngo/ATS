@@ -89,6 +89,18 @@ test("a recruiter assesses a CV and sees the score on the card", async ({
     drawer.getByRole("button", { name: "Bedöm igen" }),
   ).toBeVisible();
 
+  // A deliberate rerun right away runs again (no silent cooldown)
+  await drawer.getByRole("button", { name: "Bedöm igen" }).click();
+  await expect
+    .poll(async () => {
+      const { count } = await admin
+        .from("cv_assessments")
+        .select("id", { count: "exact", head: true })
+        .eq("candidate_id", candidateId);
+      return count;
+    })
+    .toBe(2);
+
   await page.keyboard.press("Escape");
   await expect(
     page
@@ -100,5 +112,13 @@ test("a recruiter assesses a CV and sees the score on the card", async ({
     .from("cv_assessments")
     .select("score, created_by")
     .eq("candidate_id", candidateId);
-  expect(data).toEqual([{ score: 72, created_by: userId }]);
+  expect(data).toEqual([
+    { score: 72, created_by: userId },
+    { score: 72, created_by: userId },
+  ]);
+  const { count: locks } = await admin
+    .from("cv_assessment_locks")
+    .select("candidate_id", { count: "exact", head: true })
+    .eq("candidate_id", candidateId);
+  expect(locks).toBe(0);
 });

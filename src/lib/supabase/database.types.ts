@@ -107,6 +107,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"cv_assessment_locks": {
+                  Row: {
+                    "candidate_id": string,"job_id": string,"locked_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "candidate_id": string,"job_id": string,"locked_at"?: string
+                  }
+                  Update: {
+                    "candidate_id"?: string,"job_id"?: string,"locked_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "cv_assessment_locks_candidate_id_fkey"
+      columns: ["candidate_id"]
+isOneToOne: false
+      referencedRelation: "candidates"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "cv_assessment_locks_job_id_fkey"
+      columns: ["job_id"]
+isOneToOne: false
+      referencedRelation: "jobs"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"cv_assessments": {
                   Row: {
                     "candidate_id": string,"created_at": string,"created_by": string | null,"gaps": NonNullable<Json>,"id": string,"interview_questions": NonNullable<Json>,"job_id": string,"model": string,"organization_id": string,"score": number,"skill_matches": NonNullable<Json>,"strengths": NonNullable<Json>,"summary": string
@@ -208,10 +234,45 @@ isOneToOne: false
                 }
           }
           Views: {
-            [_ in never]: never
+            "latest_cv_assessments": {
+                  Row: {
+                    "candidate_id": string | null,"created_at": string | null,"created_by": string | null,"gaps": Json | null,"id": string | null,"interview_questions": Json | null,"job_id": string | null,"model": string | null,"organization_id": string | null,"score": number | null,"skill_matches": Json | null,"strengths": Json | null,"summary": string | null
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    {
+      foreignKeyName: "cv_assessments_candidate_id_organization_id_fkey"
+      columns: ["candidate_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "candidates"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "cv_assessments_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "cv_assessments_job_id_organization_id_fkey"
+      columns: ["job_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "jobs"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "cv_assessments_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                }
           }
           Functions: {
-            "current_org_id":
+            "claim_cv_assessment":
+{ Args: { "p_candidate": string,"p_job": string,"p_stale_seconds": number }; Returns: boolean
+                           },
+"current_org_id":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
 "is_admin":
