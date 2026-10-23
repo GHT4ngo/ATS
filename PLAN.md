@@ -1,6 +1,6 @@
 # PLAN: Mini ATS
 
-> **Status:** Phase 4 (core customer features) built and reviewed on `feat/core-features`, PR pending. Next: Phase 5.
+> **Status:** Phase 4 (core customer features) done, reviewed and merged (PR #3). Next: Phase 5.
 > **Deadline:** Friday 30 October 2026. **Live URL:** https://ats.t4ngo.com
 > Usage budget and model routing: [BUDGET.md](./BUDGET.md). Review process: [REVIEW.md](./REVIEW.md).
 
