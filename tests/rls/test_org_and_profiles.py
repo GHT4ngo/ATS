@@ -219,3 +219,61 @@ def test_profiles_cannot_be_inserted_directly(world: World, login):
     with pytest.raises(APIError) as exc:
         login(world.admin).table("profiles").insert({"id": str(uuid.uuid4())}).execute()
     assert exc.value.code == "42501"
+
+
+def test_inactive_user_cannot_update_own_profile(world: World, login, service):
+    login(world.inactive_a).table("profiles").update({"full_name": "x"}).eq(
+        "id", world.inactive_a.id
+    ).execute()
+    row = (
+        service.table("profiles")
+        .select("full_name")
+        .eq("id", world.inactive_a.id)
+        .single()
+        .execute()
+        .data
+    )
+    assert row["full_name"] == "inactive-a"
+
+
+def test_admin_deletes_profile_and_it_is_not_recreated(world: World, login, service):
+    user = service.auth.admin.create_user(
+        {
+            "email": f"rls-deleted-{uuid.uuid4().hex[:8]}@example.com",
+            "password": "rls-test-password-1",
+            "email_confirm": True,
+            "app_metadata": {"role": "admin"},
+        }
+    ).user
+    try:
+        login(world.admin).table("profiles").delete().eq("id", user.id).execute()
+        assert service.table("profiles").select("id").eq("id", user.id).execute().data == []
+        # A later app_metadata change must not bring the old admin role back.
+        service.auth.admin.update_user_by_id(user.id, {"app_metadata": {"note": "x"}})
+        assert service.table("profiles").select("id").eq("id", user.id).execute().data == []
+    finally:
+        service.auth.admin.delete_user(user.id)
+
+
+def test_user_metadata_is_sanitized(world: World, service):
+    user = service.auth.admin.create_user(
+        {
+            "email": f"rls-meta-{uuid.uuid4().hex[:8]}@example.com",
+            "password": "rls-test-password-1",
+            "email_confirm": True,
+            "app_metadata": {"role": "customer", "organization_id": world.org_a.id},
+            "user_metadata": {"full_name": "x" * 300, "locale": "de"},
+        }
+    ).user
+    try:
+        row = (
+            service.table("profiles")
+            .select("full_name, locale")
+            .eq("id", user.id)
+            .single()
+            .execute()
+            .data
+        )
+        assert row == {"full_name": "x" * 200, "locale": "sv"}
+    finally:
+        service.auth.admin.delete_user(user.id)

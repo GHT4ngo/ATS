@@ -4,7 +4,12 @@
 -- Access model:
 --   * admin: internal staff, full access to every organization.
 --   * customer: full access, but only within their own organization.
---   * A deactivated profile (is_active = false) gets no access at all.
+--   * A deactivated profile (is_active = false) can read its own profile row,
+--     so the app can explain why, and nothing else.
+--
+-- Triggers that guard columns skip their checks when auth.uid() is null, which
+-- means the service role (server code and seed scripts) or a direct database
+-- connection.
 
 -- Types -----------------------------------------------------------------------
 
@@ -14,19 +19,6 @@ create type public.employment_type as enum ('full_time', 'part_time', 'contract'
 create type public.application_stage as enum (
   'applied', 'screening', 'interview', 'offer', 'hired', 'rejected'
 );
-
--- Shared trigger functions ----------------------------------------------------
-
-create function public.set_updated_at()
-returns trigger
-language plpgsql
-set search_path = ''
-as $$
-begin
-  new.updated_at = now();
-  return new;
-end;
-$$;
 
 -- Tables ----------------------------------------------------------------------
 
@@ -59,7 +51,7 @@ create table public.jobs (
   location text not null default '' check (char_length(location) <= 200),
   employment_type public.employment_type not null default 'full_time',
   status public.job_status not null default 'open',
-  created_by uuid references public.profiles (id) on delete set null,
+  created_by uuid default auth.uid() references public.profiles (id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   -- Target for the composite foreign key on applications.
@@ -75,11 +67,17 @@ create table public.candidates (
   linkedin_url text check (linkedin_url is null or char_length(linkedin_url) <= 500),
   location text check (location is null or char_length(location) <= 200),
   notes text not null default '' check (char_length(notes) <= 20000),
-  cv_path text check (cv_path is null or char_length(cv_path) <= 500),
-  created_by uuid references public.profiles (id) on delete set null,
+  cv_path text check (char_length(cv_path) <= 500),
+  created_by uuid default auth.uid() references public.profiles (id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  unique (id, organization_id)
+  unique (id, organization_id),
+  -- The CV must live in this candidate's own folder in the cvs bucket, so a
+  -- row can never point server code at another organization's file.
+  constraint cv_path_in_own_folder check (
+    cv_path is null
+    or starts_with(cv_path, organization_id::text || '/' || id::text || '/')
+  )
 );
 
 -- One candidate per email address within an organization.
@@ -134,38 +132,10 @@ create index activity_log_actor_id_idx on public.activity_log (actor_id);
 create index jobs_created_by_idx on public.jobs (created_by);
 create index candidates_created_by_idx on public.candidates (created_by);
 
--- updated_at triggers ---------------------------------------------------------
-
-create trigger organizations_set_updated_at before update on public.organizations
-  for each row execute function public.set_updated_at();
-create trigger profiles_set_updated_at before update on public.profiles
-  for each row execute function public.set_updated_at();
-create trigger jobs_set_updated_at before update on public.jobs
-  for each row execute function public.set_updated_at();
-create trigger candidates_set_updated_at before update on public.candidates
-  for each row execute function public.set_updated_at();
-create trigger applications_set_updated_at before update on public.applications
-  for each row execute function public.set_updated_at();
-
-create function public.set_stage_changed_at()
-returns trigger
-language plpgsql
-set search_path = ''
-as $$
-begin
-  if new.stage is distinct from old.stage then
-    new.stage_changed_at = now();
-  end if;
-  return new;
-end;
-$$;
-
-create trigger applications_set_stage_changed_at before update on public.applications
-  for each row execute function public.set_stage_changed_at();
-
 -- Access helpers --------------------------------------------------------------
 -- Security definer so policies can read profiles without recursing into the
--- profiles policies. Both return false or null for deactivated users.
+-- profiles policies. Both return false or null for deactivated users. Policies
+-- call them as (select ...) so they run once per statement, not once per row.
 
 create function public.is_admin()
 returns boolean
@@ -191,33 +161,126 @@ as $$
   where id = auth.uid() and is_active;
 $$;
 
--- True when the current user may act within the given organization.
-create function public.can_access_org(org uuid)
-returns boolean
-language sql
-stable
+revoke execute on function public.is_admin() from public, anon;
+revoke execute on function public.current_org_id() from public, anon;
+grant execute on function public.is_admin() to authenticated;
+grant execute on function public.current_org_id() to authenticated;
+
+-- Column guards ---------------------------------------------------------------
+
+-- updated_at is always now(); created_at can never be rewritten.
+create function public.set_updated_at()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  new.created_at = old.created_at;
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+create trigger organizations_set_updated_at before update on public.organizations
+  for each row execute function public.set_updated_at();
+create trigger profiles_set_updated_at before update on public.profiles
+  for each row execute function public.set_updated_at();
+create trigger jobs_set_updated_at before update on public.jobs
+  for each row execute function public.set_updated_at();
+create trigger candidates_set_updated_at before update on public.candidates
+  for each row execute function public.set_updated_at();
+create trigger applications_set_updated_at before update on public.applications
+  for each row execute function public.set_updated_at();
+
+-- created_by is always the caller and never changes afterwards.
+create function public.set_created_by()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if tg_op = 'UPDATE' then
+    new.created_by = old.created_by;
+  elsif auth.uid() is not null then
+    new.created_by = auth.uid();
+    new.created_at = now();
+  end if;
+  return new;
+end;
+$$;
+
+create trigger jobs_set_created_by before insert or update on public.jobs
+  for each row execute function public.set_created_by();
+create trigger candidates_set_created_by before insert or update on public.candidates
+  for each row execute function public.set_created_by();
+
+-- stage_changed_at drives "days in stage": it is set by the database, except
+-- for service role writes, so seed data can be backdated.
+create function public.set_stage_changed_at()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if tg_op = 'UPDATE' and new.stage is distinct from old.stage then
+    new.stage_changed_at = now();
+  elsif auth.uid() is not null then
+    if tg_op = 'INSERT' then
+      new.stage_changed_at = now();
+      new.created_at = now();
+    else
+      new.stage_changed_at = old.stage_changed_at;
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+create trigger applications_set_stage_changed_at before insert or update on public.applications
+  for each row execute function public.set_stage_changed_at();
+
+-- Activity entries must reference an entity of the same organization. Log a
+-- deletion before deleting the row.
+create function public.check_activity_entity()
+returns trigger
+language plpgsql
 security definer
 set search_path = ''
 as $$
-  select public.is_admin() or org = public.current_org_id();
+declare
+  found boolean := false;
+begin
+  if new.entity = 'job' then
+    select exists (select 1 from public.jobs j
+      where j.id = new.entity_id and j.organization_id = new.organization_id) into found;
+  elsif new.entity = 'candidate' then
+    select exists (select 1 from public.candidates c
+      where c.id = new.entity_id and c.organization_id = new.organization_id) into found;
+  elsif new.entity = 'application' then
+    select exists (select 1 from public.applications a
+      where a.id = new.entity_id and a.organization_id = new.organization_id) into found;
+  end if;
+  if not found then
+    raise exception 'Activity entity % % not found in organization', new.entity, new.entity_id
+      using errcode = '23503';
+  end if;
+  new.created_at = now();
+  return new;
+end;
 $$;
 
-revoke execute on function public.is_admin() from public, anon;
-revoke execute on function public.current_org_id() from public, anon;
-revoke execute on function public.can_access_org(uuid) from public, anon;
-grant execute on function public.is_admin() to authenticated;
-grant execute on function public.current_org_id() to authenticated;
-grant execute on function public.can_access_org(uuid) to authenticated;
+create trigger activity_log_check_entity before insert on public.activity_log
+  for each row execute function public.check_activity_entity();
 
 -- Profiles: created from auth.users ------------------------------------------
 -- Role and organization come from app_metadata, which only the service role
 -- can set (auth.admin.createUser). user_metadata is user controlled and is
--- used for the display name only.
+-- used for the display name and locale only, sanitized to fit the columns.
 --
 -- GoTrue inserts the user first and writes app_metadata in a later update, so
--- the profile is created the first time app_metadata carries a role. A user
--- without one gets no profile and therefore no access. Later changes to role
--- or organization are made on the profile, which is the source of truth.
+-- the profile is created the moment app_metadata first gains a role. It is
+-- never recreated after that: the profile is the source of truth for role and
+-- organization, and a deleted profile stays deleted.
 
 create function public.handle_new_user()
 returns trigger
@@ -226,14 +289,16 @@ security definer
 set search_path = ''
 as $$
 begin
-  if new.raw_app_meta_data ? 'role' then
+  if new.raw_app_meta_data ? 'role'
+    and (tg_op = 'INSERT' or not coalesce(old.raw_app_meta_data ? 'role', false))
+  then
     insert into public.profiles (id, full_name, role, organization_id, locale)
     values (
       new.id,
-      coalesce(new.raw_user_meta_data ->> 'full_name', ''),
+      left(coalesce(new.raw_user_meta_data ->> 'full_name', ''), 200),
       (new.raw_app_meta_data ->> 'role')::public.user_role,
       (new.raw_app_meta_data ->> 'organization_id')::uuid,
-      coalesce(nullif(new.raw_user_meta_data ->> 'locale', ''), 'sv')
+      case when new.raw_user_meta_data ->> 'locale' = 'en' then 'en' else 'sv' end
     )
     on conflict (id) do nothing;
   end if;
@@ -244,8 +309,8 @@ $$;
 create trigger on_auth_user_created after insert or update of raw_app_meta_data on auth.users
   for each row execute function public.handle_new_user();
 
--- Only admins (or the service role, where auth.uid() is null) may change who
--- a user is: role, organization and active flag.
+-- Only admins (or the service role) may change who a user is: role,
+-- organization and active flag.
 create function public.protect_profile_fields()
 returns trigger
 language plpgsql
@@ -284,7 +349,7 @@ revoke all on all sequences in schema public from anon;
 -- organizations: members read their own, admins manage all.
 create policy "organizations: read own or admin" on public.organizations
   for select to authenticated
-  using ((select public.can_access_org(id)));
+  using ((select public.is_admin()) or id = (select public.current_org_id()));
 create policy "organizations: admin insert" on public.organizations
   for insert to authenticated
   with check ((select public.is_admin()));
@@ -296,17 +361,19 @@ create policy "organizations: admin delete" on public.organizations
   for delete to authenticated
   using ((select public.is_admin()));
 
--- profiles: read yourself and your team; update yourself (guarded by the
--- trigger above); admins manage all. Inserts happen through the auth trigger.
+-- profiles: read yourself and your team; active users update themselves
+-- (guarded by the trigger above); admins manage all. Inserts happen through
+-- the auth trigger.
 create policy "profiles: read self, team or admin" on public.profiles
   for select to authenticated
   using (
     id = (select auth.uid())
-    or (select public.can_access_org(organization_id))
+    or (select public.is_admin())
+    or organization_id = (select public.current_org_id())
   );
 create policy "profiles: update self or admin" on public.profiles
   for update to authenticated
-  using (id = (select auth.uid()) or (select public.is_admin()))
+  using ((id = (select auth.uid()) and is_active) or (select public.is_admin()))
   with check (id = (select auth.uid()) or (select public.is_admin()));
 create policy "profiles: admin delete" on public.profiles
   for delete to authenticated
@@ -315,28 +382,28 @@ create policy "profiles: admin delete" on public.profiles
 -- jobs, candidates, applications: full access within your organization.
 create policy "jobs: organization access" on public.jobs
   for all to authenticated
-  using ((select public.can_access_org(organization_id)))
-  with check ((select public.can_access_org(organization_id)));
+  using ((select public.is_admin()) or organization_id = (select public.current_org_id()))
+  with check ((select public.is_admin()) or organization_id = (select public.current_org_id()));
 
 create policy "candidates: organization access" on public.candidates
   for all to authenticated
-  using ((select public.can_access_org(organization_id)))
-  with check ((select public.can_access_org(organization_id)));
+  using ((select public.is_admin()) or organization_id = (select public.current_org_id()))
+  with check ((select public.is_admin()) or organization_id = (select public.current_org_id()));
 
 create policy "applications: organization access" on public.applications
   for all to authenticated
-  using ((select public.can_access_org(organization_id)))
-  with check ((select public.can_access_org(organization_id)));
+  using ((select public.is_admin()) or organization_id = (select public.current_org_id()))
+  with check ((select public.is_admin()) or organization_id = (select public.current_org_id()));
 
 -- activity_log: append only. Entries are written under your own identity.
 create policy "activity_log: read organization" on public.activity_log
   for select to authenticated
-  using ((select public.can_access_org(organization_id)));
+  using ((select public.is_admin()) or organization_id = (select public.current_org_id()));
 create policy "activity_log: insert as self" on public.activity_log
   for insert to authenticated
   with check (
     actor_id = (select auth.uid())
-    and (select public.can_access_org(organization_id))
+    and ((select public.is_admin()) or organization_id = (select public.current_org_id()))
   );
 
 revoke update, delete, truncate on public.activity_log from authenticated;

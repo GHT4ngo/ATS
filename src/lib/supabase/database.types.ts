@@ -173,10 +173,7 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "can_access_org":
-{ Args: { "org": string }; Returns: boolean
-                           },
-"current_org_id":
+            "current_org_id":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
 "is_admin":

@@ -142,3 +142,58 @@ def test_anon_reads_nothing(world: World, anon):
     for table in TABLES:
         with pytest.raises(APIError):
             anon.table(table).select("id").execute()
+
+
+@pytest.mark.parametrize("table", ["jobs", "candidates"])
+def test_created_by_is_forced_to_caller(table, world: World, login, service):
+    client = login(world.customer_a)
+    row = _payload(table, world.org_a, service) | {"created_by": world.teammate_a.id}
+    created = client.table(table).insert(row).execute().data[0]
+    assert created["created_by"] == world.customer_a.id
+    updated = (
+        client.table(table)
+        .update({"created_by": world.teammate_a.id})
+        .eq("id", created["id"])
+        .execute()
+        .data[0]
+    )
+    assert updated["created_by"] == world.customer_a.id
+    client.table(table).delete().eq("id", created["id"]).execute()
+
+
+def test_stage_changed_at_is_set_by_database(world: World, login, service):
+    client = login(world.customer_a)
+    row = _payload("applications", world.org_a, service) | {"stage_changed_at": "2000-01-01"}
+    created = client.table("applications").insert(row).execute().data[0]
+    assert not created["stage_changed_at"].startswith("2000")
+    same = (
+        client.table("applications")
+        .update({"stage_changed_at": "2000-01-01"})
+        .eq("id", created["id"])
+        .execute()
+        .data[0]
+    )
+    assert same["stage_changed_at"] == created["stage_changed_at"]
+    moved = (
+        client.table("applications")
+        .update({"stage": "screening"})
+        .eq("id", created["id"])
+        .execute()
+        .data[0]
+    )
+    assert moved["stage_changed_at"] > created["stage_changed_at"]
+    client.table("applications").delete().eq("id", created["id"]).execute()
+
+
+def test_cv_path_must_be_in_candidates_own_folder(world: World, login):
+    client = login(world.customer_a)
+    candidate_id = world.org_a.candidate_id
+    with pytest.raises(APIError) as exc:
+        client.table("candidates").update(
+            {"cv_path": f"{world.org_b.id}/{world.org_b.candidate_id}/cv.pdf"}
+        ).eq("id", candidate_id).execute()
+    assert exc.value.code == "23514"
+    own = f"{world.org_a.id}/{candidate_id}/cv.pdf"
+    rows = client.table("candidates").update({"cv_path": own}).eq("id", candidate_id).execute()
+    assert rows.data[0]["cv_path"] == own
+    client.table("candidates").update({"cv_path": None}).eq("id", candidate_id).execute()

@@ -3,7 +3,7 @@
 import uuid
 
 import pytest
-from conftest import World
+from conftest import Org, World
 from postgrest.exceptions import APIError
 from storage3.exceptions import StorageApiError
 
@@ -13,12 +13,12 @@ PDF = b"%PDF-1.4\n%rls test\n"
 # activity_log -----------------------------------------------------------------
 
 
-def _entry(world: World, org_id: str, actor_id: str) -> dict:
+def _entry(org: Org, actor_id: str, entity_id: str | None = None) -> dict:
     return {
-        "organization_id": org_id,
+        "organization_id": org.id,
         "actor_id": actor_id,
         "entity": "candidate",
-        "entity_id": world.org_a.candidate_id,
+        "entity_id": entity_id or org.candidate_id,
         "action": "rls_test",
     }
 
@@ -40,7 +40,7 @@ def test_customer_logs_as_self_in_own_org(world: World, login):
     rows = (
         login(world.customer_a)
         .table("activity_log")
-        .insert(_entry(world, world.org_a.id, world.customer_a.id))
+        .insert(_entry(world.org_a, world.customer_a.id))
         .execute()
         .data
     )
@@ -50,7 +50,7 @@ def test_customer_logs_as_self_in_own_org(world: World, login):
 def test_customer_cannot_log_as_someone_else(world: World, login):
     with pytest.raises(APIError) as exc:
         login(world.customer_a).table("activity_log").insert(
-            _entry(world, world.org_a.id, world.teammate_a.id)
+            _entry(world.org_a, world.teammate_a.id)
         ).execute()
     assert exc.value.code == "42501"
 
@@ -58,7 +58,7 @@ def test_customer_cannot_log_as_someone_else(world: World, login):
 def test_customer_cannot_log_into_other_org(world: World, login):
     with pytest.raises(APIError) as exc:
         login(world.customer_a).table("activity_log").insert(
-            _entry(world, world.org_b.id, world.customer_a.id)
+            _entry(world.org_b, world.customer_a.id)
         ).execute()
     assert exc.value.code == "42501"
 
@@ -67,11 +67,20 @@ def test_admin_logs_into_any_org_as_self(world: World, login):
     rows = (
         login(world.admin)
         .table("activity_log")
-        .insert(_entry(world, world.org_b.id, world.admin.id))
+        .insert(_entry(world.org_b, world.admin.id))
         .execute()
         .data
     )
     assert rows[0]["actor_id"] == world.admin.id
+
+
+@pytest.mark.parametrize("who", ["customer_a", "admin"])
+def test_entry_must_reference_entity_in_same_org(who, world: World, login):
+    with pytest.raises(APIError) as exc:
+        login(getattr(world, who)).table("activity_log").insert(
+            _entry(world.org_a, getattr(world, who).id, world.org_b.candidate_id)
+        ).execute()
+    assert exc.value.code == "23503"
 
 
 @pytest.mark.parametrize("who", ["customer_a", "admin"])
@@ -156,3 +165,37 @@ def test_bucket_rejects_non_pdf(world: World, login):
         login(world.customer_a).storage.from_("cvs").upload(
             _path(world.org_a.id), b"hello", {"content-type": "text/plain"}
         )
+
+
+def test_customer_cannot_move_cv_into_other_org(world: World, login):
+    bucket = login(world.customer_a).storage.from_("cvs")
+    path = _path(world.org_a.id)
+    _upload(login(world.customer_a), path)
+    try:
+        with pytest.raises(StorageApiError):
+            bucket.move(path, _path(world.org_b.id))
+    finally:
+        bucket.remove([path])
+
+
+def test_customer_cannot_overwrite_other_org_cv(world: World, login, service):
+    path = _path(world.org_b.id)
+    _upload(service, path)
+    try:
+        with pytest.raises(StorageApiError):
+            login(world.customer_a).storage.from_("cvs").update(
+                path, b"%PDF-1.4\n%tampered\n", {"content-type": "application/pdf"}
+            )
+        assert service.storage.from_("cvs").download(path) == PDF
+    finally:
+        service.storage.from_("cvs").remove([path])
+
+
+def test_customer_and_admin_update_cv_in_scope(world: World, login):
+    for user, org in [(world.customer_a, world.org_a), (world.admin, world.org_b)]:
+        bucket = login(user).storage.from_("cvs")
+        path, moved = _path(org.id), _path(org.id)
+        _upload(login(user), path)
+        bucket.move(path, moved)
+        assert bucket.download(moved) == PDF
+        bucket.remove([moved])

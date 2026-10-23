@@ -51,13 +51,13 @@ A professional, production quality mini ATS on Supabase that a first customer ca
 | `activity_log` | actor_id, entity, entity_id, action, payload |
 
 * [x] **Stages in v1 (fixed):** Applied, Screening, Interview, Offer, Hired, Rejected
-* [x] **RLS on every table.** Security definer helpers `is_admin()`, `current_org_id()` and `can_access_org()`. Customers have full access only within their own organization; admins can do everything; deactivated users get nothing.
+* [x] **RLS on every table.** Security definer helpers `is_admin()` and `current_org_id()`. Customers have full access only within their own organization; admins can do everything; deactivated users can only read their own profile.
 * [x] **Storage:** a private `cvs` bucket (PDF only, 10 MB) with path policies per organization (`<organization_id>/<candidate_id>/<file>`).
 * [x] **Tests (pytest):** customer A cannot read or write organization B's data, and an admin can (`tests/rls/`).
-* [x] Profiles are created by a trigger from `app_metadata` (role, organization), which only the service role can set; public signup is disabled.
+* [x] Profiles are created by a trigger from `app_metadata` (role, organization), which only the service role can set; public signup is disabled in `supabase/config.toml` (the cloud project needs the same setting).
 * [x] Generated TypeScript types in `src/lib/supabase/database.types.ts` (`pnpm db:types`).
 
-Additions to the table above: `applications` and `activity_log` also carry `organization_id` (composite foreign keys keep the candidate, job and application in the same organization), `applications.stage_changed_at` drives "days in stage", and `jobs` and `candidates` have `created_by`. The activity log is append only.
+Additions to the table above: `applications` and `activity_log` also carry `organization_id` (composite foreign keys keep the candidate, job and application in the same organization), `applications.stage_changed_at` drives "days in stage", and `jobs` and `candidates` have `created_by`. The activity log is append only and must reference an entity in the same organization. Triggers own `created_by`, `created_at`, `updated_at` and `stage_changed_at`, and `cv_path` must point into the candidate's own folder.
 
 ## Phase 3: Auth and admin (Sun 25)
 
