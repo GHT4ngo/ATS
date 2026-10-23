@@ -1,12 +1,117 @@
 {
-  "Home": {
-    "title": "Mini ATS",
-    "tagline": "Följ dina kandidater från ansökan till anställning.",
-    "status": "Under uppbyggnad"
-  },
   "Theme": {
     "light": "Ljust",
     "dark": "Mörkt",
     "system": "System"
+  },
+  "Common": {
+    "appName": "Mini ATS",
+    "save": "Spara",
+    "saving": "Sparar...",
+    "create": "Skapa",
+    "cancel": "Avbryt",
+    "name": "Namn",
+    "email": "E-post",
+    "password": "Lösenord",
+    "role": "Roll",
+    "organization": "Organisation",
+    "status": "Status",
+    "created": "Skapad",
+    "saved": "Sparat",
+    "none": "Ingen",
+    "admin": "Admin",
+    "customer": "Kund",
+    "active": "Aktiv",
+    "inactive": "Inaktiverad",
+    "swedish": "Svenska",
+    "english": "English"
+  },
+  "Errors": {
+    "invalidInput": "Kontrollera fälten och försök igen.",
+    "invalidCredentials": "Fel e-postadress eller lösenord.",
+    "accountInactive": "Kontot har inaktiverats. Kontakta din administratör.",
+    "linkExpired": "Länken har gått ut. Begär en ny.",
+    "passwordTooShort": "Lösenordet måste vara minst 10 tecken.",
+    "passwordMismatch": "Lösenorden matchar inte.",
+    "samePassword": "Välj ett annat lösenord än det nuvarande.",
+    "slugTaken": "Det finns redan en organisation med liknande namn.",
+    "emailTaken": "Det finns redan en användare med den e-postadressen.",
+    "cannotDeactivateSelf": "Du kan inte inaktivera ditt eget konto.",
+    "generic": "Något gick fel. Försök igen."
+  },
+  "Auth": {
+    "loginTitle": "Logga in",
+    "loginDescription": "Logga in för att följa dina kandidater.",
+    "loginButton": "Logga in",
+    "forgotLink": "Glömt lösenordet?",
+    "forgotTitle": "Återställ lösenord",
+    "forgotDescription": "Ange din e-postadress så skickar vi en länk för att välja ett nytt lösenord.",
+    "forgotButton": "Skicka länk",
+    "forgotSent": "Om adressen hör till ett konto är en länk på väg.",
+    "backToLogin": "Tillbaka till inloggning",
+    "resetTitle": "Välj nytt lösenord",
+    "resetDescription": "Använd minst 10 tecken.",
+    "newPassword": "Nytt lösenord",
+    "confirmPassword": "Bekräfta lösenord",
+    "resetButton": "Spara lösenord",
+    "resetDone": "Ditt lösenord har ändrats.",
+    "continue": "Fortsätt till appen"
+  },
+  "Nav": {
+    "dashboard": "Översikt",
+    "team": "Team",
+    "settings": "Inställningar",
+    "organizations": "Organisationer",
+    "users": "Användare",
+    "signOut": "Logga ut",
+    "actAs": "Agera som kund",
+    "actAsNone": "Ingen kund vald",
+    "viewingAs": "Visar som {name}",
+    "exitViewing": "Avsluta"
+  },
+  "Dashboard": {
+    "welcome": "Välkommen, {name}",
+    "pickOrganization": "Välj en kund i växlaren ovan för att se deras rekrytering.",
+    "comingSoon": "Jobb, kandidater och pipeline kommer i nästa fas."
+  },
+  "Team": {
+    "title": "Team",
+    "description": "Alla med åtkomst till {organization}.",
+    "empty": "Det finns inga användare i organisationen ännu.",
+    "pickOrganization": "Välj en kund i växlaren ovan för att se deras team."
+  },
+  "Settings": {
+    "title": "Inställningar",
+    "profileTitle": "Profil",
+    "profileDescription": "Ditt namn och ditt språk.",
+    "fullName": "Fullständigt namn",
+    "language": "Språk",
+    "passwordTitle": "Byt lösenord",
+    "passwordDescription": "Välj ett nytt lösenord för ditt konto."
+  },
+  "Admin": {
+    "organizationsTitle": "Organisationer",
+    "organizationsDescription": "Kunder som använder plattformen.",
+    "newOrganization": "Ny organisation",
+    "organizationName": "Organisationens namn",
+    "slug": "Identifierare",
+    "noOrganizations": "Det finns inga organisationer ännu.",
+    "usersTitle": "Användare",
+    "usersDescription": "Alla konton på plattformen.",
+    "newUser": "Ny användare",
+    "temporaryPassword": "Tillfälligt lösenord",
+    "generatePassword": "Generera",
+    "temporaryPasswordHint": "Dela det säkert med användaren. De kan byta under Inställningar.",
+    "selectOrganization": "Välj organisation",
+    "deactivate": "Inaktivera",
+    "reactivate": "Aktivera igen",
+    "resetPassword": "Återställ lösenord",
+    "resetPasswordFor": "Återställ lösenord för {name}",
+    "resetPasswordDone": "Lösenordet har ändrats. Dela det nya säkert.",
+    "userCreated": "Användaren har skapats.",
+    "organizationCreated": "Organisationen har skapats.",
+    "userDeactivated": "Användaren har inaktiverats.",
+    "userReactivated": "Användaren är aktiv igen.",
+    "adminNoOrganization": "Internt"
   }
 }

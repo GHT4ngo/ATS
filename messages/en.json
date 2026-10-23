@@ -1,12 +1,117 @@
 {
-  "Home": {
-    "title": "Mini ATS",
-    "tagline": "Follow your candidates from application to hire.",
-    "status": "Under construction"
-  },
   "Theme": {
     "light": "Light",
     "dark": "Dark",
     "system": "System"
+  },
+  "Common": {
+    "appName": "Mini ATS",
+    "save": "Save",
+    "saving": "Saving...",
+    "create": "Create",
+    "cancel": "Cancel",
+    "name": "Name",
+    "email": "Email",
+    "password": "Password",
+    "role": "Role",
+    "organization": "Organization",
+    "status": "Status",
+    "created": "Created",
+    "saved": "Saved",
+    "none": "None",
+    "admin": "Admin",
+    "customer": "Customer",
+    "active": "Active",
+    "inactive": "Deactivated",
+    "swedish": "Svenska",
+    "english": "English"
+  },
+  "Errors": {
+    "invalidInput": "Check the fields and try again.",
+    "invalidCredentials": "Wrong email or password.",
+    "accountInactive": "This account has been deactivated. Contact your administrator.",
+    "linkExpired": "The link has expired. Request a new one.",
+    "passwordTooShort": "The password must be at least 10 characters.",
+    "passwordMismatch": "The passwords do not match.",
+    "samePassword": "Choose a password different from the current one.",
+    "slugTaken": "An organization with a similar name already exists.",
+    "emailTaken": "A user with this email already exists.",
+    "cannotDeactivateSelf": "You cannot deactivate your own account.",
+    "generic": "Something went wrong. Try again."
+  },
+  "Auth": {
+    "loginTitle": "Sign in",
+    "loginDescription": "Sign in to follow your candidates.",
+    "loginButton": "Sign in",
+    "forgotLink": "Forgot your password?",
+    "forgotTitle": "Reset your password",
+    "forgotDescription": "Enter your email and we will send you a link to choose a new password.",
+    "forgotButton": "Send link",
+    "forgotSent": "If the address belongs to an account, a link is on its way.",
+    "backToLogin": "Back to sign in",
+    "resetTitle": "Choose a new password",
+    "resetDescription": "Use at least 10 characters.",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "resetButton": "Save password",
+    "resetDone": "Your password has been changed.",
+    "continue": "Continue to the app"
+  },
+  "Nav": {
+    "dashboard": "Dashboard",
+    "team": "Team",
+    "settings": "Settings",
+    "organizations": "Organizations",
+    "users": "Users",
+    "signOut": "Sign out",
+    "actAs": "Act as customer",
+    "actAsNone": "No customer selected",
+    "viewingAs": "Viewing as {name}",
+    "exitViewing": "Exit"
+  },
+  "Dashboard": {
+    "welcome": "Welcome, {name}",
+    "pickOrganization": "Choose a customer in the switcher above to see their recruitment.",
+    "comingSoon": "Jobs, candidates and the pipeline arrive in the next phase."
+  },
+  "Team": {
+    "title": "Team",
+    "description": "Everyone with access to {organization}.",
+    "empty": "No users in this organization yet.",
+    "pickOrganization": "Choose a customer in the switcher above to see their team."
+  },
+  "Settings": {
+    "title": "Settings",
+    "profileTitle": "Profile",
+    "profileDescription": "Your name and language.",
+    "fullName": "Full name",
+    "language": "Language",
+    "passwordTitle": "Change password",
+    "passwordDescription": "Choose a new password for your account."
+  },
+  "Admin": {
+    "organizationsTitle": "Organizations",
+    "organizationsDescription": "Customers using the platform.",
+    "newOrganization": "New organization",
+    "organizationName": "Organization name",
+    "slug": "Identifier",
+    "noOrganizations": "No organizations yet.",
+    "usersTitle": "Users",
+    "usersDescription": "Every account on the platform.",
+    "newUser": "New user",
+    "temporaryPassword": "Temporary password",
+    "generatePassword": "Generate",
+    "temporaryPasswordHint": "Share it with the user securely. They can change it under Settings.",
+    "selectOrganization": "Select organization",
+    "deactivate": "Deactivate",
+    "reactivate": "Reactivate",
+    "resetPassword": "Reset password",
+    "resetPasswordFor": "Reset password for {name}",
+    "resetPasswordDone": "The password has been changed. Share the new one securely.",
+    "userCreated": "User created.",
+    "organizationCreated": "Organization created.",
+    "userDeactivated": "User deactivated.",
+    "userReactivated": "User reactivated.",
+    "adminNoOrganization": "Internal"
   }
 }
