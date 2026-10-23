@@ -79,7 +79,11 @@
   "Dashboard": {
     "welcome": "Welcome, {name}",
     "pickOrganization": "Choose a customer in the switcher above to see their recruitment.",
-    "comingSoon": "Jobs, candidates and the pipeline arrive in the next phase."
+    "comingSoon": "Jobs, candidates and the pipeline arrive in the next phase.",
+    "openJobs": "Open jobs",
+    "activeCandidates": "Active candidates",
+    "hiresThisMonth": "Hires this month",
+    "funnel": "Pipeline funnel"
   },
   "Team": {
     "title": "Team",
@@ -191,6 +195,10 @@
       "created": "Candidate created",
       "updated": "Profile updated",
       "notes": "Notes updated"
-    }
+    },
+    "daysShort": "{days}d"
+  },
+  "Pipeline": {
+    "heading": "Pipeline"
   }
 }

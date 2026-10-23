@@ -79,7 +79,11 @@
   "Dashboard": {
     "welcome": "Välkommen, {name}",
     "pickOrganization": "Välj en kund i växlaren ovan för att se deras rekrytering.",
-    "comingSoon": "Jobb, kandidater och pipeline kommer i nästa fas."
+    "comingSoon": "Jobb, kandidater och pipeline kommer i nästa fas.",
+    "openJobs": "Öppna tjänster",
+    "activeCandidates": "Aktiva kandidater",
+    "hiresThisMonth": "Anställda denna månad",
+    "funnel": "Pipelinetratt"
   },
   "Team": {
     "title": "Team",
@@ -191,6 +195,10 @@
       "created": "Kandidat skapad",
       "updated": "Profilen uppdaterades",
       "notes": "Anteckningarna uppdaterades"
-    }
+    },
+    "daysShort": "{days} d"
+  },
+  "Pipeline": {
+    "heading": "Pipeline"
   }
 }
