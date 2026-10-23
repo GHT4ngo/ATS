@@ -7,7 +7,7 @@ import type { ActionState } from "@/lib/auth/schemas";
 import { candidateSchema, noteSchema } from "@/lib/data/schemas";
 import { getScope } from "@/lib/data/scope";
 
-export const MAX_CV_BYTES = 4 * 1024 * 1024;
+const MAX_CV_BYTES = 4 * 1024 * 1024;
 
 function parse(formData: FormData) {
   const fields = Object.fromEntries(
