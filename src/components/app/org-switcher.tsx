@@ -38,7 +38,7 @@ export function OrgSwitcher({
         )
       }
     >
-      <SelectTrigger aria-label={t("actAs")} className="w-40 sm:w-52">
+      <SelectTrigger aria-label={t("actAs")} className="w-full">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>

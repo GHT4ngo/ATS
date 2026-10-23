@@ -25,3 +25,17 @@ export async function updateProfile(
   revalidatePath("/", "layout");
   return { ok: true };
 }
+
+export async function setLanguage(locale: string): Promise<void> {
+  const { profile } = await requireUser();
+  const parsed = profileSchema.shape.locale.safeParse(locale);
+  if (!parsed.success) return;
+
+  const supabase = await createClient();
+  await supabase
+    .from("profiles")
+    .update({ locale: parsed.data })
+    .eq("id", profile.id);
+  await setLocaleCookie(parsed.data);
+  revalidatePath("/", "layout");
+}
