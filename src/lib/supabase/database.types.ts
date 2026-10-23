@@ -107,6 +107,44 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"cv_assessments": {
+                  Row: {
+                    "candidate_id": string,"created_at": string,"created_by": string | null,"gaps": NonNullable<Json>,"id": string,"interview_questions": NonNullable<Json>,"job_id": string,"model": string,"organization_id": string,"score": number,"skill_matches": NonNullable<Json>,"strengths": NonNullable<Json>,"summary": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "candidate_id": string,"created_at"?: string,"created_by"?: string | null,"gaps"?: NonNullable<Json>,"id"?: string,"interview_questions"?: NonNullable<Json>,"job_id": string,"model": string,"organization_id": string,"score": number,"skill_matches"?: NonNullable<Json>,"strengths"?: NonNullable<Json>,"summary": string
+                  }
+                  Update: {
+                    "candidate_id"?: string,"created_at"?: string,"created_by"?: string | null,"gaps"?: NonNullable<Json>,"id"?: string,"interview_questions"?: NonNullable<Json>,"job_id"?: string,"model"?: string,"organization_id"?: string,"score"?: number,"skill_matches"?: NonNullable<Json>,"strengths"?: NonNullable<Json>,"summary"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "cv_assessments_candidate_id_organization_id_fkey"
+      columns: ["candidate_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "candidates"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "cv_assessments_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "cv_assessments_job_id_organization_id_fkey"
+      columns: ["job_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "jobs"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "cv_assessments_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"jobs": {
                   Row: {
                     "created_at": string,"created_by": string | null,"description": string,"employment_type": Database["public"]['Enums']["employment_type"],"id": string,"location": string,"organization_id": string,"status": Database["public"]['Enums']["job_status"],"title": string,"updated_at": string
