@@ -1,6 +1,6 @@
 # PLAN: Mini ATS
 
-> **Status:** Phase 1 in progress: scaffold and local Supabase done; cloud project, Vercel and DNS remain.
+> **Status:** Phase 1 done. Next: Phase 2 (data model and RLS).
 > **Deadline:** Friday 30 October 2026. **Live URL:** https://ats.t4ngo.com
 > Usage budget and model routing: [BUDGET.md](./BUDGET.md). Review process: [REVIEW.md](./REVIEW.md).
 
@@ -36,8 +36,8 @@ A professional, production quality mini ATS on Supabase that a first customer ca
 * [x] Supabase CLI as a dev dependency: `supabase init` and `supabase start` (local Docker)
 * [x] Libraries: Supabase SSR, next intl, next themes, dnd kit, zod, react hook form, sonner, lucide, TanStack Table
 * [x] Quality: Prettier, ESLint, Vitest, Playwright; ruff and pytest in the venv
-* [ ] Create the Supabase cloud project and the Vercel project, and point the DNS at Vercel
-* [ ] Get a first page live on ats.t4ngo.com on day one
+* [x] Create the Supabase cloud project and the Vercel project, and point the DNS at Vercel
+* [x] Get a first page live on ats.t4ngo.com on day one
 
 ## Phase 2: Data model and security (Sat 24)
 
