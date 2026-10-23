@@ -37,7 +37,11 @@
     "slugTaken": "Det finns redan en organisation med liknande namn.",
     "emailTaken": "Det finns redan en användare med den e-postadressen.",
     "cannotDeactivateSelf": "Du kan inte inaktivera ditt eget konto.",
-    "generic": "Något gick fel. Försök igen."
+    "generic": "Något gick fel. Försök igen.",
+    "duplicateEmail": "Det finns redan en kandidat med den e-postadressen.",
+    "cvTooLarge": "CV:t är större än 4 MB.",
+    "cvNotPdf": "CV:t måste vara en PDF-fil.",
+    "cvUploadFailed": "Kandidaten sparades, men CV:t kunde inte laddas upp."
   },
   "Auth": {
     "loginTitle": "Logga in",
@@ -148,6 +152,45 @@
       "open": "Öppen",
       "paused": "Pausad",
       "closed": "Stängd"
+    }
+  },
+  "Filters": {
+    "search": "Sök kandidater",
+    "jobs": "Filtrera på tjänst",
+    "clear": "Rensa"
+  },
+  "Candidates": {
+    "heading": "Kandidater",
+    "new": "Ny kandidat",
+    "created": "Kandidaten skapades",
+    "updated": "Kandidaten uppdaterades",
+    "save": "Spara kandidat",
+    "phone": "Telefon",
+    "location": "Plats",
+    "jobs": "Tjänster",
+    "noJobs": "Skapa en tjänst först för att koppla kandidater till den.",
+    "cv": "CV (PDF)",
+    "replaceCv": "Ersätt CV (PDF)",
+    "cvHint": "PDF, högst 4 MB.",
+    "empty": "Inga kandidater hittades.",
+    "noContact": "Inga kontaktuppgifter",
+    "openCv": "Öppna CV",
+    "cvMissing": "CV:t kunde inte öppnas.",
+    "editProfile": "Redigera profil",
+    "cancelEdit": "Avbryt redigering",
+    "applications": "Ansökningar",
+    "noApplications": "Inte kopplad till någon tjänst.",
+    "daysInStage": "{days, plural, one {# dag} other {# dagar}} i steget",
+    "notes": "Anteckningar",
+    "saveNotes": "Spara anteckningar",
+    "notesSaved": "Anteckningarna sparades",
+    "notesFailed": "Anteckningarna kunde inte sparas.",
+    "timeline": "Aktivitet",
+    "activity": {
+      "moved": "{job}: {from} till {to}",
+      "created": "Kandidat skapad",
+      "updated": "Profilen uppdaterades",
+      "notes": "Anteckningarna uppdaterades"
     }
   }
 }

@@ -46,7 +46,6 @@ export const candidateSchema = z.object({
       .refine((v) => /^https?:\/\/([a-z0-9-]+\.)*linkedin\.com\//i.test(v))
       .nullable(),
   ),
-  notes: z.string().trim().max(20000).default(""),
   jobIds: z.array(z.uuid()).default([]),
 });
 
