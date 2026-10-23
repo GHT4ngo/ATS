@@ -23,14 +23,24 @@ export default async function PipelinePage({
     .filter((id) => z.uuid().safeParse(id).success);
   const term = q?.trim().toLowerCase();
 
-  const [{ data: jobs }, { data: candidates }, { data: apps }] =
-    await Promise.all([
-      scope.jobs().order("title"),
-      scope.candidates(),
-      jobFilter.length
-        ? scope.applications().in("job_id", jobFilter)
-        : scope.applications(),
-    ]);
+  const [
+    { data: jobs },
+    { data: candidates },
+    { data: apps },
+    { data: assessments },
+  ] = await Promise.all([
+    scope.jobs().order("title"),
+    scope.candidates(),
+    jobFilter.length
+      ? scope.applications().in("job_id", jobFilter)
+      : scope.applications(),
+    scope.assessments().order("created_at", { ascending: false }),
+  ]);
+  const score = new Map<string, number>();
+  for (const a of assessments ?? []) {
+    const key = `${a.candidate_id}:${a.job_id}`;
+    if (!score.has(key)) score.set(key, a.score);
+  }
 
   const jobTitle = new Map((jobs ?? []).map((j) => [j.id, j.title]));
   const byId = new Map((candidates ?? []).map((c) => [c.id, c]));
@@ -48,6 +58,7 @@ export default async function PipelinePage({
         stage: a.stage,
         position: a.position,
         stageChangedAt: a.stage_changed_at,
+        score: score.get(`${a.candidate_id}:${a.job_id}`) ?? null,
         linkedinUrl: cand.linkedin_url,
       },
     ];

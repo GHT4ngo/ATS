@@ -5,6 +5,10 @@ import { useFormatter, useTranslations } from "next-intl";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { getCvUrl, saveNotes } from "@/app/actions/candidates";
+import {
+  AssessmentPanel,
+  type AssessmentView,
+} from "@/components/assessments/assessment-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +31,7 @@ export type DrawerApplication = {
   jobTitle: string;
   stage: string;
   stageChangedAt: string;
+  assessment: AssessmentView | null;
 };
 
 export type DrawerActivity = {
@@ -51,6 +56,7 @@ export function CandidateDrawer({
   activity: DrawerActivity[];
 }) {
   const t = useTranslations("Candidates");
+  const ai = useTranslations("Assessment");
   const s = useTranslations("Stages");
   const f = useFormatter();
   const router = useRouter();
@@ -86,6 +92,12 @@ export function CandidateDrawer({
         to: s(String(p.to)),
       });
     }
+    if (a.action === "assessed") {
+      return t("activity.assessed", {
+        job: String(p.job ?? ""),
+        score: Number(p.score),
+      });
+    }
     if (a.action === "created") return t("activity.created");
     if (a.action === "updated") return t("activity.updated");
     if (a.action === "notes") return t("activity.notes");
@@ -109,6 +121,7 @@ export function CandidateDrawer({
             <Button
               variant="outline"
               size="sm"
+              nativeButton={false}
               render={
                 <a
                   href={candidate.linkedin_url}
@@ -173,6 +186,27 @@ export function CandidateDrawer({
             <p className="text-muted-foreground">{t("noApplications")}</p>
           )}
         </section>
+
+        {applications.length > 0 && (
+          <>
+            <Separator />
+            <section className="grid gap-2">
+              <h3 className="font-medium">{ai("heading")}</h3>
+              <p className="text-muted-foreground text-xs">
+                {ai("disclaimer")}
+              </p>
+              {applications.map((a) => (
+                <AssessmentPanel
+                  key={a.id}
+                  applicationId={a.id}
+                  jobTitle={a.jobTitle}
+                  hasCv={candidate.hasCv}
+                  assessment={a.assessment}
+                />
+              ))}
+            </section>
+          </>
+        )}
 
         <Separator />
         <section className="grid gap-2">

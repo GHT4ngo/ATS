@@ -27,6 +27,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { toast } from "sonner";
 import { moveApplication } from "@/app/actions/pipeline";
+import { ScoreBadge } from "@/components/assessments/score-badge";
 import { Badge } from "@/components/ui/badge";
 import { STAGES, type Stage } from "@/lib/data/schemas";
 import { cn } from "@/lib/utils";
@@ -39,6 +40,7 @@ export type BoardCard = {
   stage: Stage;
   position: number;
   stageChangedAt: string;
+  score: number | null;
   linkedinUrl: string | null;
 };
 
@@ -66,6 +68,7 @@ function CardBody({
   drawerHref?: string;
 }) {
   const t = useTranslations("Candidates");
+  const ai = useTranslations("Assessment");
   return (
     <>
       <div className="bg-muted text-muted-foreground flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-medium">
@@ -94,6 +97,12 @@ function CardBody({
           >
             <span className="truncate">{card.jobTitle}</span>
           </Badge>
+          {card.score !== null && (
+            <ScoreBadge
+              score={card.score}
+              label={ai("scoreLabel", { score: card.score })}
+            />
+          )}
           <span className="text-muted-foreground text-xs">
             {t("daysShort", { days: daysSince(card.stageChangedAt) })}
           </span>

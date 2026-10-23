@@ -1,6 +1,6 @@
 # PLAN: Mini ATS
 
-> **Status:** Phase 4 (core customer features) merged (PR #3). Phase 5 (polish) merged (PR #4). Phase 6 tests, CI and seed script done on `feat/ship-v1` (PR #5); production seeded on 2026-10-23; v1 delivery pending.
+> **Status:** Phase 4 (core customer features) merged (PR #3). Phase 5 (polish) merged (PR #4). Phase 6 merged (PR #5), production seeded on 2026-10-23; v1 delivery pending. Phase 7 (AI CV assessment) in progress on `feat/ai-assessment`.
 > **Deadline:** Friday 30 October 2026. **Live URL:** https://ats.t4ngo.com
 > Usage budget and model routing: [BUDGET.md](./BUDGET.md). Review process: [REVIEW.md](./REVIEW.md).
 
@@ -95,12 +95,12 @@ Additions to the table above: `applications` and `activity_log` also carry `orga
 
 ## Phase 7: AI CV assessment (Wed 28)
 
-* [ ] An "Assess CV" button per candidate and job (never automatic, to control cost and keep a human in the loop)
-* [ ] Upload the CV (PDF), extract the text on the server, then send the CV text and job description to Claude with structured output
-* [ ] Output: a **score from 0 to 100**, a summary, strengths, gaps, skill matches and suggested interview questions
-* [ ] Store the result in `cv_assessments`; show a score badge on the kanban card and a full panel in the drawer
-* [ ] Show a disclaimer: decision support, not a decision (bias, GDPR, a human in the loop)
-* [ ] Eval script in the venv: run sample CVs several times to check score consistency
+* [x] An "Assess CV" button per candidate and job (never automatic, to control cost and keep a human in the loop)
+* [x] Upload the CV (PDF), extract the text on the server, then send the CV text and job description to Claude with structured output
+* [x] Output: a **score from 0 to 100**, a summary, strengths, gaps, skill matches and suggested interview questions
+* [x] Store the result in `cv_assessments`; show a score badge on the kanban card and a full panel in the drawer
+* [x] Show a disclaimer: decision support, not a decision (bias, GDPR, a human in the loop)
+* [ ] Eval script in the venv: run sample CVs several times to check score consistency (script ready in `scripts/eval_assessment.py`; needs an API key to run)
 
 ## Phase 8: Extras (Thu 29, only after v1 is tested)
 

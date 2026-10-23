@@ -1,5 +1,7 @@
 import { z } from "zod";
+import type { AssessmentView } from "@/components/assessments/assessment-panel";
 import { getScope } from "@/lib/data/scope";
+import type { Database } from "@/lib/supabase/database.types";
 import { CandidateDrawer } from "./candidate-drawer";
 
 /** Loads one candidate for the drawer. Renders nothing for a bad or foreign id. */
@@ -18,10 +20,19 @@ export async function CandidateDrawerLoader({
     .maybeSingle();
   if (!candidate) return null;
 
-  const [{ data: apps }, { data: jobs }] = await Promise.all([
-    scope.applications().eq("candidate_id", candidate.id),
-    scope.jobs().order("title"),
-  ]);
+  const [{ data: apps }, { data: jobs }, { data: assessments }] =
+    await Promise.all([
+      scope.applications().eq("candidate_id", candidate.id),
+      scope.jobs().order("title"),
+      scope
+        .assessments()
+        .eq("candidate_id", candidate.id)
+        .order("created_at", { ascending: false }),
+    ]);
+  // Newest first, so the first row per job is the latest assessment.
+  const latest = new Map<string, NonNullable<typeof assessments>[number]>();
+  for (const a of assessments ?? [])
+    if (!latest.has(a.job_id)) latest.set(a.job_id, a);
   const appIds = (apps ?? []).map((a) => a.id);
   const jobTitle = new Map((jobs ?? []).map((j) => [j.id, j.title]));
 
@@ -71,6 +82,7 @@ export async function CandidateDrawerLoader({
         jobTitle: jobTitle.get(a.job_id) ?? "",
         stage: a.stage,
         stageChangedAt: a.stage_changed_at,
+        assessment: toView(latest.get(a.job_id)),
       }))}
       activity={(log ?? []).map((l) => ({
         id: l.id,
@@ -81,4 +93,20 @@ export async function CandidateDrawerLoader({
       }))}
     />
   );
+}
+
+function toView(
+  row: Database["public"]["Tables"]["cv_assessments"]["Row"] | undefined,
+): AssessmentView | null {
+  if (!row) return null;
+  return {
+    score: row.score,
+    summary: row.summary,
+    strengths: row.strengths as string[],
+    gaps: row.gaps as string[],
+    skillMatches: row.skill_matches as AssessmentView["skillMatches"],
+    interviewQuestions: row.interview_questions as string[],
+    model: row.model,
+    createdAt: row.created_at,
+  };
 }

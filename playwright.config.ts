@@ -26,6 +26,7 @@ export default defineConfig({
     command: "pnpm dev --port 3100",
     url: "http://localhost:3100/login",
     reuseExistingServer: false,
-    env,
+    // AI_FAKE returns a fixed assessment instead of calling Claude.
+    env: { ...env, AI_FAKE: "1" },
   },
 });
