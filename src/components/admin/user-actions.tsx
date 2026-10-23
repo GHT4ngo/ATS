@@ -4,6 +4,7 @@ import { useActionState, useEffect, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { resetUserPassword, setUserActive } from "@/app/actions/admin";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { FormMessage, SubmitButton } from "@/components/form-bits";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,6 +31,7 @@ export function UserActions({
   const e = useTranslations("Errors");
   const [pending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [password, setPassword] = useState("");
   const [state, action] = useActionState(resetUserPassword, {});
 
@@ -42,6 +44,7 @@ export function UserActions({
   }, [state, t]);
 
   function toggleActive() {
+    setConfirmOpen(false);
     startTransition(async () => {
       const result = await setUserActive(userId, !isActive);
       if (result.error) toast.error(e(result.error));
@@ -77,11 +80,20 @@ export function UserActions({
           variant="outline"
           size="sm"
           disabled={pending}
-          onClick={toggleActive}
+          onClick={() => (isActive ? setConfirmOpen(true) : toggleActive())}
         >
           {isActive ? t("deactivate") : t("reactivate")}
         </Button>
       )}
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={t("confirmDeactivateTitle", { name })}
+        description={t("confirmDeactivateBody")}
+        confirmLabel={t("deactivate")}
+        pending={pending}
+        onConfirm={toggleActive}
+      />
     </div>
   );
 }

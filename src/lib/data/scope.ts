@@ -13,9 +13,16 @@ type Tables = Database["public"]["Tables"];
  * an admin has not picked an organization yet.
  */
 export async function getScope() {
+  const scope = await getOptionalScope();
+  if (!scope) redirect("/dashboard");
+  return scope;
+}
+
+/** Like getScope, but null instead of a redirect when no organization is active. */
+export async function getOptionalScope() {
   const { user, profile } = await requireUser();
   const org = await getActiveOrganization();
-  if (!org) redirect("/dashboard");
+  if (!org) return null;
 
   const supabase = await createClient();
   const orgId = org.id;

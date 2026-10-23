@@ -17,8 +17,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Mini ATS",
+  metadataBase: new URL("https://ats.t4ngo.com"),
+  title: { default: "Mini ATS", template: "%s | Mini ATS" },
   description: "A mini applicant tracking system.",
+  openGraph: {
+    title: "Mini ATS",
+    description: "A mini applicant tracking system.",
+    type: "website",
+  },
 };
 
 export default async function RootLayout({

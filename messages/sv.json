@@ -24,7 +24,15 @@
     "active": "Aktiv",
     "inactive": "Inaktiverad",
     "swedish": "Svenska",
-    "english": "English"
+    "english": "English",
+    "confirm": "Bekräfta",
+    "loading": "Laddar",
+    "tryAgain": "Försök igen",
+    "somethingWrong": "Något gick fel",
+    "somethingWrongBody": "Ett oväntat fel uppstod. Du kan försöka igen.",
+    "notFoundTitle": "Sidan hittades inte",
+    "notFoundBody": "Sidan du söker finns inte.",
+    "goHome": "Tillbaka till översikten"
   },
   "Errors": {
     "invalidInput": "Kontrollera fälten och försök igen.",
@@ -74,7 +82,22 @@
     "exitViewing": "Avsluta",
     "jobs": "Tjänster",
     "candidates": "Kandidater",
-    "pipeline": "Pipeline"
+    "pipeline": "Pipeline",
+    "openMenu": "Öppna menyn",
+    "collapse": "Fäll ihop sidofältet",
+    "expand": "Fäll ut sidofältet",
+    "search": "Sök",
+    "searchPlaceholder": "Hoppa till en kandidat, tjänst eller sida...",
+    "noResults": "Inga träffar",
+    "pages": "Sidor",
+    "candidatesGroup": "Kandidater",
+    "jobsGroup": "Tjänster",
+    "language": "Språk",
+    "theme": "Tema",
+    "skipToContent": "Hoppa till innehållet",
+    "closeMenu": "Stäng menyn",
+    "shortcut": "Ctrl K",
+    "menu": "Meny"
   },
   "Dashboard": {
     "welcome": "Välkommen, {name}",
@@ -123,7 +146,9 @@
     "organizationCreated": "Organisationen har skapats.",
     "userDeactivated": "Användaren har inaktiverats.",
     "userReactivated": "Användaren är aktiv igen.",
-    "adminNoOrganization": "Internt"
+    "adminNoOrganization": "Internt",
+    "confirmDeactivateTitle": "Inaktivera {name}?",
+    "confirmDeactivateBody": "Personen kan inte längre logga in. Du kan återaktivera kontot senare."
   },
   "Stages": {
     "applied": "Ansökt",

@@ -24,7 +24,15 @@
     "active": "Active",
     "inactive": "Deactivated",
     "swedish": "Svenska",
-    "english": "English"
+    "english": "English",
+    "confirm": "Confirm",
+    "loading": "Loading",
+    "tryAgain": "Try again",
+    "somethingWrong": "Something went wrong",
+    "somethingWrongBody": "An unexpected error occurred. You can try again.",
+    "notFoundTitle": "Page not found",
+    "notFoundBody": "The page you are looking for does not exist.",
+    "goHome": "Back to the dashboard"
   },
   "Errors": {
     "invalidInput": "Check the fields and try again.",
@@ -74,7 +82,22 @@
     "exitViewing": "Exit",
     "jobs": "Jobs",
     "candidates": "Candidates",
-    "pipeline": "Pipeline"
+    "pipeline": "Pipeline",
+    "openMenu": "Open menu",
+    "collapse": "Collapse sidebar",
+    "expand": "Expand sidebar",
+    "search": "Search",
+    "searchPlaceholder": "Jump to a candidate, job or page...",
+    "noResults": "No results",
+    "pages": "Pages",
+    "candidatesGroup": "Candidates",
+    "jobsGroup": "Jobs",
+    "language": "Language",
+    "theme": "Theme",
+    "skipToContent": "Skip to content",
+    "closeMenu": "Close menu",
+    "shortcut": "Ctrl K",
+    "menu": "Menu"
   },
   "Dashboard": {
     "welcome": "Welcome, {name}",
@@ -123,7 +146,9 @@
     "organizationCreated": "Organization created.",
     "userDeactivated": "User deactivated.",
     "userReactivated": "User reactivated.",
-    "adminNoOrganization": "Internal"
+    "adminNoOrganization": "Internal",
+    "confirmDeactivateTitle": "Deactivate {name}?",
+    "confirmDeactivateBody": "They will no longer be able to sign in. You can reactivate them later."
   },
   "Stages": {
     "applied": "Applied",

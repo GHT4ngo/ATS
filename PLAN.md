@@ -1,6 +1,6 @@
 # PLAN: Mini ATS
 
-> **Status:** Phase 4 (core customer features) done, reviewed and merged (PR #3). Next: Phase 5.
+> **Status:** Phase 4 (core customer features) merged (PR #3). Phase 5 (polish) built on `feat/polish`, awaiting review. Next: Phase 6.
 > **Deadline:** Friday 30 October 2026. **Live URL:** https://ats.t4ngo.com
 > Usage budget and model routing: [BUDGET.md](./BUDGET.md). Review process: [REVIEW.md](./REVIEW.md).
 
@@ -79,12 +79,12 @@ Additions to the table above: `applications` and `activity_log` also carry `orga
 
 ## Phase 5: Polish (Tue 27)
 
-* [ ] Dark, light and system theme; language switcher saved on the profile
-* [ ] Responsive layout with a collapsible sidebar
-* [ ] Command palette (Ctrl K) to jump to any candidate or job
-* [ ] Empty states, skeleton loaders, toasts and confirm dialogs
-* [ ] Accessibility: keyboard drag and drop, focus rings, contrast
-* [ ] Error boundaries, a 404 page, meta tags and a favicon
+* [x] Dark, light and system theme; language switcher saved on the profile
+* [x] Responsive layout with a collapsible sidebar
+* [x] Command palette (Ctrl K) to jump to any candidate or job
+* [x] Empty states, skeleton loaders, toasts and confirm dialogs
+* [x] Accessibility: keyboard drag and drop, focus rings, contrast
+* [x] Error boundaries, a 404 page, meta tags and a favicon
 
 ## Phase 6: Test and ship v1 (Tue 27)
 

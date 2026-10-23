@@ -104,7 +104,7 @@ test("customer changes language and name in the settings", async ({ page }) => {
   await signIn(page, emails.mate);
   await page.goto("/settings");
   await page.getByLabel("Fullständigt namn").fill("E2E Renamed");
-  await page.getByLabel("Språk").click();
+  await page.locator("main").getByLabel("Språk").click();
   await page.getByRole("option", { name: "English" }).click();
   await page.getByRole("button", { name: "Spara", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
@@ -148,6 +148,10 @@ test("admin creates an organization and a user, acts as the customer and deactiv
   // Deactivate the new user.
   await page.goto("/admin/users");
   await row.getByRole("button", { name: "Inaktivera" }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Inaktivera" })
+    .click();
   await expect(row.getByText("Inaktiverad")).toBeVisible();
 });
 
