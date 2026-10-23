@@ -1,6 +1,6 @@
 # PLAN: Mini ATS
 
-> **Status:** Draft for discussion. No app code until this is agreed.
+> **Status:** Agreed 23 Oct. Next: Phase 1.
 > **Deadline:** Friday 30 October 2026. **Live URL:** https://ats.t4ngo.com
 > Usage budget and model routing: [BUDGET.md](./BUDGET.md). Review process: [REVIEW.md](./REVIEW.md).
 
@@ -24,6 +24,11 @@ A professional, production quality mini ATS on Supabase that a first customer ca
 | Theme | next themes: dark, light, system |
 | AI in the app | Claude via the Anthropic SDK (Sonnet for scoring, Opus for the agent) |
 | Package manager | pnpm |
+| Team users | Several customer users per organization from v1 |
+| Admin access | Organization switcher with a "Viewing as X" banner; no impersonation |
+| Onboarding | Admin sets email and a temporary password; user can change it later; no SMTP in v1 |
+| AI trigger | "Assess CV" button per candidate and job; never automatic |
+| Demo | Seed script with a fictional Stockholm tech company; the user records the Loom video |
 
 ## Phase 1: Foundations (Fri 23 and Sat 24)
 
@@ -39,7 +44,7 @@ A professional, production quality mini ATS on Supabase that a first customer ca
 | Table | Key columns |
 |:------|:------------|
 | `organizations` | name, slug |
-| `profiles` | id (the auth user), full_name, role (admin or customer), organization_id, locale, is_active |
+| `profiles` | id (the auth user), full_name, role (admin or customer), organization_id (many users per organization), locale, is_active |
 | `jobs` | organization_id, title, description, location, employment_type, status (open, paused, closed) |
 | `candidates` | organization_id, full_name, email, phone, linkedin_url, location, notes, cv_path |
 | `applications` | candidate_id, job_id, stage, position (kanban order), rating; unique per candidate and job |
@@ -53,7 +58,9 @@ A professional, production quality mini ATS on Supabase that a first customer ca
 ## Phase 3: Auth and admin (Sun 25)
 
 * [ ] Email and password login, password reset, protected routes via middleware
-* [ ] Admin panel: create organizations; create accounts (admin or customer) on the server with `auth.admin.createUser`, where the service role key never reaches the browser; list, deactivate and reset accounts
+* [ ] Admin panel: create organizations; create accounts on the server with `auth.admin.createUser` (email, name, role, organization and a temporary password), where the service role key never reaches the browser; list, deactivate and reset accounts
+* [ ] Team list per organization, showing every user in it
+* [ ] Profile settings: name, language and change password
 * [ ] **Act as customer:** an organization switcher for admins, so the whole app runs in the chosen customer's context. Actions are logged under the admin's own identity.
 
 ## Phase 4: Core customer features (Sun 25 to Mon 26)
@@ -78,11 +85,12 @@ A professional, production quality mini ATS on Supabase that a first customer ca
 
 * [ ] Playwright end to end test: admin creates a customer, the customer logs in, creates a job, adds a candidate, drags the card and filters
 * [ ] GitHub Actions CI: lint, typecheck, Vitest, Playwright and the pytest RLS suite
-* [ ] Production seed: a demo organization with realistic jobs and candidates
+* [ ] Seed script (Python in the venv, service role key, runs against local and production): a fictional Stockholm tech company with 4 jobs (frontend developer, backend developer, product designer, customer success manager) and about 20 candidates spread across the stages, with sample CVs
 * [ ] **Delivery v1:** admin login, live URL and repo link
 
 ## Phase 7: AI CV assessment (Wed 28)
 
+* [ ] An "Assess CV" button per candidate and job (never automatic, to control cost and keep a human in the loop)
 * [ ] Upload the CV (PDF), extract the text on the server, then send the CV text and job description to Claude with structured output
 * [ ] Output: a **score from 0 to 100**, a summary, strengths, gaps, skill matches and suggested interview questions
 * [ ] Store the result in `cv_assessments`; show a score badge on the kanban card and a full panel in the drawer
@@ -97,7 +105,7 @@ To be prioritized together:
 2. Custom pipeline stages per job
 3. Public career page per job, where applicants land directly in Applied
 4. Email invites and notifications (Resend)
-5. Multiple team members per organization, comments and mentions
+5. Comments and mentions on candidates
 6. CSV import and export of candidates
 7. Interview scheduling (calendar links)
 8. Audit log view for admins
@@ -105,13 +113,13 @@ To be prioritized together:
 ## Phase 9: Deliverables (Thu 29 and Fri 30)
 
 * [ ] Assumptions email (drafted for review before sending)
-* [ ] Storyboard and recording for the 5 minute Loom demo
+* [ ] Storyboard for the 5 minute Loom demo in `docs/demo-storyboard.md` (the user records it, adding one or two candidates live)
 * [ ] Final README: screenshots, setup instructions, architecture overview
 
 ## Assumptions (for the email)
 
-* B2B: each customer is an **organization**, starting with one user per organization.
-* Admins are internal staff who create every account (no self signup).
+* B2B: each customer is an **organization**, and an organization can have several users.
+* Admins are internal staff who create every account (no self signup), with a temporary password the user can change.
 * A candidate belongs to one organization and can apply to several of its jobs.
 * Pipeline stages are fixed in v1.
 * Data is hosted in the EU (Supabase EU region) because of GDPR.
@@ -123,9 +131,10 @@ To be prioritized together:
 * **Reviews:** one review per phase, logged in [REVIEW.md](./REVIEW.md)
 * **Definition of done:** lint, typecheck and tests pass, both themes and both languages are checked, the change is deployed and reviewed
 
-## Open questions for discussion
+## Decisions log (23 Oct)
 
-* Do we need multiple users per customer organization in v1, or is that an extra?
-* Should admins be able to fully impersonate a customer user, or is an organization switcher enough?
-* Should the CV assessment run automatically on upload or only on a button click (cost and consent)?
-* What should the demo organization look like (industry, roles) for the Loom video?
+* **Team users:** several users per customer organization in v1; this replaces the "team members" extra.
+* **Admin access:** an organization switcher instead of impersonation, for security and a clean audit trail.
+* **AI trigger:** a button click only, for cost control and a human in the loop.
+* **Onboarding:** the admin sets a temporary password, so no email setup is needed for v1.
+* **Demo:** a seed script provides realistic data; the user records the Loom video by hand.
