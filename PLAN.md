@@ -1,6 +1,6 @@
 # PLAN: Mini ATS
 
-> **Status:** Phase 4 (core customer features) merged (PR #3). Phase 5 (polish) merged (PR #4). Phase 6 tests, CI and seed script done on `feat/ship-v1` (PR #5); production seed and v1 delivery pending.
+> **Status:** Phase 4 (core customer features) merged (PR #3). Phase 5 (polish) merged (PR #4). Phase 6 tests, CI and seed script done on `feat/ship-v1` (PR #5); production seeded on 2026-10-23; v1 delivery pending.
 > **Deadline:** Friday 30 October 2026. **Live URL:** https://ats.t4ngo.com
 > Usage budget and model routing: [BUDGET.md](./BUDGET.md). Review process: [REVIEW.md](./REVIEW.md).
 
