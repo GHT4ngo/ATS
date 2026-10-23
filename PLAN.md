@@ -100,7 +100,7 @@ Additions to the table above: `applications` and `activity_log` also carry `orga
 * [x] Output: a **score from 0 to 100**, a summary, strengths, gaps, skill matches and suggested interview questions
 * [x] Store the result in `cv_assessments`; show a score badge on the kanban card and a full panel in the drawer
 * [x] Show a disclaimer: decision support, not a decision (bias, GDPR, a human in the loop)
-* [ ] Eval script in the venv: run sample CVs several times to check score consistency (script ready in `scripts/eval_assessment.py`; needs an API key to run)
+* [x] Eval script in the venv: run sample CVs several times to check score consistency (`scripts/eval_assessment.py`; 2026-10-23: 5 CVs x 3 runs, max spread 6 points, ranking ok, 0.20 USD)
 
 ## Phase 8: Extras (Thu 29, only after v1 is tested)
 
