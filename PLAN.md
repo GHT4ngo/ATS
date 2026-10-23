@@ -1,6 +1,6 @@
 # PLAN: Mini ATS
 
-> **Status:** Phase 2 done (pending review). Next: Phase 3 (auth and admin).
+> **Status:** Phase 2 done, reviewed and migrated to the cloud. Next: Phase 3 (auth and admin).
 > **Deadline:** Friday 30 October 2026. **Live URL:** https://ats.t4ngo.com
 > Usage budget and model routing: [BUDGET.md](./BUDGET.md). Review process: [REVIEW.md](./REVIEW.md).
 
