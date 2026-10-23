@@ -1,6 +1,6 @@
 # PLAN: Mini ATS
 
-> **Status:** Agreed 23 Oct. Next: Phase 1.
+> **Status:** Phase 1 in progress: scaffold and local Supabase done; cloud project, Vercel and DNS remain.
 > **Deadline:** Friday 30 October 2026. **Live URL:** https://ats.t4ngo.com
 > Usage budget and model routing: [BUDGET.md](./BUDGET.md). Review process: [REVIEW.md](./REVIEW.md).
 
@@ -32,10 +32,10 @@ A professional, production quality mini ATS on Supabase that a first customer ca
 
 ## Phase 1: Foundations (Fri 23 and Sat 24)
 
-* [ ] Scaffold the Next.js app (TS, ESLint, Tailwind, `src/`) and initialize shadcn/ui
-* [ ] Supabase CLI as a dev dependency: `supabase init` and `supabase start` (local Docker)
-* [ ] Libraries: Supabase SSR, next intl, next themes, dnd kit, zod, react hook form, sonner, lucide, TanStack Table
-* [ ] Quality: Prettier, ESLint, Vitest, Playwright; ruff and pytest in the venv
+* [x] Scaffold the Next.js app (TS, ESLint, Tailwind, `src/`) and initialize shadcn/ui
+* [x] Supabase CLI as a dev dependency: `supabase init` and `supabase start` (local Docker)
+* [x] Libraries: Supabase SSR, next intl, next themes, dnd kit, zod, react hook form, sonner, lucide, TanStack Table
+* [x] Quality: Prettier, ESLint, Vitest, Playwright; ruff and pytest in the venv
 * [ ] Create the Supabase cloud project and the Vercel project, and point the DNS at Vercel
 * [ ] Get a first page live on ats.t4ngo.com on day one
 

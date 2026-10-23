@@ -1,0 +1,12 @@
+{
+  "Home": {
+    "title": "Mini ATS",
+    "tagline": "Följ dina kandidater från ansökan till anställning.",
+    "status": "Under uppbyggnad"
+  },
+  "Theme": {
+    "light": "Ljust",
+    "dark": "Mörkt",
+    "system": "System"
+  }
+}

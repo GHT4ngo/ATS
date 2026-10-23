@@ -1,0 +1,12 @@
+{
+  "Home": {
+    "title": "Mini ATS",
+    "tagline": "Follow your candidates from application to hire.",
+    "status": "Under construction"
+  },
+  "Theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  }
+}
