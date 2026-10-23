@@ -28,6 +28,9 @@ export default async function AppLayout({
 
   const links = [
     { href: "/dashboard", label: t("dashboard") },
+    { href: "/pipeline", label: t("pipeline") },
+    { href: "/jobs", label: t("jobs") },
+    { href: "/candidates", label: t("candidates") },
     { href: "/team", label: t("team") },
     { href: "/settings", label: t("settings") },
     ...(isAdmin

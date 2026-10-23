@@ -67,7 +67,10 @@
     "actAs": "Act as customer",
     "actAsNone": "No customer selected",
     "viewingAs": "Viewing as {name}",
-    "exitViewing": "Exit"
+    "exitViewing": "Exit",
+    "jobs": "Jobs",
+    "candidates": "Candidates",
+    "pipeline": "Pipeline"
   },
   "Dashboard": {
     "welcome": "Welcome, {name}",
@@ -113,5 +116,38 @@
     "userDeactivated": "User deactivated.",
     "userReactivated": "User reactivated.",
     "adminNoOrganization": "Internal"
+  },
+  "Stages": {
+    "applied": "Applied",
+    "screening": "Screening",
+    "interview": "Interview",
+    "offer": "Offer",
+    "hired": "Hired",
+    "rejected": "Rejected"
+  },
+  "Jobs": {
+    "heading": "Jobs",
+    "title": "Title",
+    "new": "New job",
+    "edit": "Edit",
+    "save": "Save job",
+    "created": "Job created",
+    "updated": "Job updated",
+    "location": "Location",
+    "employmentType": "Employment type",
+    "statusLabel": "Status",
+    "description": "Description",
+    "empty": "No jobs yet. Create the first one.",
+    "type": {
+      "full_time": "Full time",
+      "part_time": "Part time",
+      "contract": "Contract",
+      "internship": "Internship"
+    },
+    "status": {
+      "open": "Open",
+      "paused": "Paused",
+      "closed": "Closed"
+    }
   }
 }

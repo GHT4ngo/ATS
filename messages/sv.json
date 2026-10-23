@@ -67,7 +67,10 @@
     "actAs": "Agera som kund",
     "actAsNone": "Ingen kund vald",
     "viewingAs": "Visar som {name}",
-    "exitViewing": "Avsluta"
+    "exitViewing": "Avsluta",
+    "jobs": "Tjänster",
+    "candidates": "Kandidater",
+    "pipeline": "Pipeline"
   },
   "Dashboard": {
     "welcome": "Välkommen, {name}",
@@ -113,5 +116,38 @@
     "userDeactivated": "Användaren har inaktiverats.",
     "userReactivated": "Användaren är aktiv igen.",
     "adminNoOrganization": "Internt"
+  },
+  "Stages": {
+    "applied": "Ansökt",
+    "screening": "Screening",
+    "interview": "Intervju",
+    "offer": "Erbjudande",
+    "hired": "Anställd",
+    "rejected": "Avslagen"
+  },
+  "Jobs": {
+    "heading": "Tjänster",
+    "title": "Titel",
+    "new": "Ny tjänst",
+    "edit": "Redigera",
+    "save": "Spara tjänst",
+    "created": "Tjänsten skapades",
+    "updated": "Tjänsten uppdaterades",
+    "location": "Plats",
+    "employmentType": "Anställningsform",
+    "statusLabel": "Status",
+    "description": "Beskrivning",
+    "empty": "Inga tjänster ännu. Skapa den första.",
+    "type": {
+      "full_time": "Heltid",
+      "part_time": "Deltid",
+      "contract": "Konsult",
+      "internship": "Praktik"
+    },
+    "status": {
+      "open": "Öppen",
+      "paused": "Pausad",
+      "closed": "Stängd"
+    }
   }
 }

@@ -34,14 +34,11 @@ export async function getScope() {
       supabase.from("jobs").insert({ ...row, organization_id: orgId }),
     insertCandidate: (
       row: Omit<Tables["candidates"]["Insert"], "organization_id">,
-    ) =>
-      supabase.from("candidates").insert({ ...row, organization_id: orgId }),
+    ) => supabase.from("candidates").insert({ ...row, organization_id: orgId }),
     insertApplication: (
       row: Omit<Tables["applications"]["Insert"], "organization_id">,
     ) =>
-      supabase
-        .from("applications")
-        .insert({ ...row, organization_id: orgId }),
+      supabase.from("applications").insert({ ...row, organization_id: orgId }),
     updateJob: (id: string, patch: Tables["jobs"]["Update"]) =>
       supabase
         .from("jobs")
