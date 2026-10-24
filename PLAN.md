@@ -4,15 +4,16 @@
 > **Deadline:** Friday 30 October 2026. **Live URL:** https://ats.t4ngo.com
 > Usage budget and model routing: [BUDGET.md](./BUDGET.md). Review process: [REVIEW.md](./REVIEW.md).
 
-## Where we left off (23 Oct, evening)
+## Where we left off (24 Oct)
 
-* **Production:** all four migrations are applied to the cloud database; the Nordlys Tech demo data is seeded (logins `sara.lindqvist@nordlys.example` and `johan.ek@nordlys.example`, password kept outside the repo); `ANTHROPIC_API_KEY` is set on Vercel (Production only, not Preview).
+* **Production:** all five migrations applied; the Nordlys Tech demo was reseeded on 24 Oct with custom stages on the frontend job (logins `sara.lindqvist@nordlys.example` and `johan.ek@nordlys.example`, new password kept outside the repo); `ANTHROPIC_API_KEY` is set on Vercel (Production only, not Preview).
+* **Done in Phase 8:** the recruiter agent (PR #7) and custom pipeline stages per job (PR #8), both reviewed and live.
 * **Open items:**
   * Send the v1 delivery (admin login, live URL, repo link).
-  * Smoke test one real CV assessment on the live site (about a cent per run).
-  * One unexplained failure of the core e2e test (`e2e/core.spec.ts`), not reproduced in two full runs since; watch CI.
+  * Smoke test one real CV assessment and one assistant question on the live site.
+  * One unexplained failure of the core e2e test (`e2e/core.spec.ts`) on 23 Oct, not seen since; watch CI.
   * The admin organization switcher needs the sidebar expanded; empty states are plain text.
-* **Next:** custom pipeline stages (`feat/stages`, PR pending, needs its migration on production before merge); then Phase 9 deliverables.
+* **Next:** Phase 9 deliverables (assumptions email, Loom storyboard, final README); further extras only if time allows.
 
 ## Goal
 
