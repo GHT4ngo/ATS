@@ -110,7 +110,7 @@ cp .env.example .env.local        # fill in the values from `pnpm exec supabase 
 pnpm dev                          # http://localhost:3000
 ```
 
-Demo data (a fictional Stockholm company with 4 jobs and 20 candidates with CVs):
+Demo data (a fictional Stockholm company with 4 jobs and 23 candidates with CVs):
 
 ```bash
 SEED_PASSWORD=choose-one .venv/bin/python scripts/seed.py         # local

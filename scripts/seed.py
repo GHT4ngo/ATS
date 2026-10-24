@@ -1,6 +1,6 @@
 """Seed a demo customer: Nordlys Tech AB, a fictional Stockholm tech company.
 
-Creates the organization, two customer users, four jobs and twenty candidates
+Creates the organization, two customer users, four jobs and 23 candidates
 spread across the pipeline stages, each with a generated PDF CV, backdated
 stage times and an activity history. Running it again replaces the demo data.
 
@@ -95,6 +95,13 @@ FRONTEND_STAGES = {
 }
 # Candidates placed in a named stage instead of their phase's first stage
 IN_STAGE = {"Oskar Holm": "Slutintervju"}
+# Recruiter marks, so the board and the dashboard show stars and flags
+MARKS = {
+    "Elin Sandberg": {"starred": True},
+    "Maja Svensson": {"starred": True},
+    "Fredrik Lund": {"flagged": True},
+    "Ida Wallin": {"flagged": True},
+}
 
 CANDIDATES = [
     (
@@ -172,7 +179,7 @@ CANDIDATES = [
         "Backendutvecklare, Logistikhuset",
         "Civilingenjör teknisk fysik, KTH",
         "karinaberg",
-        [("backend", "interview", 4)],
+        [("backend", "interview", 18)],
     ),
     (
         "Mohammed Rahimi",
@@ -260,7 +267,7 @@ CANDIDATES = [
         "Praktikant, Designstudion",
         "UX design, Hyper Island",
         None,
-        [("designer", "applied", 3)],
+        [("designer", "applied", 16)],
     ),
     (
         "Nora Karlsson",
@@ -316,6 +323,39 @@ CANDIDATES = [
         "Civilekonom, Uppsala universitet",
         "gustavoberg",
         [("csm", "hired", 30)],
+    ),
+    (
+        "Petra Lindholm",
+        "Stockholm",
+        8,
+        "Kotlin, Java, PostgreSQL, Kafka, AWS",
+        "Senior backendutvecklare, Betalkompaniet",
+        "Backendutvecklare, Logistikdata",
+        "Civilingenjör teknisk fysik, KTH",
+        "petralindholm",
+        [("backend", "hired", 58)],
+    ),
+    (
+        "Samuel Ek",
+        "Sundbyberg",
+        2,
+        "Figma, prototyper, användartester",
+        "UX-designer, Appstudion",
+        "Praktikant, Designbyrån",
+        "Interaktionsdesign, Malmö universitet",
+        None,
+        [("designer", "rejected", 64)],
+    ),
+    (
+        "Tove Hedlund",
+        "Stockholm",
+        5,
+        "Kundframgång, onboarding, HubSpot, SaaS",
+        "Customer success manager, Bokningsbolaget",
+        "Kundansvarig, Telekom Syd",
+        "Ekonomie kandidat, Uppsala universitet",
+        "tovehedlund",
+        [("csm", "hired", 75)],
     ),
 ]
 
@@ -433,7 +473,7 @@ def seed(db: Client, password: str) -> None:
 
     job_ids = {}
     for key, job in JOBS.items():
-        created = now - timedelta(days=45)
+        created = now - timedelta(days=100)
         row = (
             db.table("jobs")
             .insert(
@@ -537,6 +577,7 @@ def seed(db: Client, password: str) -> None:
                             else {}
                         ),
                         "position": pos,
+                        **MARKS.get(name, {}),
                         "created_at": created.isoformat(),
                         "stage_changed_at": changed.isoformat(),
                     }
