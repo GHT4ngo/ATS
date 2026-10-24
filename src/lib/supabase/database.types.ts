@@ -51,14 +51,14 @@ isOneToOne: false
                   ]
                 },"applications": {
                   Row: {
-                    "candidate_id": string,"created_at": string,"id": string,"job_id": string,"organization_id": string,"position": number,"rating": number | null,"stage": Database["public"]['Enums']["application_stage"],"stage_changed_at": string,"updated_at": string
+                    "candidate_id": string,"created_at": string,"id": string,"job_id": string,"organization_id": string,"position": number,"rating": number | null,"stage": Database["public"]['Enums']["application_stage"],"stage_changed_at": string,"stage_id": string,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "candidate_id": string,"created_at"?: string,"id"?: string,"job_id": string,"organization_id": string,"position"?: number,"rating"?: number | null,"stage"?: Database["public"]['Enums']["application_stage"],"stage_changed_at"?: string,"updated_at"?: string
+                    "candidate_id": string,"created_at"?: string,"id"?: string,"job_id": string,"organization_id": string,"position"?: number,"rating"?: number | null,"stage"?: Database["public"]['Enums']["application_stage"],"stage_changed_at"?: string,"stage_id": string,"updated_at"?: string
                   }
                   Update: {
-                    "candidate_id"?: string,"created_at"?: string,"id"?: string,"job_id"?: string,"organization_id"?: string,"position"?: number,"rating"?: number | null,"stage"?: Database["public"]['Enums']["application_stage"],"stage_changed_at"?: string,"updated_at"?: string
+                    "candidate_id"?: string,"created_at"?: string,"id"?: string,"job_id"?: string,"organization_id"?: string,"position"?: number,"rating"?: number | null,"stage"?: Database["public"]['Enums']["application_stage"],"stage_changed_at"?: string,"stage_id"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -79,6 +79,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "organizations"
       referencedColumns: ["id"]
+    },{
+      foreignKeyName: "applications_stage_in_job"
+      columns: ["stage_id","job_id"]
+isOneToOne: false
+      referencedRelation: "job_stages"
+      referencedColumns: ["id","job_id"]
     }
                   ]
                 },"candidates": {
@@ -165,6 +171,32 @@ isOneToOne: false
       referencedColumns: ["id","organization_id"]
     },{
       foreignKeyName: "cv_assessments_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"job_stages": {
+                  Row: {
+                    "created_at": string,"id": string,"job_id": string,"name": string | null,"organization_id": string,"phase": Database["public"]['Enums']["application_stage"],"position": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"job_id": string,"name"?: string | null,"organization_id": string,"phase": Database["public"]['Enums']["application_stage"],"position"?: number
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"job_id"?: string,"name"?: string | null,"organization_id"?: string,"phase"?: Database["public"]['Enums']["application_stage"],"position"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "job_stages_job_id_organization_id_fkey"
+      columns: ["job_id","organization_id"]
+isOneToOne: false
+      referencedRelation: "jobs"
+      referencedColumns: ["id","organization_id"]
+    },{
+      foreignKeyName: "job_stages_organization_id_fkey"
       columns: ["organization_id"]
 isOneToOne: false
       referencedRelation: "organizations"
