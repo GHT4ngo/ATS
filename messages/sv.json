@@ -373,6 +373,7 @@
       "starred": "Stjärnmärkta",
       "flagged": "Flaggade",
       "mismatch": "Uppfyller inte kraven"
-    }
+    },
+    "mismatchShort": "Matchar inte"
   }
 }

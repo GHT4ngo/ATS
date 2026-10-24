@@ -130,15 +130,18 @@ function CardBody({
             />
           )}
           {card.mismatch && (
-            <span className="inline-flex h-5 items-center rounded-full bg-rose-100 px-2 text-xs font-medium text-rose-800 dark:bg-rose-950 dark:text-rose-200">
-              {m("mismatch")}
+            <span
+              title={m("mismatch")}
+              className="inline-flex h-5 items-center rounded-full bg-rose-100 px-2 text-xs font-medium whitespace-nowrap text-rose-800 dark:bg-rose-950 dark:text-rose-200"
+            >
+              {m("mismatchShort")}
             </span>
           )}
         </div>
         <div className="text-muted-foreground mt-1 flex items-center gap-2 text-xs">
           <span
             className={cn(
-              "inline-flex items-center gap-1",
+              "inline-flex shrink-0 items-center gap-1 whitespace-nowrap",
               days > STUCK_DAYS &&
                 isActive(card.stage) &&
                 "font-medium text-amber-700 dark:text-amber-400",
@@ -147,7 +150,9 @@ function CardBody({
             <Clock className="size-3" />
             {t("daysShort", { days })}
           </span>
-          {card.stageName && <span className="truncate">{card.stageName}</span>}
+          {card.stageName && (
+            <span className="min-w-0 truncate">{card.stageName}</span>
+          )}
           {card.linkedinUrl && (
             <a
               href={card.linkedinUrl}

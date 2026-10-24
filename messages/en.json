@@ -373,6 +373,7 @@
       "starred": "Starred",
       "flagged": "Flagged",
       "mismatch": "Not a match"
-    }
+    },
+    "mismatchShort": "No match"
   }
 }
