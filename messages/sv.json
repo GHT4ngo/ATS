@@ -59,7 +59,11 @@
     "cvDownloadFailed": "CV:t kunde inte hämtas. Försök igen.",
     "cvUnreadable": "CV-filen kunde inte öppnas. Den kan vara skadad eller lösenordsskyddad.",
     "assessmentRunning": "En bedömning pågår redan för den här kandidaten och tjänsten.",
-    "agentTooLong": "Assistenten behövde för många steg. Prova en smalare fråga."
+    "agentTooLong": "Assistenten behövde för många steg. Prova en smalare fråga.",
+    "agentUnavailable": "Assistenten är inte konfigurerad.",
+    "agentRefused": "Assistenten avböjde förfrågan.",
+    "agentFailed": "Assistenten stötte på ett problem. Försök igen.",
+    "conversationTooLong": "Konversationen är för lång. Starta en ny för att fortsätta."
   },
   "Auth": {
     "loginTitle": "Logga in",

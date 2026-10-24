@@ -59,7 +59,11 @@
     "cvDownloadFailed": "The CV could not be read from storage. Try again.",
     "cvUnreadable": "The CV file could not be opened. It may be damaged or password protected.",
     "assessmentRunning": "An assessment is already running for this candidate and job.",
-    "agentTooLong": "The assistant needed too many steps. Try a narrower question."
+    "agentTooLong": "The assistant needed too many steps. Try a narrower question.",
+    "agentUnavailable": "The assistant is not configured.",
+    "agentRefused": "The assistant declined this request.",
+    "agentFailed": "The assistant ran into a problem. Try again.",
+    "conversationTooLong": "The conversation is too long. Start a new one to continue."
   },
   "Auth": {
     "loginTitle": "Sign in",

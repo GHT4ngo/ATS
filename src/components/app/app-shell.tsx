@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import {
@@ -43,6 +43,7 @@ export function AppShell({
   const [mobileOpen, setMobileOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [assistantOpen, setAssistantOpen] = useState(false);
+  const closeAssistant = useCallback(() => setAssistantOpen(false), []);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -201,8 +202,9 @@ export function AppShell({
           {children}
         </main>
       </div>
-      {assistant && assistantOpen && (
-        <AgentPanel onClose={() => setAssistantOpen(false)} />
+      {/* Stays mounted while closed, so the conversation survives. */}
+      {assistant && (
+        <AgentPanel open={assistantOpen} onClose={closeAssistant} />
       )}
     </div>
   );

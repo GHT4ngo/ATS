@@ -2,6 +2,7 @@ import "server-only";
 import type Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { STAGES } from "@/lib/data/schemas";
+import { moveApplicationTo } from "@/lib/data/moves";
 import type { getScope } from "@/lib/data/scope";
 
 type Scope = Awaited<ReturnType<typeof getScope>>;
@@ -118,29 +119,34 @@ export function isToolName(name: string): name is ToolName {
   return name in inputs;
 }
 
-async function loadContext(scope: Scope) {
-  const [
-    { data: jobs },
-    { data: candidates },
-    { data: apps },
-    { data: scores },
-  ] = await Promise.all([
-    scope.jobs(),
-    scope.candidates(),
-    scope.applications(),
-    scope.supabase
-      .from("latest_cv_assessments")
-      .select("candidate_id, job_id, score")
-      .eq("organization_id", scope.orgId),
-  ]);
+/** Loads what a tool needs; candidates and scores only when asked for. */
+async function loadContext(
+  scope: Scope,
+  need: { candidates?: boolean; scores?: boolean } = {},
+) {
+  const [{ data: jobs }, { data: apps }, candidates, scores] =
+    await Promise.all([
+      scope.jobs(),
+      scope.applications(),
+      need.candidates
+        ? scope.candidates().then((r) => r.data ?? [])
+        : Promise.resolve([]),
+      need.scores
+        ? scope.supabase
+            .from("latest_cv_assessments")
+            .select("candidate_id, job_id, score")
+            .eq("organization_id", scope.orgId)
+            .then((r) => r.data ?? [])
+        : Promise.resolve([]),
+    ]);
   const score = new Map(
-    (scores ?? []).map((s) => [`${s.candidate_id}:${s.job_id}`, s.score]),
+    scores.map((s) => [`${s.candidate_id}:${s.job_id}`, s.score]),
   );
   return {
     jobs: jobs ?? [],
     jobTitle: new Map((jobs ?? []).map((j) => [j.id, j.title])),
-    candidates: candidates ?? [],
-    candidateName: new Map((candidates ?? []).map((c) => [c.id, c.full_name])),
+    candidates,
+    candidateName: new Map(candidates.map((c) => [c.id, c.full_name])),
     apps: apps ?? [],
     score: (candidateId: string, jobId: string) =>
       score.get(`${candidateId}:${jobId}`) ?? null,
@@ -186,7 +192,7 @@ export async function runTool(
   switch (name) {
     case "search_candidates": {
       const { query, job_id, stage } = parseInput(name, input);
-      const ctx = await loadContext(scope);
+      const ctx = await loadContext(scope, { candidates: true, scores: true });
       const q = query?.trim().toLowerCase();
       const matches = ctx.candidates
         .filter((c) => !q || c.full_name.toLowerCase().includes(q))
@@ -290,7 +296,7 @@ export async function runTool(
 
     case "pipeline_summary": {
       const { job_id } = parseInput(name, input);
-      const ctx = await loadContext(scope);
+      const ctx = await loadContext(scope, { candidates: true, scores: true });
       const apps = ctx.apps.filter((a) => !job_id || a.job_id === job_id);
       const scores = apps
         .map((a) => ctx.score(a.candidate_id, a.job_id))
@@ -324,38 +330,21 @@ export async function runTool(
 
     case "move_candidate": {
       const { application_id, stage } = parseInput(name, input);
-      const { data: app } = await scope
-        .applications()
-        .eq("id", application_id)
-        .maybeSingle();
-      if (!app) return { result: { error: "Application not found" } };
-      if (app.stage === stage) return { result: { ok: true, unchanged: true } };
-
-      // Put the card at the bottom of its new column.
-      const { data: last } = await scope
-        .applications()
-        .eq("stage", stage)
-        .order("position", { ascending: false })
-        .limit(1);
-      const position = (last?.[0]?.position ?? 0) + 1;
-      const { error } = await scope.updateApplication(app.id, {
-        stage,
-        position,
-      });
-      if (error) return { result: { error: "The move failed" } };
-      const { data: job } = await scope
-        .jobs()
-        .eq("id", app.job_id)
-        .maybeSingle();
-      await scope.log("application", app.id, "moved", {
-        from: app.stage,
-        to: stage,
-        job: job?.title ?? null,
+      const result = await moveApplicationTo(scope, application_id, stage, {
         via: "assistant",
       });
+      if ("error" in result)
+        return {
+          result: {
+            error:
+              result.error === "notFound"
+                ? "Application not found"
+                : "The move failed",
+          },
+        };
       return {
-        result: { ok: true, from: app.stage, to: stage },
-        changed: true,
+        result: { ok: true, from: result.from, to: stage },
+        changed: result.from !== stage,
       };
     }
   }

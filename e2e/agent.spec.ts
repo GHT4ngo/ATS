@@ -97,6 +97,13 @@ test("the assistant answers, and moves a candidate only after approval", async (
     page.getByRole("region", { name: "Screening" }).getByText("Karin Åberg"),
   ).toBeVisible();
   expect((await stages())?.sort()).toEqual(["applied", "screening"]);
+
+  // Escape closes the panel; reopening keeps the conversation
+  await panel.getByLabel("Meddelande till assistenten").focus();
+  await page.keyboard.press("Escape");
+  await expect(panel).toBeHidden();
+  await page.getByRole("button", { name: "Assistent" }).click();
+  await expect(panel).toContainText("Klart, kandidaten är flyttad.");
   const { data: log } = await admin
     .from("activity_log")
     .select("action, payload, actor_id")

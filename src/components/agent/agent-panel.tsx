@@ -47,7 +47,13 @@ function entries(messages: Message[]): Entry[] {
   });
 }
 
-export function AgentPanel({ onClose }: { onClose: () => void }) {
+export function AgentPanel({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
   const t = useTranslations("Agent");
   const s = useTranslations("Stages");
   const e = useTranslations("Errors");
@@ -64,16 +70,33 @@ export function AgentPanel({ onClose }: { onClose: () => void }) {
   const [error, setError] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const panelRef = useRef<HTMLElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  // The user's text while its request runs; history only changes when the
+  // server returns the confirmed conversation.
+  const [sending, setSending] = useState<string | null>(null);
+
+  // Leaving the app (sign out, org switch) cancels a running request.
+  useEffect(() => () => abortRef.current?.abort(), []);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: "end" });
   }, [history, live, pending, liveTool]);
 
   useEffect(() => {
-    const onKey = (ev: KeyboardEvent) => ev.key === "Escape" && onClose();
+    if (!open) return;
+    inputRef.current?.focus();
+    // Only when focus is in the panel, so Escape in other dialogs is theirs.
+    const onKey = (ev: KeyboardEvent) => {
+      if (
+        ev.key === "Escape" &&
+        panelRef.current?.contains(document.activeElement)
+      )
+        onClose();
+    };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  }, [open, onClose]);
 
   async function send(body: {
     input?: string;
@@ -83,17 +106,24 @@ export function AgentPanel({ onClose }: { onClose: () => void }) {
     setError(null);
     setPending([]);
     setLive("");
-    const shown = body.input
-      ? [...history, { role: "user" as const, content: body.input }]
-      : history;
-    setHistory(shown);
+    setSending(body.input ?? null);
+    const controller = new AbortController();
+    abortRef.current = controller;
+    let confirmed = false;
     try {
       const res = await fetch("/api/agent", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ messages: history, ...body }),
+        signal: controller.signal,
       });
-      if (!res.ok || !res.body) throw new Error(String(res.status));
+      if (!res.ok || !res.body) {
+        const data = await res.json().catch(() => ({}));
+        setError(
+          data.error === "conversationTooLong" ? data.error : "agentFailed",
+        );
+        return;
+      }
       const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
       let buffer = "";
       for (;;) {
@@ -112,14 +142,18 @@ export function AgentPanel({ onClose }: { onClose: () => void }) {
           else if (event.type === "changed") router.refresh();
           else if (event.type === "error") setError(event.code);
           else if (event.type === "done") {
+            confirmed = true;
             setHistory(event.messages);
             setLive("");
           }
         }
       }
     } catch {
-      setError("aiFailed");
+      if (!controller.signal.aborted) setError("agentFailed");
     } finally {
+      // Nothing confirmed: give the text back so it can be sent again.
+      if (!confirmed && body.input) setInput(body.input);
+      setSending(null);
       setBusy(false);
       setLiveTool(null);
       setDecisions({});
@@ -149,7 +183,9 @@ export function AgentPanel({ onClose }: { onClose: () => void }) {
 
   return (
     <aside
+      ref={panelRef}
       aria-label={t("title")}
+      hidden={!open}
       className="bg-background fixed inset-0 z-40 flex flex-col md:sticky md:top-0 md:z-auto md:h-screen md:w-96 md:shrink-0 md:border-l"
     >
       <div className="flex items-center gap-2 border-b px-4 py-3">
@@ -160,7 +196,7 @@ export function AgentPanel({ onClose }: { onClose: () => void }) {
           size="icon-sm"
           aria-label={t("newChat")}
           title={t("newChat")}
-          disabled={busy || !history.length}
+          disabled={busy || (!history.length && !error)}
           onClick={() => {
             setHistory([]);
             setPending([]);
@@ -218,6 +254,11 @@ export function AgentPanel({ onClose }: { onClose: () => void }) {
               </p>
             ),
           )}
+          {sending && (
+            <p className="bg-primary text-primary-foreground ml-8 rounded-lg px-3 py-2 whitespace-pre-wrap">
+              {sending}
+            </p>
+          )}
           {liveTool && (
             <p className="text-muted-foreground text-xs">
               {t(`tools.${liveTool}`)}
@@ -269,9 +310,22 @@ export function AgentPanel({ onClose }: { onClose: () => void }) {
             </div>
           ))}
           {error && (
-            <p role="alert" className="text-destructive text-sm">
-              {e(error)}
-            </p>
+            <div role="alert" className="grid justify-items-start gap-2">
+              <p className="text-destructive text-sm">{e(error)}</p>
+              {error === "conversationTooLong" && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setHistory([]);
+                    setPending([]);
+                    setError(null);
+                  }}
+                >
+                  {t("newChat")}
+                </Button>
+              )}
+            </div>
           )}
           <div ref={endRef} />
         </div>
