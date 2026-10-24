@@ -198,7 +198,7 @@ export function AppShell({
           <span className="font-semibold">{appName}</span>
         </div>
         {banner}
-        <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
+        <main id="main" className="w-full min-w-0 flex-1 px-4 py-6 md:px-6">
           {children}
         </main>
       </div>

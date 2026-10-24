@@ -25,14 +25,18 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { Clock, Flag, Star } from "lucide-react";
 import { toast } from "sonner";
 import { moveApplication } from "@/app/actions/pipeline";
 import { ScoreBadge } from "@/components/assessments/score-badge";
 import { Badge } from "@/components/ui/badge";
+import { STUCK_DAYS, isActive } from "@/lib/data/dashboard";
 import type { Stage } from "@/lib/data/schemas";
-import { cn } from "@/lib/utils";
+import { PHASE_STYLE } from "@/lib/phase-style";
+import { cn, initials } from "@/lib/utils";
+import { MarkButtons } from "./marks";
 
-export type BoardColumn = { id: string; label: string };
+export type BoardColumn = { id: string; label: string; phase: Stage };
 
 export type BoardCard = {
   id: string;
@@ -45,60 +49,76 @@ export type BoardCard = {
   /** A custom stage name, shown on the all jobs board. */
   stageName: string | null;
   position: number;
-  stageChangedAt: string;
+  /** Days in the current stage, counted on the server so hydration matches. */
+  days: number;
   score: number | null;
   linkedinUrl: string | null;
+  starred: boolean;
+  flagged: boolean;
+  /** Not meeting the requirements: the recruiter's call, else the AI score. */
+  mismatch: boolean;
 };
-
-function initials(name: string) {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((p) => p[0]?.toUpperCase())
-    .join("");
-}
-
-function daysSince(iso: string) {
-  return Math.max(
-    0,
-    Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000),
-  );
-}
 
 function CardBody({
   card,
   drawerHref,
 }: {
   card: BoardCard;
+  /** Absent on the drag preview, which is not interactive. */
   drawerHref?: string;
 }) {
   const t = useTranslations("Candidates");
   const ai = useTranslations("Assessment");
+  const m = useTranslations("Marks");
+  const { days } = card;
   return (
     <>
-      <div className="bg-muted text-muted-foreground flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-medium">
+      <div
+        className={cn(
+          "flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
+          PHASE_STYLE[card.stage].soft,
+        )}
+      >
         {initials(card.name)}
       </div>
       <div className="min-w-0 flex-1">
-        {drawerHref ? (
-          <Link
-            href={drawerHref}
-            scroll={false}
-            className="block truncate text-sm font-medium hover:underline"
-            onPointerDown={(e) => e.stopPropagation()}
-          >
-            {card.name}
-          </Link>
-        ) : (
-          <span className="block truncate text-sm font-medium">
-            {card.name}
-          </span>
-        )}
+        <div className="flex items-start gap-1">
+          {drawerHref ? (
+            <Link
+              href={drawerHref}
+              scroll={false}
+              className="min-w-0 flex-1 truncate text-sm font-medium hover:underline"
+              onPointerDown={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+            >
+              {card.name}
+            </Link>
+          ) : (
+            <span className="min-w-0 flex-1 truncate text-sm font-medium">
+              {card.name}
+            </span>
+          )}
+          {drawerHref ? (
+            <MarkButtons
+              applicationId={card.id}
+              starred={card.starred}
+              flagged={card.flagged}
+            />
+          ) : (
+            <span className="flex gap-1">
+              {card.starred && (
+                <Star className="size-3.5 fill-amber-400 text-amber-500" />
+              )}
+              {card.flagged && (
+                <Flag className="size-3.5 fill-current text-rose-600" />
+              )}
+            </span>
+          )}
+        </div>
         <div className="mt-1 flex flex-wrap items-center gap-1.5">
           <Badge
             variant="secondary"
-            className="max-w-32 justify-start"
+            className="max-w-36 justify-start"
             title={card.jobTitle}
           >
             <span className="truncate">{card.jobTitle}</span>
@@ -109,29 +129,53 @@ function CardBody({
               label={ai("scoreLabel", { score: card.score })}
             />
           )}
-          <span className="text-muted-foreground text-xs">
-            {t("daysShort", { days: daysSince(card.stageChangedAt) })}
-          </span>
+          {card.mismatch && (
+            <span className="inline-flex h-5 items-center rounded-full bg-rose-100 px-2 text-xs font-medium text-rose-800 dark:bg-rose-950 dark:text-rose-200">
+              {m("mismatch")}
+            </span>
+          )}
         </div>
-        {card.stageName && (
-          <span className="text-muted-foreground mt-1 block truncate text-xs">
-            {card.stageName}
+        <div className="text-muted-foreground mt-1 flex items-center gap-2 text-xs">
+          <span
+            className={cn(
+              "inline-flex items-center gap-1",
+              days > STUCK_DAYS &&
+                isActive(card.stage) &&
+                "font-medium text-amber-700 dark:text-amber-400",
+            )}
+          >
+            <Clock className="size-3" />
+            {t("daysShort", { days })}
           </span>
-        )}
+          {card.stageName && <span className="truncate">{card.stageName}</span>}
+          {card.linkedinUrl && (
+            <a
+              href={card.linkedinUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={t("linkedin")}
+              className="hover:text-foreground ml-auto shrink-0 font-semibold"
+              onPointerDown={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+            >
+              {t("linkedinShort")}
+            </a>
+          )}
+        </div>
       </div>
-      {card.linkedinUrl && (
-        <a
-          href={card.linkedinUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label={t("linkedin")}
-          className="text-muted-foreground hover:text-foreground shrink-0 text-xs font-semibold"
-          onPointerDown={(e) => e.stopPropagation()}
-        >
-          {t("linkedinShort")}
-        </a>
-      )}
     </>
+  );
+}
+
+function cardClass(card: BoardCard) {
+  return cn(
+    "bg-card flex items-start gap-2 rounded-lg border border-l-4 p-2 shadow-xs",
+    PHASE_STYLE[card.stage].edge,
+    card.mismatch &&
+      "border-rose-300 bg-rose-50/80 ring-1 ring-rose-300 dark:border-rose-900 dark:bg-rose-950/30 dark:ring-rose-900",
+    card.starred &&
+      !card.mismatch &&
+      "ring-1 ring-amber-300 dark:ring-amber-800",
   );
 }
 
@@ -155,7 +199,8 @@ function SortableCard({
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
-        "bg-card flex cursor-grab touch-none items-start gap-2 rounded-lg border p-2 shadow-xs",
+        cardClass(card),
+        "cursor-grab touch-none",
         isDragging && "opacity-40",
       )}
       {...attributes}
@@ -183,13 +228,23 @@ function Column({
     <section
       aria-label={column.label}
       className={cn(
-        "bg-muted/40 flex w-60 shrink-0 flex-col gap-2 rounded-xl p-2",
+        "flex min-w-52 flex-1 basis-0 flex-col gap-2 rounded-xl p-2",
+        PHASE_STYLE[column.phase].wash,
         isOver && "ring-ring/40 ring-2",
       )}
     >
-      <h2 className="flex items-center justify-between px-1 text-sm font-medium">
-        {column.label}
-        <span className="text-muted-foreground text-xs tabular-nums">
+      <h2 className="flex items-center gap-2 px-1 pt-1 text-sm font-semibold">
+        <span
+          className={cn("size-2.5 rounded-full", PHASE_STYLE[column.phase].dot)}
+          aria-hidden
+        />
+        <span className="min-w-0 flex-1 truncate">{column.label}</span>
+        <span
+          className={cn(
+            "rounded-full px-2 text-xs tabular-nums",
+            PHASE_STYLE[column.phase].soft,
+          )}
+        >
           {cards.length}
         </span>
       </h2>
@@ -197,7 +252,7 @@ function Column({
         items={cards.map((c) => c.id)}
         strategy={verticalListSortingStrategy}
       >
-        <ul ref={setNodeRef} className="flex min-h-16 flex-col gap-2">
+        <ul ref={setNodeRef} className="flex min-h-24 flex-1 flex-col gap-2">
           {cards.map((card) => (
             <SortableCard
               key={card.id}
@@ -333,7 +388,15 @@ export function KanbanBoard({
     }
     if (ok) {
       // The phase board names the card's stage; it can change with the move.
-      const done = mode === "phase" ? { ...moved, stageName } : moved;
+      // The phase and the days in stage follow the new column, so the colours
+      // and the stuck highlight are right before the next refresh.
+      const phase = columns.find((c) => c.id === to)?.phase ?? card.stage;
+      const restarted = saved.column !== to ? { stage: phase, days: 0 } : {};
+      const done = {
+        ...moved,
+        ...restarted,
+        ...(mode === "phase" ? { stageName } : {}),
+      };
       setCards((prev) => prev.map((c) => (c.id === card.id ? done : c)));
       setSynced((prev) => prev.map((c) => (c.id === card.id ? done : c)));
     } else {
@@ -347,6 +410,8 @@ export function KanbanBoard({
 
   return (
     <DndContext
+      // A fixed id keeps the server and client markup the same.
+      id="pipeline-board"
       sensors={sensors}
       collisionDetection={closestCorners}
       onDragStart={onDragStart}
@@ -369,7 +434,7 @@ export function KanbanBoard({
       </div>
       <DragOverlay>
         {active && (
-          <div className="bg-card flex items-start gap-2 rounded-lg border p-2 shadow-lg">
+          <div className={cn(cardClass(active), "shadow-lg")}>
             <CardBody card={active} />
           </div>
         )}

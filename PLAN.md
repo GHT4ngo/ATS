@@ -132,6 +132,21 @@ Prioritized on 24 Oct: the agent first, then custom pipeline stages; the rest on
 * [x] Storyboard for the 5 minute Loom demo in `docs/demo-storyboard.md` (the user records it, adding one or two candidates live)
 * [x] Final README: screenshots, setup instructions, architecture overview
 
+## Phase 10: Feedback round (Sat 24 to Sun 25)
+
+From the first walk through of v1. Branch `feat/phase-10-ux`.
+
+* [x] Violet theme and one colour per phase on every page (blue, violet, amber, cyan, green, red)
+* [x] Dashboard: clickable stats with change against the previous period, activity chart for 7, 30 or 90 days, clickable funnel, needs attention, standouts and team
+* [x] Pipeline uses the full width, coloured columns and cards, amber days in stage after 14 days
+* [x] Star and flag per application; "does not meet requirements" from an AI score below 40 or the recruiter's own call
+* [x] Mark and phase filters on the pipeline and candidates pages; jobs page with phase coloured counts
+* [x] Team and Settings pages removed: team on the dashboard, settings in a dialog behind the cog
+* [x] Organizations and users merged into one Customers page
+* [x] Developer mode for admins with a customer preview (admin tools hidden, changes still logged as the admin)
+* [x] Fix: the activity log kept no backdated seed history, so the demo timeline showed the seed time
+* [ ] Apply the migration in production and reseed the demo (with approval)
+
 ## Assumptions (for the email)
 
 * B2B: each customer is an **organization**, and an organization can have several users.

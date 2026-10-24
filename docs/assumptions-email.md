@@ -44,7 +44,7 @@ Alla sju användarberättelser är på plats och testade, liksom bedömningen av
 
 * Datan ligger i Supabase i EU av hänsyn till GDPR. Varje tabell har radnivåsäkerhet, så en kund kan aldrig se en annan kunds data.
 * Språket är svenska som standard, med engelska som alternativ. Användaren väljer språk och tema själv.
-* Demodatan är ett påhittat bolag i Stockholm, Nordlys Tech AB, med fyra tjänster och tjugo kandidater med CV:n.
+* Demodatan är ett påhittat bolag i Stockholm, Nordlys Tech AB, med fyra tjänster och 23 kandidater med CV:n.
 
 ## Hur jag angrep bedömningen med AI
 

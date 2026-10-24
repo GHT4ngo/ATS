@@ -47,6 +47,18 @@ def test_customer_logs_as_self_in_own_org(world: World, login):
     assert rows[0]["actor_id"] == world.customer_a.id
 
 
+def test_customer_cannot_backdate_an_entry(world: World, login):
+    entry = {**_entry(world.org_a, world.customer_a.id), "created_at": "2020-01-01T00:00:00Z"}
+    rows = login(world.customer_a).table("activity_log").insert(entry).execute().data
+    assert not rows[0]["created_at"].startswith("2020")
+
+
+def test_service_role_keeps_a_backdated_entry(world: World, service):
+    entry = {**_entry(world.org_a, world.customer_a.id), "created_at": "2020-01-01T00:00:00Z"}
+    rows = service.table("activity_log").insert(entry).execute().data
+    assert rows[0]["created_at"].startswith("2020")
+
+
 def test_customer_cannot_log_as_someone_else(world: World, login):
     with pytest.raises(APIError) as exc:
         login(world.customer_a).table("activity_log").insert(

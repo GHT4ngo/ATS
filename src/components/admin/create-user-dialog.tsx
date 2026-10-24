@@ -26,8 +26,11 @@ import { TemporaryPasswordField } from "./temporary-password-field";
 
 export function CreateUserDialog({
   organizations,
+  organizationId,
 }: {
   organizations: { id: string; name: string }[];
+  /** Opens from an organization: the user joins it, and the trigger is small. */
+  organizationId?: string;
 }) {
   const t = useTranslations("Admin");
   const c = useTranslations("Common");
@@ -52,7 +55,13 @@ export function CreateUserDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button />}>{t("newUser")}</DialogTrigger>
+      <DialogTrigger
+        render={
+          organizationId ? <Button variant="outline" size="sm" /> : <Button />
+        }
+      >
+        {organizationId ? t("addUser") : t("newUser")}
+      </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{t("newUser")}</DialogTitle>
@@ -95,7 +104,12 @@ export function CreateUserDialog({
           {role === "customer" && (
             <div className="grid gap-2">
               <Label htmlFor="user-org">{c("organization")}</Label>
-              <Select name="organizationId" items={orgItems} required>
+              <Select
+                name="organizationId"
+                items={orgItems}
+                defaultValue={organizationId}
+                required
+              >
                 <SelectTrigger id="user-org" className="w-full">
                   <SelectValue placeholder={t("selectOrganization")} />
                 </SelectTrigger>
