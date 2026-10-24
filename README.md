@@ -94,7 +94,7 @@ flowchart LR
 | Playwright (`e2e/`) | the full v1 flow from admin to customer, auth, CV assessment, the assistant, custom stages |
 | `scripts/eval_assessment.py` | AI score consistency on sample CVs |
 
-GitHub Actions runs everything except the paid eval on every pull request. Each phase was reviewed before merging; the findings and fixes are logged in [REVIEW.md](./REVIEW.md). The plan and the decisions behind it are in [PLAN.md](./PLAN.md).
+GitHub Actions runs everything except the paid eval on every pull request. Each phase was reviewed before merging; the findings and fixes are logged in [REVIEW.md](./REVIEW.md). The plan and the decisions behind it are in [PLAN.md](./PLAN.md). The assumptions behind the product are in [docs/assumptions-email.md](./docs/assumptions-email.md), and the demo script in [docs/demo-storyboard.md](./docs/demo-storyboard.md).
 
 ## Getting started
 
