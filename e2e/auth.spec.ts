@@ -73,7 +73,7 @@ test.afterAll(async () => {
 });
 
 test("signed out visitors are sent to the login page", async ({ page }) => {
-  await page.goto("/team");
+  await page.goto("/candidates");
   await expect(page).toHaveURL(/\/login$/);
 });
 
@@ -89,11 +89,11 @@ test("customer signs in, sees the team and cannot reach the admin pages", async 
 }) => {
   await signIn(page, emails.customer);
   await expect(page).toHaveURL(/\/dashboard$/);
-  await page.getByRole("link", { name: "Team" }).click();
-  await expect(page.getByRole("cell", { name: emails.mate })).toBeVisible();
-  await expect(page.getByRole("cell", { name: emails.customer })).toBeVisible();
+  await expect(page.getByText(emails.mate)).toBeVisible();
+  await expect(page.getByText(emails.customer)).toBeVisible();
+  await expect(page.getByRole("link", { name: "Kunder" })).toHaveCount(0);
 
-  await page.goto("/admin/users");
+  await page.goto("/admin/customers");
   await expect(page).toHaveURL(/\/dashboard$/);
 
   await page.getByRole("button", { name: "Logga ut" }).click();
@@ -102,20 +102,22 @@ test("customer signs in, sees the team and cannot reach the admin pages", async 
 
 test("customer changes language and name in the settings", async ({ page }) => {
   await signIn(page, emails.mate);
-  await page.goto("/settings");
-  await page.getByLabel("Fullständigt namn").fill("E2E Renamed");
-  await page.locator("main").getByLabel("Språk").click();
+  await page.getByRole("button", { name: "Inställningar" }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByLabel("Fullständigt namn").fill("E2E Renamed");
+  await dialog.getByLabel("Språk").click();
   await page.getByRole("option", { name: "English" }).click();
-  await page.getByRole("button", { name: "Spara", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
+  await dialog.getByRole("button", { name: "Spara", exact: true }).click();
   await expect(page.getByText("Saved")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("link", { name: "Dashboard" })).toBeVisible();
 });
 
 test("admin creates an organization and a user, acts as the customer and deactivates the user", async ({
   page,
 }) => {
   await signIn(page, emails.admin);
-  await page.goto("/admin/organizations");
+  await page.goto("/admin/customers");
   await page.getByRole("button", { name: "Ny organisation" }).click();
   await page.getByLabel("Organisationens namn").fill(`E2E New Org ${run}`);
   await page
@@ -123,10 +125,9 @@ test("admin creates an organization and a user, acts as the customer and deactiv
     .getByRole("button", { name: "Ny organisation" })
     .click();
   await expect(
-    page.getByRole("cell", { name: `e2e-new-org-${run}` }),
+    page.getByRole("region", { name: `E2E New Org ${run}` }),
   ).toBeVisible();
 
-  await page.goto("/admin/users");
   await page.getByRole("button", { name: "Ny användare" }).click();
   const dialog = page.getByRole("dialog");
   await dialog.getByLabel("Namn").fill("E2E Created");
@@ -135,24 +136,42 @@ test("admin creates an organization and a user, acts as the customer and deactiv
   await page.getByRole("option", { name: `E2E Org ${run}` }).click();
   await dialog.getByRole("button", { name: "Generera" }).click();
   await dialog.getByRole("button", { name: "Skapa" }).click();
-  const row = page.getByRole("row", { name: new RegExp(emails.created) });
+  const row = page.getByRole("listitem").filter({ hasText: emails.created });
   await expect(row).toBeVisible();
 
   // Act as the customer organization.
   await page.getByLabel("Agera som kund").click();
   await page.getByRole("option", { name: `E2E Org ${run}` }).click();
   await expect(page.getByText(`Visar som E2E Org ${run}`)).toBeVisible();
-  await page.goto("/team");
-  await expect(page.getByRole("cell", { name: emails.created })).toBeVisible();
+  await page.goto("/dashboard");
+  await expect(page.getByText(emails.created)).toBeVisible();
 
   // Deactivate the new user.
-  await page.goto("/admin/users");
+  await page.goto("/admin/customers");
   await row.getByRole("button", { name: "Inaktivera" }).click();
   await page
     .getByRole("dialog")
     .getByRole("button", { name: "Inaktivera" })
     .click();
   await expect(row.getByText("Inaktiverad")).toBeVisible();
+});
+
+test("admin turns on developer mode and previews the app as a customer", async ({
+  page,
+}) => {
+  await signIn(page, emails.admin);
+  await page.getByRole("button", { name: "Inställningar" }).click();
+  await page.getByRole("dialog").getByRole("switch").click();
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "Utvecklarverktyg" }).click();
+  await page.getByRole("menuitem", { name: `E2E Org ${run}` }).click();
+  await expect(page.getByText(`Kundvy: E2E Org ${run}`)).toBeVisible();
+  await expect(page.getByRole("link", { name: "Kunder" })).toHaveCount(0);
+  await expect(page.getByLabel("Agera som kund")).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Avsluta kundvy" }).click();
+  await expect(page.getByRole("link", { name: "Kunder" })).toBeVisible();
+  await expect(page.getByText(`Visar som E2E Org ${run}`)).toBeVisible();
 });
 
 test("a deactivated user cannot sign in", async ({ page }) => {

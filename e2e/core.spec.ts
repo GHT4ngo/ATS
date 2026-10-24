@@ -47,16 +47,14 @@ test("admin creates a customer, who creates a job and candidates, moves a card a
 }) => {
   // Admin creates the customer organization and its first user
   await signIn(page, emails.admin);
-  await page.goto("/admin/organizations");
+  await page.goto("/admin/customers");
   await page.getByRole("button", { name: "Ny organisation" }).click();
   await page.getByLabel("Organisationens namn").fill(orgName);
   await page
     .getByRole("dialog")
     .getByRole("button", { name: "Ny organisation" })
     .click();
-  await expect(
-    page.getByRole("cell", { name: `e2e-core-${run}` }),
-  ).toBeVisible();
+  await expect(page.getByRole("region", { name: orgName })).toBeVisible();
   const { data: org } = await admin
     .from("organizations")
     .select("id")
@@ -64,7 +62,6 @@ test("admin creates a customer, who creates a job and candidates, moves a card a
     .single();
   orgId = org!.id;
 
-  await page.goto("/admin/users");
   await page.getByRole("button", { name: "Ny användare" }).click();
   const dialog = page.getByRole("dialog");
   await dialog.getByLabel("Namn").fill("Core Customer");
@@ -74,7 +71,7 @@ test("admin creates a customer, who creates a job and candidates, moves a card a
   await dialog.getByLabel("Tillfälligt lösenord").fill(PASSWORD);
   await dialog.getByRole("button", { name: "Skapa" }).click();
   await expect(
-    page.getByRole("row", { name: new RegExp(emails.customer) }),
+    page.getByRole("listitem").filter({ hasText: emails.customer }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Logga ut" }).click();
   await expect(page).toHaveURL(/\/login$/);
@@ -135,6 +132,19 @@ test("admin creates a customer, who creates a job and candidates, moves a card a
   await expect(
     page.getByRole("region", { name: "Screening" }).getByText("Anna Andersson"),
   ).toBeVisible();
+
+  // Star Bo and filter on stars
+  const bo = page.getByRole("button", { name: /Bo Berg/ });
+  await bo.getByRole("button", { name: "Stjärnmärk" }).click();
+  await expect(
+    bo.getByRole("button", { name: "Ta bort stjärna" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Stjärnmärkta" }).click();
+  await expect(page).toHaveURL(/marks=starred/);
+  await expect(page.getByText("Anna Andersson")).toHaveCount(0);
+  await expect(page.getByText("Bo Berg")).toBeVisible();
+  await page.getByRole("button", { name: "Stjärnmärkta" }).click();
+  await expect(page.getByText("Anna Andersson")).toBeVisible();
 
   // Filter by job and by name, kept in the URL
   await page
