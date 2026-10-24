@@ -15,7 +15,7 @@
 
 </div>
 
-![The pipeline for all jobs, with AI scores on the cards](docs/screenshots/pipeline.png)
+![The pipeline for all jobs: one colour per phase, AI scores, stars, flags and red cards for candidates who do not meet the requirements](docs/screenshots/pipeline.png)
 
 ## What it does
 
@@ -25,17 +25,23 @@ Mini ATS is a recruiting tool for small and medium sized companies. An internal 
 
 | # | As a | I can | Where |
 |:--|:-----|:------|:------|
-| 1 | **Admin** | create accounts, both admin and customer accounts | Admin, Users: email, role, organization and a generated temporary password |
-| 2 | **Customer** | log in | Email and password, password reset by email, change password in Settings |
+| 1 | **Admin** | create accounts, both admin and customer accounts | Customers: each organization with its users; email, role and a generated temporary password |
+| 2 | **Customer** | log in | Email and password, password reset by email, change password under the settings cog |
 | 3 | **Customer** | post jobs I'm recruiting for | Jobs: title, description, location, employment type, open, paused or closed |
 | 4 | **Customer** | add candidates with profile information | Candidates: contact details, LinkedIn link, notes, a CV as PDF, one or more jobs |
-| 5 | **Customer** | see a compact kanban view of all my candidates | Pipeline: drag and drop with mouse or keyboard, days in stage, AI score |
-| 6 | **Customer** | filter the kanban view by job and candidate name | Pipeline: job chips and a name search, kept in the URL so a view can be shared |
-| 7 | **Admin** | do everything customers can do, on their behalf | An organization switcher with a "Viewing as" banner; no impersonation, so every change is logged as the admin |
+| 5 | **Customer** | see a compact kanban view of all my candidates | Pipeline: drag and drop with mouse or keyboard, one colour per phase, days in stage, AI score |
+| 6 | **Customer** | filter the kanban view by job and candidate name | Pipeline: job chips, a name search and mark filters, kept in the URL so a view can be shared |
+| 7 | **Admin** | do everything customers can do, on their behalf | An organization switcher with a "Viewing as" banner, and a customer preview in developer mode; no impersonation, so every change is logged as the admin |
 
 All seven are live, covered by end to end tests and backed by row level security tested per policy.
 
 ### Beyond the brief
+
+**Dashboard.** Stats that link to the page behind them, each compared with the previous period; an activity chart of applications, hires and interviews over 7, 30 or 90 days; a funnel that opens the candidates in a phase; a list of candidates who need attention (flagged, stuck for more than two weeks, CV not assessed); standouts; and the team's activity.
+
+![The dashboard](docs/screenshots/dashboard.png)
+
+**Marks.** A star for a candidate who stands out and a flag for one that needs a follow up. A candidate whose AI score is below 40 gets a red card as not meeting the requirements, and the recruiter can confirm or overrule that by hand.
 
 **AI CV assessment.** One click scores a candidate's CV against a job from 0 to 100, with a summary, strengths, gaps, a match per requirement with evidence, and suggested interview questions. It is never automatic, it states clearly that it is decision support, and the prompt keeps protected traits out of the judgement. A consistency eval runs each sample CV several times: the spread stays within 6 points and the ranking holds.
 

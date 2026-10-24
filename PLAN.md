@@ -6,7 +6,7 @@
 
 ## Where we left off (24 Oct)
 
-* **Production:** all five migrations applied; the Nordlys Tech demo was reseeded on 24 Oct with custom stages on the frontend job (logins `sara.lindqvist@nordlys.example` and `johan.ek@nordlys.example`, new password kept outside the repo); `ANTHROPIC_API_KEY` is set on Vercel (Production only, not Preview).
+* **Production:** all six migrations applied; Phase 10 (PR #10) is live; the Nordlys Tech demo was reseeded on 24 Oct with 23 candidates, history, stars and flags (logins `sara.lindqvist@nordlys.example` and `johan.ek@nordlys.example`, new password kept outside the repo); `ANTHROPIC_API_KEY` is set on Vercel (Production only, not Preview).
 * **Done in Phase 8:** the recruiter agent (PR #7) and custom pipeline stages per job (PR #8), both reviewed and live.
 * **Open items:**
   * Send the v1 delivery (admin login, live URL, repo link).
@@ -145,7 +145,8 @@ From the first walk through of v1. Branch `feat/phase-10-ux`.
 * [x] Organizations and users merged into one Customers page
 * [x] Developer mode for admins with a customer preview (admin tools hidden, changes still logged as the admin)
 * [x] Fix: the activity log kept no backdated seed history, so the demo timeline showed the seed time
-* [ ] Apply the migration in production and reseed the demo (with approval)
+* [x] Apply the migration in production and reseed the demo (24 Oct, new password kept outside the repo)
+* [x] New README screenshots, including the dashboard
 
 ## Assumptions (for the email)
 
