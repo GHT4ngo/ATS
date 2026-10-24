@@ -58,7 +58,12 @@
     "aiFailed": "Bedömningen misslyckades. Försök igen.",
     "cvDownloadFailed": "CV:t kunde inte hämtas. Försök igen.",
     "cvUnreadable": "CV-filen kunde inte öppnas. Den kan vara skadad eller lösenordsskyddad.",
-    "assessmentRunning": "En bedömning pågår redan för den här kandidaten och tjänsten."
+    "assessmentRunning": "En bedömning pågår redan för den här kandidaten och tjänsten.",
+    "agentTooLong": "Assistenten behövde för många steg. Prova en smalare fråga.",
+    "agentUnavailable": "Assistenten är inte konfigurerad.",
+    "agentRefused": "Assistenten avböjde förfrågan.",
+    "agentFailed": "Assistenten stötte på ett problem. Försök igen.",
+    "conversationTooLong": "Konversationen är för lång. Starta en ny för att fortsätta."
   },
   "Auth": {
     "loginTitle": "Logga in",
@@ -106,7 +111,8 @@
     "skipToContent": "Hoppa till innehållet",
     "closeMenu": "Stäng menyn",
     "shortcut": "Ctrl K",
-    "menu": "Meny"
+    "menu": "Meny",
+    "assistant": "Assistent"
   },
   "Dashboard": {
     "welcome": "Välkommen, {name}",
@@ -257,5 +263,30 @@
     "scoreLabel": "AI-poäng {score} av 100",
     "meta": "{date} · {model}",
     "disclaimer": "AI-bedömningen är ett beslutsstöd, inte ett beslut. Den kan ha fel och spegla fördomar, så läs CV:t själv och låt en människa fatta varje beslut. CV-texten skickas till Anthropic för bearbetning."
+  },
+  "Agent": {
+    "title": "Assistent",
+    "intro": "Fråga om din pipeline, hitta kandidater, flytta dem mellan steg eller skriv ett mejlutkast. Flyttar görs först när du har godkänt dem.",
+    "suggestSummary": "Sammanfatta pipelinen",
+    "suggestStalled": "Vilka kandidater har fastnat länge i ett steg?",
+    "suggestEmail": "Skriv en intervjuinbjudan till den starkaste frontendkandidaten",
+    "newChat": "Ny konversation",
+    "close": "Stäng assistenten",
+    "inputLabel": "Meddelande till assistenten",
+    "placeholder": "Fråga assistenten...",
+    "send": "Skicka",
+    "thinking": "Tänker...",
+    "approveTitle": "Godkänn flytten",
+    "moveQuestion": "Flytta {candidate} ({job}) från {from} till {to}?",
+    "approve": "Godkänn",
+    "decline": "Avböj",
+    "disclaimer": "AI kan ha fel. Mejl är utkast och skickas aldrig.",
+    "tools": {
+      "search_candidates": "Söker kandidater...",
+      "get_candidate": "Läser kandidatprofilen...",
+      "list_jobs": "Läser tjänsterna...",
+      "pipeline_summary": "Sammanfattar pipelinen...",
+      "move_candidate": "Föreslår en flytt..."
+    }
   }
 }

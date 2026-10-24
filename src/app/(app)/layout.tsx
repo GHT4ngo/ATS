@@ -56,6 +56,7 @@ export default async function AppLayout({
       links={links}
       appName={c("appName")}
       defaultCollapsed={defaultCollapsed}
+      assistant={Boolean(activeOrg)}
       banner={
         isAdmin && activeOrg ? (
           <div className="bg-amber-100 text-amber-950 dark:bg-amber-950 dark:text-amber-100">

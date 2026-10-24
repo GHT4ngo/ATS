@@ -1,9 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
-import { Menu, PanelLeftClose, PanelLeftOpen, Search, X } from "lucide-react";
+import {
+  Menu,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Search,
+  Sparkles,
+  X,
+} from "lucide-react";
+import { AgentPanel } from "@/components/agent/agent-panel";
 import { Button } from "@/components/ui/button";
 import { SIDEBAR_COOKIE } from "@/lib/sidebar";
 import { cn } from "@/lib/utils";
@@ -17,6 +25,7 @@ export function AppShell({
   footer,
   compactFooter,
   banner,
+  assistant,
   children,
 }: {
   links: NavLink[];
@@ -25,12 +34,16 @@ export function AppShell({
   footer: React.ReactNode;
   compactFooter: React.ReactNode;
   banner?: React.ReactNode;
+  /** The assistant needs an active organization. */
+  assistant: boolean;
   children: React.ReactNode;
 }) {
   const t = useTranslations("Nav");
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [assistantOpen, setAssistantOpen] = useState(false);
+  const closeAssistant = useCallback(() => setAssistantOpen(false), []);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -108,6 +121,23 @@ export function AppShell({
           <kbd className="bg-muted rounded px-1.5 text-xs">{t("shortcut")}</kbd>
         </Button>
       )}
+      {assistant && (
+        <Button
+          variant={assistantOpen ? "secondary" : "ghost"}
+          size={compact ? "icon-sm" : "sm"}
+          className={compact ? "self-center" : "w-full justify-start gap-2"}
+          aria-label={compact ? t("assistant") : undefined}
+          title={compact ? t("assistant") : undefined}
+          aria-pressed={assistantOpen}
+          onClick={() => {
+            setAssistantOpen((o) => !o);
+            setMobileOpen(false);
+          }}
+        >
+          <Sparkles className="size-4" />
+          {!compact && t("assistant")}
+        </Button>
+      )}
       <div className="flex-1 overflow-y-auto">
         <NavLinks
           links={links}
@@ -172,6 +202,10 @@ export function AppShell({
           {children}
         </main>
       </div>
+      {/* Stays mounted while closed, so the conversation survives. */}
+      {assistant && (
+        <AgentPanel open={assistantOpen} onClose={closeAssistant} />
+      )}
     </div>
   );
 }
