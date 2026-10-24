@@ -21,6 +21,9 @@ Object.assign(process.env, env);
 export default defineConfig({
   testDir: "./e2e",
   workers: 1,
+  // The dev server compiles each route on its first request, which can take
+  // longer than the default 5 seconds on a CI runner.
+  expect: { timeout: process.env.CI ? 15_000 : 5_000 },
   use: { baseURL: "http://localhost:3100" },
   webServer: {
     command: "pnpm dev --port 3100",
