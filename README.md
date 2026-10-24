@@ -11,70 +11,90 @@
 [![Claude](https://img.shields.io/badge/AI-Claude-D97757?logo=anthropic&logoColor=white)](https://www.anthropic.com)
 [![Vercel](https://img.shields.io/badge/Hosted%20on-Vercel-000?logo=vercel)](https://vercel.com)
 
-**Live:** [ats.t4ngo.com](https://ats.t4ngo.com) · **Plan:** [PLAN.md](./PLAN.md) · **Deadline:** Friday 30 October 2026
+**Live:** [ats.t4ngo.com](https://ats.t4ngo.com) · **Plan:** [PLAN.md](./PLAN.md) · **Reviews:** [REVIEW.md](./REVIEW.md)
 
 </div>
 
-## The assignment
+![The pipeline for all jobs, with AI scores on the cards](docs/screenshots/pipeline.png)
 
-Build a **mini ATS (applicant tracking system)** that can be live with a first customer as quickly as possible.
+## What it does
 
-### Core features
+Mini ATS is a recruiting tool for small and medium sized companies. An internal admin sets up each customer company and its users; the customer's recruiters post jobs, add candidates and move them through a kanban pipeline. Everything is in Swedish by default, with English one click away.
 
-| # | As a | I can | Status |
-|:--|:-----|:------|:------:|
-| 1 | **Admin** | create accounts (both admin and customer accounts) | Todo |
-| 2 | **Customer** | log in | Todo |
-| 3 | **Customer** | post jobs I'm recruiting candidates for | Todo |
-| 4 | **Customer** | add candidates with profile information (for example a LinkedIn link) | Todo |
-| 5 | **Customer** | see a compact kanban view of all my candidates | Todo |
-| 6 | **Customer** | filter the kanban view by job and candidate name | Todo |
-| 7 | **Admin** | do everything customers can do, on their behalf | Todo |
+### The brief: seven user stories
 
-### Guidelines
+| # | As a | I can | Where |
+|:--|:-----|:------|:------|
+| 1 | **Admin** | create accounts, both admin and customer accounts | Admin, Users: email, role, organization and a generated temporary password |
+| 2 | **Customer** | log in | Email and password, password reset by email, change password in Settings |
+| 3 | **Customer** | post jobs I'm recruiting for | Jobs: title, description, location, employment type, open, paused or closed |
+| 4 | **Customer** | add candidates with profile information | Candidates: contact details, LinkedIn link, notes, a CV as PDF, one or more jobs |
+| 5 | **Customer** | see a compact kanban view of all my candidates | Pipeline: drag and drop with mouse or keyboard, days in stage, AI score |
+| 6 | **Customer** | filter the kanban view by job and candidate name | Pipeline: job chips and a name search, kept in the URL so a view can be shared |
+| 7 | **Admin** | do everything customers can do, on their behalf | An organization switcher with a "Viewing as" banner; no impersonation, so every change is logged as the admin |
 
-* **Supabase** as the backend (authentication and database)
-* Build as much as possible **with AI tools** (Claude Code, Cursor, Copilot and similar) to move fast
-* Free to make assumptions about customers, wishes and needs
-* Free to add further functionality that fits an ATS if time allows
+All seven are live, covered by end to end tests and backed by row level security tested per policy.
 
-### Extra task: AI feature
+### Beyond the brief
 
-* Implement a simple, stripped down **AI powered assessment of a candidate's CV**
-* At minimum, explain in the demo how such a problem would be approached
+**AI CV assessment.** One click scores a candidate's CV against a job from 0 to 100, with a summary, strengths, gaps, a match per requirement with evidence, and suggested interview questions. It is never automatic, it states clearly that it is decision support, and the prompt keeps protected traits out of the judgement. A consistency eval runs each sample CV several times: the spread stays within 6 points and the ranking holds.
 
-### Deliverables
+![A candidate with an AI assessment](docs/screenshots/drawer-assessment.png)
 
-* [ ] Admin login to the platform
-* [ ] 5 minute demo video (Loom or similar)
-* [ ] Email describing the assumptions made
-* [ ] Link to this repository
-* [ ] Ship often; multiple deliveries are welcome
+**Recruiter assistant.** A chat panel next to the board answers questions about the pipeline, finds candidates, drafts emails and proposes moves. It works through server side tools that run as the signed in user, so it sees exactly what the user may see, and a move only happens after the user approves it.
 
-## Tech stack
+![The assistant proposing a move, waiting for approval](docs/screenshots/assistant.png)
 
-| Layer | Choice |
-|:------|:-------|
-| Frontend | Next.js 15 (App Router), TypeScript, Tailwind CSS, shadcn/ui |
-| Backend | Supabase: Auth, Postgres with Row Level Security, Storage |
-| Kanban | dnd kit (accessible drag and drop) |
-| Language and theme | next intl (Swedish default, English), next themes (dark, light, system) |
-| AI | Anthropic Claude: CV scoring and a recruiter assistant agent |
-| Tooling | pnpm, Python venv (seed scripts, RLS tests, AI evals), Vitest, Playwright, GitHub Actions |
-| Hosting | Vercel, with Cloudflare DNS (ats.t4ngo.com) |
+**Custom stages per job.** Each job can have its own stages, such as a phone screen, a coding test or a final interview, inside six fixed phases. A job's board shows its own columns, while the all jobs board, the dashboard and the assistant keep the common phases.
 
-## Roadmap
+| Board for one job | Stage editor (dark mode) |
+|:---|:---|
+| ![A job board with its own stages](docs/screenshots/pipeline-job-stages.png) | ![The stage editor](docs/screenshots/stages-editor-dark.png) |
 
-See **[PLAN.md](./PLAN.md)** for the full plan. In short:
+**Polish.** Swedish and English, dark, light and system theme, a collapsible sidebar, a command palette (Ctrl K) over pages, candidates and jobs, keyboard drag and drop, skeleton loading states, error and 404 pages, and a responsive layout down to phone width.
 
-1. **Foundations:** scaffold, Supabase, CI, first deploy live
-2. **Data model and security:** schema plus RLS, tested per organization
-3. **Auth and admin:** login, account management, act as customer
-4. **Core features:** jobs, candidates, kanban with filters
-5. **Polish:** dark and light mode, Swedish and English, command palette, responsive layout
-6. **Test and ship v1**
-7. **AI CV assessment** with Claude
-8. **Extras:** Claude recruiter agent, custom stages, career page and more
+## Architecture
+
+```mermaid
+flowchart LR
+  B[Browser] --> N
+  subgraph N[Next.js 15 on Vercel]
+    SC[Server components]
+    SA[Server actions with zod]
+    AG["/api/agent stream"]
+  end
+  N -->|user session, RLS applies| S[(Supabase EU: Auth, Postgres, Storage)]
+  SA -->|service role, assessments only| S
+  SA -->|CV text and job| C[Claude Sonnet 5.5]
+  AG -->|tool loop| O[Claude Opus 5.5]
+```
+
+**Data model.** `organizations` (the customers), `profiles` (users, with role and organization), `jobs`, `job_stages`, `candidates`, `applications` (a candidate in a job, with stage and position), `cv_assessments`, `activity_log` and a private `cvs` storage bucket. Composite foreign keys make sure a row can only point at rows of its own organization, and a CV path must sit in its own candidate's folder.
+
+**Security.**
+
+* Row level security on every table, with a pytest test for each policy (about a hundred cases in `tests/rls/`).
+* Every query goes through one scope helper (`src/lib/data/scope.ts`) that pins it to the active organization. That is what makes "act as customer" safe for admins, who can see every organization through RLS.
+* The service role key is server only. It creates accounts, writes AI assessments (users can read but never write a score) and claims the lock that stops two assessments of the same candidate from running at once.
+* Server actions validate every input with zod; deactivated users are blocked in the database as well as in the app.
+
+**AI.**
+
+* CV assessment: the server extracts the PDF text, sends it with the job description to Claude Sonnet 5.5 with structured output, and stores every run. The prompt lives in `src/lib/ai/assessment-prompt.json`, shared with the Python eval so the two cannot drift. CV text is treated as data, not instructions.
+* Assistant: Claude Opus 5.5 in a streaming tool loop (`src/lib/agent/`) with five tools. Moves pause the loop for the user's approval and resume in the next request. The conversation is kept in the browser and checked on the server for shape and size.
+* Both use Anthropic's server side refusal fallback, and both have a fake mode (`AI_FAKE=1`) so CI tests the full flow without calling the API.
+
+## Quality
+
+| Check | What it covers |
+|:------|:---------------|
+| ESLint, TypeScript, Prettier | the whole codebase |
+| Vitest | prompt building and conversation history handling |
+| pytest (`tests/rls/`) | every RLS policy, the stage triggers, the assessment locks |
+| Playwright (`e2e/`) | the full v1 flow from admin to customer, auth, CV assessment, the assistant, custom stages |
+| `scripts/eval_assessment.py` | AI score consistency on sample CVs |
+
+GitHub Actions runs everything except the paid eval on every pull request. Each phase was reviewed before merging; the findings and fixes are logged in [REVIEW.md](./REVIEW.md). The plan and the decisions behind it are in [PLAN.md](./PLAN.md).
 
 ## Getting started
 
@@ -109,6 +129,36 @@ pnpm e2e                                     # Playwright, starts its own dev se
 ```
 
 GitHub Actions runs everything except the eval on every pull request.
+
+## The assignment
+
+<details>
+<summary><b>The brief, guidelines and deliverables</b></summary>
+
+<br>
+
+Build a **mini ATS (applicant tracking system)** that can be live with a first customer as quickly as possible. The seven core user stories are listed above.
+
+**Guidelines**
+
+* **Supabase** as the backend (authentication and database)
+* Build as much as possible **with AI tools** to move fast; this project was built with Claude Code
+* Free to make assumptions about customers, wishes and needs
+* Free to add further functionality that fits an ATS if time allows
+
+**Extra task: AI feature**
+
+* Implement a simple, stripped down **AI powered assessment of a candidate's CV**
+* At minimum, explain in the demo how such a problem would be approached
+
+**Deliverables**
+
+* Admin login to the platform
+* A 5 minute demo video
+* An email describing the assumptions made
+* A link to this repository
+
+</details>
 
 <details>
 <summary><b>Originaluppgiften (svenska)</b></summary>
