@@ -53,6 +53,12 @@ describe("buildSeries", () => {
 });
 
 describe("periodCounts", () => {
+  it("covers the same 91 days as the weekly chart for 90", () => {
+    const s = buildSeries(90, now, [], []);
+    const r = periodCounts(90, now, [new Date(s[0].start).toISOString()]);
+    expect(r.current).toBe(1);
+  });
+
   it("splits the current and the previous period", () => {
     const r = periodCounts(7, now, [
       "2026-10-23T00:00:00Z",

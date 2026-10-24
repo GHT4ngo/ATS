@@ -140,9 +140,10 @@ export async function setActingOrganization(
   const parsed = setActingOrganizationSchema.safeParse({ organizationId });
   if (!parsed.success) return;
   const store = await cookies();
+  // Acting normally always ends a preview; startCustomerPreview starts one.
+  store.delete(PREVIEW_COOKIE);
   if (!parsed.data.organizationId) {
     store.delete(ACTING_ORG_COOKIE);
-    store.delete(PREVIEW_COOKIE);
   } else {
     const { data } = await (
       await createClient()

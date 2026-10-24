@@ -201,7 +201,8 @@
     "openOrganization": "Öppna",
     "userCount": "{count, plural, one {# användare} other {# användare}}",
     "openJobCount": "{count, plural, one {# öppen tjänst} other {# öppna tjänster}}",
-    "administrators": "Administratörer"
+    "administrators": "Administratörer",
+    "unassigned": "Utan organisation"
   },
   "Stages": {
     "applied": "Ansökt",

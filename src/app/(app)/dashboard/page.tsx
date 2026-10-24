@@ -27,6 +27,7 @@ import {
   isActive,
   parseRange,
   periodCounts,
+  spanDays,
 } from "@/lib/data/dashboard";
 import { STAGES, type Stage } from "@/lib/data/schemas";
 import { getScope } from "@/lib/data/scope";
@@ -34,6 +35,26 @@ import { PHASE_STYLE, isMismatch } from "@/lib/phase-style";
 import { cn, initials } from "@/lib/utils";
 
 const LIST_LIMIT = 6;
+const PAGE = 1000;
+
+/**
+ * Reads every page of a query. PostgREST returns at most 1000 rows per
+ * request, and the dashboard's numbers must not be cut off silently.
+ */
+async function allRows<T>(
+  query: (
+    from: number,
+    to: number,
+  ) => PromiseLike<{ data: T[] | null; error: unknown }>,
+): Promise<{ data: T[] }> {
+  const rows: T[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await query(from, from + PAGE - 1);
+    if (error) throw error;
+    rows.push(...(data ?? []));
+    if (!data || data.length < PAGE) return { data: rows };
+  }
+}
 
 export default async function DashboardPage({
   searchParams,
@@ -70,7 +91,7 @@ export default async function DashboardPage({
 
   const range = parseRange((await searchParams).range);
   const now = Date.now();
-  const since = new Date(now - 2 * range * 86_400_000 - 86_400_000);
+  const since = new Date(now - 2 * spanDays(range) * 86_400_000 - 86_400_000);
   const scope = await getScope();
 
   const [
@@ -85,12 +106,16 @@ export default async function DashboardPage({
       .from("jobs")
       .select("id, title, status")
       .eq("organization_id", scope.orgId),
-    scope.supabase
-      .from("applications")
-      .select(
-        "id, candidate_id, job_id, stage, stage_changed_at, created_at, starred, flagged, mismatch",
-      )
-      .eq("organization_id", scope.orgId),
+    allRows((from, to) =>
+      scope.supabase
+        .from("applications")
+        .select(
+          "id, candidate_id, job_id, stage, stage_changed_at, created_at, starred, flagged, mismatch",
+        )
+        .eq("organization_id", scope.orgId)
+        .order("id")
+        .range(from, to),
+    ),
     scope.supabase
       .from("candidates")
       .select("id, full_name, cv_path")
@@ -99,12 +124,16 @@ export default async function DashboardPage({
       .from("latest_cv_assessments")
       .select("candidate_id, job_id, score")
       .eq("organization_id", scope.orgId),
-    scope.supabase
-      .from("activity_log")
-      .select("actor_id, entity_id, payload, created_at")
-      .eq("organization_id", scope.orgId)
-      .eq("action", "moved")
-      .gte("created_at", since.toISOString()),
+    allRows((from, to) =>
+      scope.supabase
+        .from("activity_log")
+        .select("actor_id, entity_id, payload, created_at")
+        .eq("organization_id", scope.orgId)
+        .eq("action", "moved")
+        .gte("created_at", since.toISOString())
+        .order("id")
+        .range(from, to),
+    ),
     scope.supabase
       .from("profiles")
       .select("id, full_name, email, is_active")
@@ -118,12 +147,19 @@ export default async function DashboardPage({
     (scores ?? []).map((a) => [`${a.candidate_id}:${a.job_id}`, a.score]),
   );
   const allApps = (apps ?? []).filter((a) => cand.has(a.candidate_id));
-  const moveList = (moves ?? []).map((m) => ({
-    at: m.created_at,
-    to: String((m.payload as Record<string, unknown>)?.to ?? ""),
-    actor: m.actor_id,
-    app: m.entity_id,
-  }));
+  // A move between two stages of the same phase is not a new interview or hire.
+  const moveList = (moves ?? []).flatMap((m) => {
+    const p = (m.payload ?? {}) as Record<string, unknown>;
+    if (p.from === p.to) return [];
+    return [
+      {
+        at: m.created_at,
+        to: String(p.to ?? ""),
+        actor: m.actor_id,
+        app: m.entity_id,
+      },
+    ];
+  });
 
   // Headline numbers
   const openJobs = (jobs ?? []).filter((j) => j.status === "open").length;

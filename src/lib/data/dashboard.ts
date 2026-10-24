@@ -25,6 +25,11 @@ export type Bucket = {
 
 type Move = { at: string; to: string };
 
+/** Days the period covers: 90 days is shown as 13 whole weeks. */
+export function spanDays(range: Range) {
+  return range === 90 ? 91 : range;
+}
+
 /**
  * Counts per bucket over the last `range` days: daily for 7 and 30 days,
  * weekly for 90. The last bucket ends today.
@@ -65,8 +70,8 @@ export function buildSeries(
 /** How many timestamps fall in this period and in the one before it. */
 export function periodCounts(range: Range, now: number, times: string[]) {
   const end = dayStart(now) + DAY;
-  const start = end - range * DAY;
-  const prevStart = start - range * DAY;
+  const start = end - spanDays(range) * DAY;
+  const prevStart = start - spanDays(range) * DAY;
   let current = 0;
   let previous = 0;
   for (const iso of times) {

@@ -30,7 +30,8 @@ export function MarkButtons({
   const e = useTranslations("Errors");
   const [marks, setMarks] = useState<Marks>({ starred, flagged });
   const [seen, setSeen] = useState<Marks>({ starred, flagged });
-  const [, startTransition] = useTransition();
+  // One change at a time, so a failed one rolls back to a value the server has.
+  const [pending, startTransition] = useTransition();
 
   if (seen.starred !== starred || seen.flagged !== flagged) {
     setSeen({ starred, flagged });
@@ -70,6 +71,7 @@ export function MarkButtons({
         )}
         onPointerDown={(ev) => ev.stopPropagation()}
         onKeyDown={(ev) => ev.stopPropagation()}
+        disabled={pending}
         onClick={() => toggle("starred")}
       >
         <Star className={cn(icon, marks.starred && "fill-amber-400")} />
@@ -87,6 +89,7 @@ export function MarkButtons({
         )}
         onPointerDown={(ev) => ev.stopPropagation()}
         onKeyDown={(ev) => ev.stopPropagation()}
+        disabled={pending}
         onClick={() => toggle("flagged")}
       >
         <Flag className={cn(icon, marks.flagged && "fill-current")} />

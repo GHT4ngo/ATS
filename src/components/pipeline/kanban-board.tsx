@@ -30,7 +30,7 @@ import { toast } from "sonner";
 import { moveApplication } from "@/app/actions/pipeline";
 import { ScoreBadge } from "@/components/assessments/score-badge";
 import { Badge } from "@/components/ui/badge";
-import { STUCK_DAYS } from "@/lib/data/dashboard";
+import { STUCK_DAYS, daysSince, isActive } from "@/lib/data/dashboard";
 import type { Stage } from "@/lib/data/schemas";
 import { PHASE_STYLE } from "@/lib/phase-style";
 import { cn, initials } from "@/lib/utils";
@@ -58,13 +58,6 @@ export type BoardCard = {
   mismatch: boolean;
 };
 
-function daysSince(iso: string) {
-  return Math.max(
-    0,
-    Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000),
-  );
-}
-
 function CardBody({
   card,
   drawerHref,
@@ -76,7 +69,7 @@ function CardBody({
   const t = useTranslations("Candidates");
   const ai = useTranslations("Assessment");
   const m = useTranslations("Marks");
-  const days = daysSince(card.stageChangedAt);
+  const days = daysSince(card.stageChangedAt, Date.now());
   return (
     <>
       <div
@@ -146,8 +139,7 @@ function CardBody({
             className={cn(
               "inline-flex items-center gap-1",
               days > STUCK_DAYS &&
-                card.stage !== "hired" &&
-                card.stage !== "rejected" &&
+                isActive(card.stage) &&
                 "font-medium text-amber-700 dark:text-amber-400",
             )}
           >
@@ -395,7 +387,18 @@ export function KanbanBoard({
     }
     if (ok) {
       // The phase board names the card's stage; it can change with the move.
-      const done = mode === "phase" ? { ...moved, stageName } : moved;
+      // The phase and the days in stage follow the new column, so the colours
+      // and the stuck highlight are right before the next refresh.
+      const phase = columns.find((c) => c.id === to)?.phase ?? card.stage;
+      const restarted =
+        saved.column !== to
+          ? { stage: phase, stageChangedAt: new Date().toISOString() }
+          : {};
+      const done = {
+        ...moved,
+        ...restarted,
+        ...(mode === "phase" ? { stageName } : {}),
+      };
       setCards((prev) => prev.map((c) => (c.id === card.id ? done : c)));
       setSynced((prev) => prev.map((c) => (c.id === card.id ? done : c)));
     } else {

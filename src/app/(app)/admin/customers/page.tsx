@@ -45,6 +45,13 @@ export default async function CustomersPage() {
   for (const j of jobs ?? [])
     openJobs.set(j.organization_id, (openJobs.get(j.organization_id) ?? 0) + 1);
   const admins = (users ?? []).filter((u) => u.role === "admin");
+  const orgIds = new Set(orgs.map((o) => o.id));
+  // Customers whose organization is missing still need to be reachable.
+  const unassigned = (users ?? []).filter(
+    (u) =>
+      u.role !== "admin" &&
+      (!u.organization_id || !orgIds.has(u.organization_id)),
+  );
   const membersOf = (orgId: string) =>
     (users ?? []).filter(
       (u) => u.role !== "admin" && u.organization_id === orgId,
@@ -161,6 +168,15 @@ export default async function CustomersPage() {
         </div>
       ) : (
         <p className="text-muted-foreground">{t("noOrganizations")}</p>
+      )}
+
+      {unassigned.length > 0 && (
+        <Card role="region" aria-label={t("unassigned")}>
+          <CardHeader>
+            <CardTitle>{t("unassigned")}</CardTitle>
+          </CardHeader>
+          <CardContent>{userList(unassigned)}</CardContent>
+        </Card>
       )}
 
       <Card>

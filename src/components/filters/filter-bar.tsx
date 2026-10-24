@@ -7,7 +7,7 @@ import { Flag, Star, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { STAGES } from "@/lib/data/schemas";
-import { MARKS, type Mark } from "@/lib/marks";
+import { MARKS, parseMarks, type Mark } from "@/lib/marks";
 import { PHASE_STYLE } from "@/lib/phase-style";
 import { cn } from "@/lib/utils";
 
@@ -68,10 +68,18 @@ export function FilterBar({
     if (!next.delete(id)) next.add(id);
     update(key, [...next].join(","));
   }
-  const selectedMarks = new Set(
-    (params.get("marks") ?? "").split(",").filter(Boolean),
+  const selectedMarks: Set<string> = parseMarks(
+    params.get("marks") ?? undefined,
   );
   const phase = params.get("phase") ?? "";
+  const filtered = selected.size > 0 || selectedMarks.size > 0 || phase !== "";
+
+  function clearAll() {
+    const next = new URLSearchParams(window.location.search);
+    for (const key of ["jobs", "marks", "phase"]) next.delete(key);
+    const qs = next.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -112,16 +120,6 @@ export function FilterBar({
               </Button>
             );
           })}
-          {selected.size > 0 && (
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              onClick={() => update("jobs", "")}
-            >
-              {t("clear")}
-            </Button>
-          )}
         </div>
       )}
       {marks && (
@@ -185,6 +183,11 @@ export function FilterBar({
             );
           })}
         </div>
+      )}
+      {filtered && (
+        <Button type="button" size="sm" variant="ghost" onClick={clearAll}>
+          {t("clear")}
+        </Button>
       )}
     </div>
   );

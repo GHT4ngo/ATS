@@ -201,7 +201,8 @@
     "openOrganization": "Open",
     "userCount": "{count, plural, one {# user} other {# users}}",
     "openJobCount": "{count, plural, one {# open job} other {# open jobs}}",
-    "administrators": "Administrators"
+    "administrators": "Administrators",
+    "unassigned": "Without an organization"
   },
   "Stages": {
     "applied": "Applied",
