@@ -9,13 +9,26 @@ import {
 } from "@/components/pipeline/kanban-board";
 import { STAGES, compareStages } from "@/lib/data/schemas";
 import { getScope } from "@/lib/data/scope";
+import { parseMarks } from "@/lib/marks";
+import { isMismatch } from "@/lib/phase-style";
 
 export default async function PipelinePage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; jobs?: string; candidate?: string }>;
+  searchParams: Promise<{
+    q?: string;
+    jobs?: string;
+    marks?: string;
+    candidate?: string;
+  }>;
 }) {
-  const { q, jobs: jobsParam, candidate } = await searchParams;
+  const {
+    q,
+    jobs: jobsParam,
+    marks: marksParam,
+    candidate,
+  } = await searchParams;
+  const marks = parseMarks(marksParam);
   const t = await getTranslations("Pipeline");
   const s = await getTranslations("Stages");
   const scope = await getScope();
@@ -55,8 +68,12 @@ export default async function PipelinePage({
       ? (stages ?? [])
           .filter((st) => st.job_id === jobFilter[0])
           .sort(compareStages)
-          .map((st) => ({ id: st.id, label: st.name ?? s(st.phase) }))
-      : STAGES.map((phase) => ({ id: phase, label: s(phase) }));
+          .map((st) => ({
+            id: st.id,
+            label: st.name ?? s(st.phase),
+            phase: st.phase,
+          }))
+      : STAGES.map((phase) => ({ id: phase, label: s(phase), phase }));
   const score = new Map(
     (assessments ?? []).map((a) => [`${a.candidate_id}:${a.job_id}`, a.score]),
   );
@@ -68,6 +85,11 @@ export default async function PipelinePage({
     const cand = byId.get(a.candidate_id);
     if (!cand) return [];
     if (term && !cand.full_name.toLowerCase().includes(term)) return [];
+    const appScore = score.get(`${a.candidate_id}:${a.job_id}`) ?? null;
+    const mismatch = isMismatch(a.mismatch, appScore);
+    if (marks.has("starred") && !a.starred) return [];
+    if (marks.has("flagged") && !a.flagged) return [];
+    if (marks.has("mismatch") && !mismatch) return [];
     return [
       {
         id: a.id,
@@ -80,8 +102,11 @@ export default async function PipelinePage({
           mode === "phase" ? (stageById.get(a.stage_id)?.name ?? null) : null,
         position: a.position,
         stageChangedAt: a.stage_changed_at,
-        score: score.get(`${a.candidate_id}:${a.job_id}`) ?? null,
+        score: appScore,
         linkedinUrl: cand.linkedin_url,
+        starred: a.starred,
+        flagged: a.flagged,
+        mismatch,
       },
     ];
   });
@@ -91,6 +116,7 @@ export default async function PipelinePage({
       <h1 className="text-2xl font-semibold tracking-tight">{t("heading")}</h1>
       <FilterBar
         jobs={(jobs ?? []).map((j) => ({ id: j.id, title: j.title }))}
+        marks
       />
       <KanbanBoard
         key={mode === "stage" ? jobFilter[0] : "all"}

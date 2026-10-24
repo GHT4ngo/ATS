@@ -9,7 +9,7 @@ import {
   AssessmentPanel,
   type AssessmentView,
 } from "@/components/assessments/assessment-panel";
-import { Badge } from "@/components/ui/badge";
+import { MarkButtons, MismatchMenu } from "@/components/pipeline/marks";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,6 +20,9 @@ import {
 } from "@/components/ui/dialog";
 import type { ActionState } from "@/lib/auth/schemas";
 import { Separator } from "@/components/ui/separator";
+import type { Stage } from "@/lib/data/schemas";
+import { PHASE_STYLE } from "@/lib/phase-style";
+import { cn } from "@/lib/utils";
 import {
   CandidateForm,
   type CandidateFormValues,
@@ -29,10 +32,15 @@ import {
 export type DrawerApplication = {
   id: string;
   jobTitle: string;
-  stage: string;
+  stage: Stage;
   stageName: string | null;
   stageChangedAt: string;
   assessment: AssessmentView | null;
+  starred: boolean;
+  flagged: boolean;
+  /** The recruiter's verdict; null follows the AI score. */
+  mismatch: boolean | null;
+  effectiveMismatch: boolean;
 };
 
 export type DrawerActivity = {
@@ -167,10 +175,33 @@ export function CandidateDrawer({
             applications.map((a) => (
               <div
                 key={a.id}
-                className="flex items-center justify-between gap-2"
+                className={cn(
+                  "grid gap-2 rounded-lg border border-l-4 p-2",
+                  PHASE_STYLE[a.stage].edge,
+                  a.effectiveMismatch &&
+                    "border-rose-300 bg-rose-50/80 dark:border-rose-900 dark:bg-rose-950/30",
+                )}
               >
-                <span>{a.jobTitle}</span>
-                <span className="flex items-center gap-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="min-w-0 truncate font-medium">
+                    {a.jobTitle}
+                  </span>
+                  <MarkButtons
+                    applicationId={a.id}
+                    starred={a.starred}
+                    flagged={a.flagged}
+                    size="md"
+                  />
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span
+                    className={cn(
+                      "inline-flex h-6 items-center rounded-full px-2 text-xs font-medium",
+                      PHASE_STYLE[a.stage].soft,
+                    )}
+                  >
+                    {a.stageName ?? s(a.stage)}
+                  </span>
                   <span className="text-muted-foreground text-xs">
                     {t("daysInStage", {
                       days: Math.floor(
@@ -179,8 +210,14 @@ export function CandidateDrawer({
                       ),
                     })}
                   </span>
-                  <Badge variant="secondary">{a.stageName ?? s(a.stage)}</Badge>
-                </span>
+                  <span className="ml-auto">
+                    <MismatchMenu
+                      applicationId={a.id}
+                      mismatch={a.mismatch}
+                      effective={a.effectiveMismatch}
+                    />
+                  </span>
+                </div>
               </div>
             ))
           ) : (

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { AssessmentView } from "@/components/assessments/assessment-panel";
 import { getScope } from "@/lib/data/scope";
+import { isMismatch } from "@/lib/phase-style";
 import type { Database } from "@/lib/supabase/database.types";
 import { CandidateDrawer } from "./candidate-drawer";
 
@@ -85,6 +86,13 @@ export async function CandidateDrawerLoader({
         stageName: stageName.get(a.stage_id) ?? null,
         stageChangedAt: a.stage_changed_at,
         assessment: toView(latest.get(a.job_id)),
+        starred: a.starred,
+        flagged: a.flagged,
+        mismatch: a.mismatch,
+        effectiveMismatch: isMismatch(
+          a.mismatch,
+          latest.get(a.job_id)?.score ?? null,
+        ),
       }))}
       activity={(log ?? []).map((l) => ({
         id: l.id,
