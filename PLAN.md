@@ -12,7 +12,7 @@
   * Smoke test one real CV assessment on the live site (about a cent per run).
   * One unexplained failure of the core e2e test (`e2e/core.spec.ts`), not reproduced in two full runs since; watch CI.
   * The admin organization switcher needs the sidebar expanded; empty states are plain text.
-* **Next:** prioritize the Phase 8 extras together, then Phase 9 deliverables.
+* **Next:** Phase 8: the recruiter agent (`feat/agent`), then custom pipeline stages; then Phase 9 deliverables.
 
 ## Goal
 
@@ -114,10 +114,10 @@ Additions to the table above: `applications` and `activity_log` also carry `orga
 
 ## Phase 8: Extras (Thu 29, only after v1 is tested)
 
-To be prioritized together:
+Prioritized on 24 Oct: the agent first, then custom pipeline stages; the rest only if time allows.
 
-1. **Claude recruiter agent:** a chat panel using tool use over server side tools (search candidates, move stage, summarize the pipeline, draft emails). It runs as the logged in user, so RLS still applies.
-2. Custom pipeline stages per job
+1. [x] **Claude recruiter agent:** a chat panel using tool use over server side tools (search candidates, move stage, summarize the pipeline, draft emails). It runs as the logged in user, so RLS still applies.
+2. [ ] Custom pipeline stages per job
 3. Public career page per job, where applicants land directly in Applied
 4. Email invites and notifications (Resend)
 5. Comments and mentions on candidates
@@ -168,3 +168,10 @@ To be prioritized together:
 * **History:** every assessment run is kept; the `latest_cv_assessments` view (security invoker, so RLS applies) gives the newest per pair.
 * **Shared prompt:** the prompt lives in `src/lib/ai/assessment-prompt.json`, read by both the app and the Python eval, so they cannot drift apart.
 * **Tests without the API:** `AI_FAKE=1` returns a fixed assessment in e2e and CI; it is ignored in production builds.
+
+## Decisions log (Phase 8)
+
+* **Recruiter agent:** Claude Opus 5.5 at medium effort in a manual streaming tool loop (`src/lib/agent/`), served by `/api/agent` as NDJSON events. Five tools (search candidates, get candidate, list jobs, pipeline summary, move candidate) run as the signed in user through the scope helper, so RLS applies.
+* **Human approval:** `move_candidate` never runs on its own; the loop stops, the panel shows an approve or decline card, and the next request resumes with the decision. Emails are drafts in the chat only.
+* **State:** the browser keeps the API history (thinking blocks echoed unchanged) and sends it each turn; the server validates its shape, allows only text and tool results in user turns, caps size and runs at most 8 model calls per request.
+* **Prompt:** stage names come from the UI message files; candidates are referred to by name, never with a gender guessed from it (found in a real run).

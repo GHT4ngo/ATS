@@ -58,7 +58,8 @@
     "aiFailed": "The assessment failed. Try again.",
     "cvDownloadFailed": "The CV could not be read from storage. Try again.",
     "cvUnreadable": "The CV file could not be opened. It may be damaged or password protected.",
-    "assessmentRunning": "An assessment is already running for this candidate and job."
+    "assessmentRunning": "An assessment is already running for this candidate and job.",
+    "agentTooLong": "The assistant needed too many steps. Try a narrower question."
   },
   "Auth": {
     "loginTitle": "Sign in",
@@ -106,7 +107,8 @@
     "skipToContent": "Skip to content",
     "closeMenu": "Close menu",
     "shortcut": "Ctrl K",
-    "menu": "Menu"
+    "menu": "Menu",
+    "assistant": "Assistant"
   },
   "Dashboard": {
     "welcome": "Welcome, {name}",
@@ -257,5 +259,30 @@
     "scoreLabel": "AI score {score} of 100",
     "meta": "{date} · {model}",
     "disclaimer": "The AI assessment is decision support, not a decision. It can be wrong and may reflect bias, so read the CV yourself and let a person make every decision. The CV text is sent to Anthropic for processing."
+  },
+  "Agent": {
+    "title": "Assistant",
+    "intro": "Ask about your pipeline, find candidates, move them between stages or draft an email. Moves are only made after you approve them.",
+    "suggestSummary": "Summarize the pipeline",
+    "suggestStalled": "Which candidates have been stuck in a stage for a long time?",
+    "suggestEmail": "Draft an interview invitation for the strongest frontend candidate",
+    "newChat": "New conversation",
+    "close": "Close the assistant",
+    "inputLabel": "Message to the assistant",
+    "placeholder": "Ask the assistant...",
+    "send": "Send",
+    "thinking": "Thinking...",
+    "approveTitle": "Approve the move",
+    "moveQuestion": "Move {candidate} ({job}) from {from} to {to}?",
+    "approve": "Approve",
+    "decline": "Decline",
+    "disclaimer": "AI can be wrong. Emails are drafts and are never sent.",
+    "tools": {
+      "search_candidates": "Searching candidates...",
+      "get_candidate": "Reading the candidate profile...",
+      "list_jobs": "Reading the jobs...",
+      "pipeline_summary": "Summarizing the pipeline...",
+      "move_candidate": "Proposing a move..."
+    }
   }
 }
