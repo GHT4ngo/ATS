@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { STAGES } from "@/lib/data/schemas";
+import { STAGES, compareStages } from "@/lib/data/schemas";
 import { getScope } from "@/lib/data/scope";
 
 export default async function JobsPage() {
@@ -23,12 +23,11 @@ export default async function JobsPage() {
 
   const [{ data: jobs }, { data: apps }, { data: stages }] = await Promise.all([
     scope.jobs().order("created_at", { ascending: false }),
-    scope.applications(),
     scope.supabase
-      .from("job_stages")
-      .select("id, job_id, name, phase, position")
-      .eq("organization_id", scope.orgId)
-      .order("position"),
+      .from("applications")
+      .select("job_id, stage, stage_id")
+      .eq("organization_id", scope.orgId),
+    scope.jobStages(),
   ]);
   const perStage = new Map<string, number>();
   for (const a of apps ?? [])
@@ -36,11 +35,7 @@ export default async function JobsPage() {
   const stagesOf = (jobId: string): StageRow[] =>
     (stages ?? [])
       .filter((st) => st.job_id === jobId)
-      .sort(
-        (a, b) =>
-          STAGES.indexOf(a.phase) - STAGES.indexOf(b.phase) ||
-          a.position - b.position,
-      )
+      .sort(compareStages)
       .map((st) => ({
         id: st.id,
         name: st.name,

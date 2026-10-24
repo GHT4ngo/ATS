@@ -174,3 +174,57 @@ def test_stage_in_use_cannot_be_deleted(world: World, login, tech_test):
 def test_anon_reads_nothing(anon: Client):
     with pytest.raises(APIError):
         anon.table("job_stages").select("id").execute()
+
+
+def test_reorder_swaps_within_the_phase(world: World, login, tech_test):
+    client = login(world.customer_a)
+
+    def interview() -> list[str]:
+        return [s["id"] for s in stages_of(client, world.org_a.job_id) if s["phase"] == "interview"]
+
+    before = interview()
+    assert before[-1] == tech_test["id"]
+    client.rpc("reorder_job_stage", {"p_stage": tech_test["id"], "p_direction": "up"}).execute()
+    after = interview()
+    assert after == [before[1], before[0]]
+    positions = [
+        s["position"] for s in stages_of(client, world.org_a.job_id) if s["phase"] == "interview"
+    ]
+    assert len(set(positions)) == len(positions)
+
+
+def test_cannot_reorder_other_org_stages(world: World, login, service: Client):
+    other = stages_of(service, world.org_b.job_id)
+    with pytest.raises(APIError):
+        login(world.customer_a).rpc(
+            "reorder_job_stage", {"p_stage": other[1]["id"], "p_direction": "up"}
+        ).execute()
+    assert stages_of(service, world.org_b.job_id) == other
+
+
+def test_deleting_a_job_with_candidates_in_custom_stages_works(world: World, service: Client):
+    org = service.table("organizations").insert({"name": "Cascade", "slug": "cascade-x"}).execute()
+    org_id = org.data[0]["id"]
+    try:
+        job = service.table("jobs").insert({"organization_id": org_id, "title": "J"}).execute()
+        job_id = job.data[0]["id"]
+        stage = (
+            service.table("job_stages")
+            .insert({"organization_id": org_id, "job_id": job_id, "name": "X", "phase": "offer"})
+            .execute()
+            .data[0]
+        )
+        cand = service.table("candidates").insert({"organization_id": org_id, "full_name": "C"})
+        cand_id = cand.execute().data[0]["id"]
+        service.table("applications").insert(
+            {
+                "organization_id": org_id,
+                "candidate_id": cand_id,
+                "job_id": job_id,
+                "stage_id": stage["id"],
+            }
+        ).execute()
+        assert service.table("jobs").delete().eq("id", job_id).execute().data
+        assert service.table("job_stages").select("id").eq("job_id", job_id).execute().data == []
+    finally:
+        service.table("organizations").delete().eq("id", org_id).execute()

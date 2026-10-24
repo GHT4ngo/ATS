@@ -46,12 +46,17 @@ export function JobStagesDialog({
   const [pending, startTransition] = useTransition();
   const [adding, setAdding] = useState<Stage | null>(null);
   const [newName, setNewName] = useState("");
+  // Bumped when a rename fails, so the uncontrolled name fields reset to the
+  // names the server still has.
+  const [resetKey, setResetKey] = useState(0);
 
   function run(action: () => Promise<ActionState>, done?: () => void) {
     startTransition(async () => {
       const result = await action();
-      if (result.error) toast.error(e(result.error));
-      else done?.();
+      if (result.error) {
+        toast.error(e(result.error));
+        setResetKey((k) => k + 1);
+      } else done?.();
     });
   }
 
@@ -84,6 +89,7 @@ export function JobStagesDialog({
                     return (
                       <li key={st.id} className="flex items-center gap-1">
                         <Input
+                          key={`${st.id}:${st.name ?? ""}:${resetKey}`}
                           aria-label={t("nameLabel", { phase: s(phase) })}
                           defaultValue={st.name ?? ""}
                           placeholder={s(phase)}

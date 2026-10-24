@@ -19,7 +19,14 @@ export async function moveApplicationTo(
   target: MoveTarget,
   options: { position?: number; via?: "assistant" } = {},
 ): Promise<
-  | { ok: true; from: Stage; to: Stage; changed: boolean }
+  | {
+      ok: true;
+      from: Stage;
+      to: Stage;
+      changed: boolean;
+      /** The custom name of the stage the card is now in, if it has one. */
+      stageName: string | null;
+    }
   | { error: "notFound" | "generic" }
 > {
   const { data: app } = await scope
@@ -29,16 +36,15 @@ export async function moveApplicationTo(
   if (!app) return { error: "notFound" };
 
   // The job's stages, to resolve the target and name both ends in the log.
-  const { data: stages } = await scope.supabase
-    .from("job_stages")
-    .select("id, name, phase, position")
-    .eq("organization_id", scope.orgId)
-    .eq("job_id", app.job_id)
-    .order("position");
+  const { data: stages } = await scope.jobStages().eq("job_id", app.job_id);
+  // A move by phase into the phase the card is already in (a reorder on the
+  // all jobs board) keeps its current stage instead of the phase's first.
   const stage =
     "stageId" in target
       ? stages?.find((s) => s.id === target.stageId)
-      : stages?.find((s) => s.phase === target.phase);
+      : app.stage === target.phase
+        ? stages?.find((s) => s.id === app.stage_id)
+        : stages?.find((s) => s.phase === target.phase);
   if (!stage) return { error: "notFound" };
 
   let position = options.position;
@@ -72,5 +78,11 @@ export async function moveApplicationTo(
   }
   revalidatePath("/dashboard");
   revalidatePath("/jobs");
-  return { ok: true, from: app.stage, to: stage.phase, changed };
+  return {
+    ok: true,
+    from: app.stage,
+    to: stage.phase,
+    changed,
+    stageName: stage.name,
+  };
 }

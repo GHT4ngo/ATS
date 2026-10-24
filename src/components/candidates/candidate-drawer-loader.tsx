@@ -28,14 +28,10 @@ export async function CandidateDrawerLoader({
     ]);
   const latest = new Map((assessments ?? []).map((a) => [a.job_id, a]));
   const { data: stages } = (apps ?? []).length
-    ? await scope.supabase
-        .from("job_stages")
-        .select("id, name")
-        .eq("organization_id", scope.orgId)
-        .in(
-          "id",
-          (apps ?? []).map((a) => a.stage_id),
-        )
+    ? await scope.jobStages().in(
+        "id",
+        (apps ?? []).map((a) => a.stage_id),
+      )
     : { data: [] };
   const stageName = new Map((stages ?? []).map((st) => [st.id, st.name]));
   const appIds = (apps ?? []).map((a) => a.id);

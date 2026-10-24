@@ -10,15 +10,11 @@ import { getScope } from "@/lib/data/scope";
 // a phase and stages in use cannot be deleted); these actions check first so
 // the user gets a clear message.
 
-async function stagesOfJob(jobId: string) {
-  const scope = await getScope();
-  const { data } = await scope.supabase
-    .from("job_stages")
-    .select("*")
-    .eq("organization_id", scope.orgId)
-    .eq("job_id", jobId)
-    .order("position");
-  return { scope, stages: data ?? [] };
+type Scope = Awaited<ReturnType<typeof getScope>>;
+
+async function stagesOfJob(scope: Scope, jobId: string) {
+  const { data } = await scope.jobStages().eq("job_id", jobId);
+  return data ?? [];
 }
 
 function refresh() {
@@ -37,7 +33,8 @@ export async function addStage(input: {
   if (!parsed.success) return { error: "invalidInput" };
   const { jobId, phase, name } = parsed.data;
 
-  const { scope, stages } = await stagesOfJob(jobId);
+  const scope = await getScope();
+  const stages = await stagesOfJob(scope, jobId);
   const { data: job } = await scope.jobs().eq("id", jobId).maybeSingle();
   if (!job) return { error: "generic" };
   const last = stages.filter((s) => s.phase === phase).at(-1);
@@ -61,9 +58,9 @@ export async function renameStage(input: {
   const parsed = z
     .object({
       stageId: z.uuid(),
-      name: z.union([z.literal(""), stageNameSchema]),
+      name: z.union([z.string().trim().length(0), stageNameSchema]),
     })
-    .safeParse({ ...input, name: input.name.trim() });
+    .safeParse(input);
   if (!parsed.success) return { error: "invalidInput" };
 
   const scope = await getScope();
@@ -89,31 +86,17 @@ export async function reorderStage(input: {
   if (!parsed.success) return { error: "invalidInput" };
 
   const scope = await getScope();
-  const { data: stage } = await scope.supabase
-    .from("job_stages")
-    .select("*")
-    .eq("organization_id", scope.orgId)
+  const { data: stage } = await scope
+    .jobStages()
     .eq("id", parsed.data.stageId)
     .maybeSingle();
   if (!stage) return { error: "generic" };
-  const { stages } = await stagesOfJob(stage.job_id);
-  const phase = stages.filter((s) => s.phase === stage.phase);
-  const index = phase.findIndex((s) => s.id === stage.id);
-  const other = phase[index + (parsed.data.direction === "up" ? -1 : 1)];
-  if (!other) return { ok: true };
-
-  // Swap the two positions; positions need not be unique, so order is safe.
-  const update = (id: string, position: number) =>
-    scope.supabase
-      .from("job_stages")
-      .update({ position })
-      .eq("organization_id", scope.orgId)
-      .eq("id", id);
-  const [a, b] = await Promise.all([
-    update(stage.id, other.position),
-    update(other.id, stage.position),
-  ]);
-  if (a.error || b.error) return { error: "generic" };
+  // One statement in the database, so quick clicks cannot tie positions.
+  const { error } = await scope.supabase.rpc("reorder_job_stage", {
+    p_stage: stage.id,
+    p_direction: parsed.data.direction,
+  });
+  if (error) return { error: "generic" };
   refresh();
   return { ok: true };
 }
@@ -123,15 +106,13 @@ export async function deleteStage(stageId: string): Promise<ActionState> {
   if (!id.success) return { error: "invalidInput" };
 
   const scope = await getScope();
-  const { data: stage } = await scope.supabase
-    .from("job_stages")
-    .select("*")
-    .eq("organization_id", scope.orgId)
+  const { data: stage } = await scope
+    .jobStages()
     .eq("id", id.data)
     .maybeSingle();
   if (!stage) return { error: "generic" };
 
-  const { stages } = await stagesOfJob(stage.job_id);
+  const stages = await stagesOfJob(scope, stage.job_id);
   if (stages.filter((s) => s.phase === stage.phase).length < 2)
     return { error: "stageLast" };
   const { count } = await scope.supabase

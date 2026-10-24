@@ -24,6 +24,16 @@ export const MAX_CV_BYTES = 4 * 1024 * 1024;
 
 export type Stage = (typeof STAGES)[number];
 
+/** Stage order everywhere: by phase, then position within the phase. */
+export function compareStages(
+  a: { phase: Stage; position: number },
+  b: { phase: Stage; position: number },
+) {
+  return (
+    STAGES.indexOf(a.phase) - STAGES.indexOf(b.phase) || a.position - b.position
+  );
+}
+
 export const jobSchema = z.object({
   title: z.string().trim().min(1).max(200),
   description: z.string().trim().max(20000).default(""),

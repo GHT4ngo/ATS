@@ -309,6 +309,9 @@ isOneToOne: false
                            },
 "is_admin":
 { Args: Record<PropertyKey, never>; Returns: boolean
+                           },
+"reorder_job_stage":
+{ Args: { "p_direction": string,"p_stage": string }; Returns: undefined
                            }
           }
           Enums: {

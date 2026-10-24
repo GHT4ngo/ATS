@@ -1,7 +1,7 @@
 import "server-only";
 import type Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
-import { STAGES } from "@/lib/data/schemas";
+import { STAGES, compareStages } from "@/lib/data/schemas";
 import { moveApplicationTo } from "@/lib/data/moves";
 import type { getScope } from "@/lib/data/scope";
 
@@ -132,11 +132,7 @@ export function isToolName(name: string): name is ToolName {
 }
 
 function stagesOf(scope: Scope) {
-  return scope.supabase
-    .from("job_stages")
-    .select("id, job_id, name, phase, position")
-    .eq("organization_id", scope.orgId)
-    .order("position");
+  return scope.jobStages();
 }
 
 /** Loads what a tool needs; candidates and scores only when asked for. */
@@ -198,16 +194,15 @@ export async function describeMove(
   const [{ data: cand }, { data: job }, { data: stages }] = await Promise.all([
     scope.candidates().eq("id", app.candidate_id).maybeSingle(),
     scope.jobs().eq("id", app.job_id).maybeSingle(),
-    scope.supabase
-      .from("job_stages")
-      .select("id, name, phase, position")
-      .eq("organization_id", scope.orgId)
-      .eq("job_id", app.job_id)
-      .order("position"),
+    scope.jobStages().eq("job_id", app.job_id),
   ]);
+  // Same rule as moveApplicationTo: a phase the candidate is already in
+  // keeps their current stage.
   const target = parsed.stage_id
     ? stages?.find((st) => st.id === parsed.stage_id)
-    : stages?.find((st) => st.phase === parsed.stage);
+    : app.stage === parsed.stage
+      ? stages?.find((st) => st.id === app.stage_id)
+      : stages?.find((st) => st.phase === parsed.stage);
   if (!target) return null;
   const current = stages?.find((st) => st.id === app.stage_id);
   return {
@@ -338,11 +333,7 @@ export async function runTool(
           ),
           stages: ctx.stages
             .filter((st) => st.job_id === j.id)
-            .sort(
-              (a, b) =>
-                STAGES.indexOf(a.phase) - STAGES.indexOf(b.phase) ||
-                a.position - b.position,
-            )
+            .sort(compareStages)
             .map((st) => ({
               stage_id: st.id,
               name: st.name,

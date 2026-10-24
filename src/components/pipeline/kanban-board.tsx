@@ -319,21 +319,23 @@ export function KanbanBoard({
     setCards((prev) => prev.map((c) => (c.id === card.id ? moved : c)));
 
     let ok = false;
+    let stageName: string | null = null;
     try {
-      ok = Boolean(
-        (
-          await moveApplication({
-            applicationId: card.id,
-            ...(mode === "stage" ? { stageId: to } : { stage: to }),
-            position,
-          })
-        ).ok,
-      );
+      const result = await moveApplication({
+        applicationId: card.id,
+        ...(mode === "stage" ? { stageId: to } : { stage: to }),
+        position,
+      });
+      ok = Boolean(result.ok);
+      stageName = result.stageName ?? null;
     } catch {
       ok = false;
     }
     if (ok) {
-      setSynced((prev) => prev.map((c) => (c.id === card.id ? moved : c)));
+      // The phase board names the card's stage; it can change with the move.
+      const done = mode === "phase" ? { ...moved, stageName } : moved;
+      setCards((prev) => prev.map((c) => (c.id === card.id ? done : c)));
+      setSynced((prev) => prev.map((c) => (c.id === card.id ? done : c)));
     } else {
       // Put the card back where the database still has it.
       setCards((prev) => prev.map((c) => (c.id === card.id ? saved : c)));

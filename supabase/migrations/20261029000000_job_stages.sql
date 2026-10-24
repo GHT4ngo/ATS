@@ -47,7 +47,10 @@ where s.job_id = a.job_id and s.phase = a.stage;
 alter table public.applications
   alter column stage_id set not null,
   add constraint applications_stage_in_job
-    foreign key (stage_id, job_id) references public.job_stages (id, job_id) on delete restrict;
+    -- NO ACTION, not RESTRICT: the check runs at the end of the statement, so
+    -- deleting a job or organization (which cascades to both tables) always
+    -- works, while deleting a stage that is still in use is refused.
+    foreign key (stage_id, job_id) references public.job_stages (id, job_id) on delete no action;
 
 create index applications_stage_id_idx on public.applications (stage_id);
 
@@ -147,3 +150,42 @@ $$;
 
 create trigger job_stages_guard before update or delete on public.job_stages
   for each row execute function public.guard_job_stage();
+
+-- Moves a stage one step up or down among the stages of its phase, in one
+-- statement so two clicks cannot leave equal positions. Runs as the caller,
+-- so RLS decides which stages can be reordered.
+create function public.reorder_job_stage(p_stage uuid, p_direction text)
+returns void
+language plpgsql
+set search_path = ''
+as $$
+declare
+  ids uuid[];
+  i int;
+begin
+  if p_direction not in ('up', 'down') then
+    raise exception 'direction must be up or down' using errcode = 'invalid_parameter_value';
+  end if;
+  select array_agg(s.id order by s.position, s.id) into ids
+  from public.job_stages s
+  join public.job_stages me on me.id = p_stage
+  where s.job_id = me.job_id and s.phase = me.phase;
+  i := array_position(ids, p_stage);
+  if i is null then
+    raise exception 'stage not found' using errcode = 'no_data_found';
+  end if;
+  if (p_direction = 'up' and i = 1) or (p_direction = 'down' and i = cardinality(ids)) then
+    return;
+  end if;
+  ids[i] := ids[i + case p_direction when 'up' then -1 else 1 end];
+  ids[i + case p_direction when 'up' then -1 else 1 end] := p_stage;
+  -- Renumber the phase in its new order; positions stay distinct.
+  update public.job_stages s
+  set position = o.ord
+  from unnest(ids) with ordinality as o (id, ord)
+  where s.id = o.id and s.position is distinct from o.ord;
+end;
+$$;
+
+revoke execute on function public.reorder_job_stage(uuid, text) from public, anon;
+grant execute on function public.reorder_job_stage(uuid, text) to authenticated;

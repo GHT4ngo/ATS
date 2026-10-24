@@ -7,7 +7,7 @@ import {
   type BoardCard,
   type BoardColumn,
 } from "@/components/pipeline/kanban-board";
-import { STAGES } from "@/lib/data/schemas";
+import { STAGES, compareStages } from "@/lib/data/schemas";
 import { getScope } from "@/lib/data/scope";
 
 export default async function PipelinePage({
@@ -44,11 +44,7 @@ export default async function PipelinePage({
       ? scope.applications().in("job_id", jobFilter)
       : scope.applications(),
     jobFilter.length ? latestScores().in("job_id", jobFilter) : latestScores(),
-    scope.supabase
-      .from("job_stages")
-      .select("id, job_id, name, phase, position")
-      .eq("organization_id", scope.orgId)
-      .order("position"),
+    scope.jobStages(),
   ]);
   const stageById = new Map((stages ?? []).map((st) => [st.id, st]));
 
@@ -58,11 +54,7 @@ export default async function PipelinePage({
     mode === "stage"
       ? (stages ?? [])
           .filter((st) => st.job_id === jobFilter[0])
-          .sort(
-            (a, b) =>
-              STAGES.indexOf(a.phase) - STAGES.indexOf(b.phase) ||
-              a.position - b.position,
-          )
+          .sort(compareStages)
           .map((st) => ({ id: st.id, label: st.name ?? s(st.phase) }))
       : STAGES.map((phase) => ({ id: phase, label: s(phase) }));
   const score = new Map(

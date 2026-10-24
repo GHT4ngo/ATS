@@ -38,11 +38,28 @@ test.beforeAll(async () => {
     .insert({ organization_id: orgId, full_name: "Maja Ek" })
     .select("id")
     .single();
-  await admin.from("applications").insert({
-    organization_id: orgId,
-    candidate_id: cand!.id,
-    job_id: jobId,
-  });
+  const { data: bo } = await admin
+    .from("candidates")
+    .insert({ organization_id: orgId, full_name: "Bo Lind" })
+    .select("id")
+    .single();
+  const { error: appError } = await admin.from("applications").insert([
+    {
+      organization_id: orgId,
+      candidate_id: cand!.id,
+      job_id: jobId,
+      stage: "applied",
+      position: 1,
+    },
+    {
+      organization_id: orgId,
+      candidate_id: bo!.id,
+      job_id: jobId,
+      stage: "interview",
+      position: 1,
+    },
+  ]);
+  if (appError) throw appError;
 });
 
 test.afterAll(async () => {
@@ -53,6 +70,13 @@ test.afterAll(async () => {
 test("a recruiter adds job stages and moves a card into one", async ({
   page,
 }) => {
+  const { data: maja } = await admin
+    .from("candidates")
+    .select("id")
+    .eq("organization_id", orgId)
+    .eq("full_name", "Maja Ek")
+    .single();
+  const cand = maja!.id;
   await page.goto("/login");
   await page.getByLabel("E-post").fill(email);
   await page.getByLabel("Lösenord").fill(PASSWORD);
@@ -111,6 +135,7 @@ test("a recruiter adds job stages and moves a card into one", async ({
         .from("applications")
         .select("stage, job_stages!applications_stage_in_job(name)")
         .eq("job_id", jobId)
+        .eq("candidate_id", cand)
         .single();
       return data;
     })
@@ -122,4 +147,52 @@ test("a recruiter adds job stages and moves a card into one", async ({
     .getByRole("region", { name: "Screening" })
     .getByRole("button", { name: /Maja/ });
   await expect(card).toContainText("Telefonintervju");
+
+  // Reordering inside a phase column keeps the card in its own stage
+  const { data: caseStage } = await admin
+    .from("job_stages")
+    .select("id")
+    .eq("job_id", jobId)
+    .eq("name", "Case")
+    .single();
+  await admin
+    .from("applications")
+    .update({ stage_id: caseStage!.id, position: 5 })
+    .eq("candidate_id", cand);
+  const movesBefore = (
+    await admin
+      .from("activity_log")
+      .select("id")
+      .eq("organization_id", orgId)
+      .eq("action", "moved")
+  ).data?.length;
+  await page.reload();
+  const interview = page.getByRole("region", { name: "Intervju", exact: true });
+  await expect(interview.getByRole("button", { name: /Maja/ })).toContainText(
+    "Case",
+  );
+  await interview.getByRole("button", { name: /Maja/ }).focus();
+  await page.keyboard.press("Space");
+  await page.waitForTimeout(300);
+  await page.keyboard.press("ArrowUp");
+  await page.waitForTimeout(300);
+  await page.keyboard.press("Space");
+  await expect
+    .poll(async () => {
+      const { data } = await admin
+        .from("applications")
+        .select("position, stage_id")
+        .eq("candidate_id", cand)
+        .single();
+      return data!.position < 1 && data!.stage_id === caseStage!.id;
+    })
+    .toBe(true);
+  const movesAfter = (
+    await admin
+      .from("activity_log")
+      .select("id")
+      .eq("organization_id", orgId)
+      .eq("action", "moved")
+  ).data?.length;
+  expect(movesAfter).toBe(movesBefore);
 });

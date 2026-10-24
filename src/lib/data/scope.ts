@@ -37,6 +37,13 @@ export async function getOptionalScope() {
       supabase.from("candidates").select("*").eq("organization_id", orgId),
     applications: () =>
       supabase.from("applications").select("*").eq("organization_id", orgId),
+    /** Pipeline stages of every job; sort with compareStages. */
+    jobStages: () =>
+      supabase
+        .from("job_stages")
+        .select("*")
+        .eq("organization_id", orgId)
+        .order("position"),
     /** The newest assessment per candidate and job. */
     latestAssessments: () =>
       supabase
