@@ -13,7 +13,7 @@
   * Smoke test one real CV assessment and one assistant question on the live site.
   * One unexplained failure of the core e2e test (`e2e/core.spec.ts`) on 23 Oct, not seen since; watch CI.
   * The admin organization switcher needs the sidebar expanded; empty states are plain text.
-* **Next:** Phase 9 deliverables (assumptions email, Loom storyboard, final README); further extras only if time allows.
+* **Next:** review and send the assumptions email, record the Loom video, send the v1 delivery. Phase 9 docs are in `docs/`.
 
 ## Goal
 
@@ -111,7 +111,7 @@ Additions to the table above: `applications` and `activity_log` also carry `orga
 * [x] Output: a **score from 0 to 100**, a summary, strengths, gaps, skill matches and suggested interview questions
 * [x] Store the result in `cv_assessments`; show a score badge on the kanban card and a full panel in the drawer
 * [x] Show a disclaimer: decision support, not a decision (bias, GDPR, a human in the loop)
-* [x] Eval script in the venv: run sample CVs several times to check score consistency (`scripts/eval_assessment.py`; 2026-10-23: 5 CVs x 3 runs, max spread 6 points, ranking ok, 0.20 USD)
+* [x] Eval script in the venv: run sample CVs several times to check score consistency (`scripts/eval_assessment.py`; 2026-10-23: 5 CVs x 3 runs, max spread 6 points, ranking ok, 0.20 USD; rerun 2026-10-24 for prompt v2 with the same result)
 
 ## Phase 8: Extras (Thu 29, only after v1 is tested)
 
@@ -128,16 +128,16 @@ Prioritized on 24 Oct: the agent first, then custom pipeline stages; the rest on
 
 ## Phase 9: Deliverables (Thu 29 and Fri 30)
 
-* [ ] Assumptions email (drafted for review before sending)
-* [ ] Storyboard for the 5 minute Loom demo in `docs/demo-storyboard.md` (the user records it, adding one or two candidates live)
-* [ ] Final README: screenshots, setup instructions, architecture overview
+* [x] Assumptions email (drafted for review before sending): `docs/assumptions-email.md`
+* [x] Storyboard for the 5 minute Loom demo in `docs/demo-storyboard.md` (the user records it, adding one or two candidates live)
+* [x] Final README: screenshots, setup instructions, architecture overview
 
 ## Assumptions (for the email)
 
 * B2B: each customer is an **organization**, and an organization can have several users.
 * Admins are internal staff who create every account (no self signup), with a temporary password the user can change.
 * A candidate belongs to one organization and can apply to several of its jobs.
-* Pipeline stages are fixed in v1.
+* Pipeline stages: six fixed phases, with custom stages per job inside them (added in Phase 8).
 * Data is hosted in the EU (Supabase EU region) because of GDPR.
 * CVs are text based PDFs. Scanned CVs (images only) are not assessed; the app says so instead of guessing.
 * The AI assessment is decision support only. The CV text is sent to Anthropic for processing, which the UI states; every decision stays with a person.
