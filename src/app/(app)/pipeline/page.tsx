@@ -8,7 +8,9 @@ import {
   type BoardColumn,
 } from "@/components/pipeline/kanban-board";
 import { STAGES, compareStages } from "@/lib/data/schemas";
+import { daysSince } from "@/lib/data/dashboard";
 import { getScope } from "@/lib/data/scope";
+import { latestScores, scoreKey } from "@/lib/data/scores";
 import { parseMarks } from "@/lib/marks";
 import { isMismatch } from "@/lib/phase-style";
 
@@ -38,17 +40,12 @@ export default async function PipelinePage({
     .split(",")
     .filter((id) => z.uuid().safeParse(id).success);
   const term = q?.trim().toLowerCase();
-  const latestScores = () =>
-    scope.supabase
-      .from("latest_cv_assessments")
-      .select("candidate_id, job_id, score")
-      .eq("organization_id", scope.orgId);
 
   const [
     { data: jobs },
     { data: candidates },
     { data: apps },
-    { data: assessments },
+    score,
     { data: stages },
   ] = await Promise.all([
     scope.jobs().order("title"),
@@ -56,7 +53,7 @@ export default async function PipelinePage({
     jobFilter.length
       ? scope.applications().in("job_id", jobFilter)
       : scope.applications(),
-    jobFilter.length ? latestScores().in("job_id", jobFilter) : latestScores(),
+    latestScores(scope, jobFilter),
     scope.jobStages(),
   ]);
   const stageById = new Map((stages ?? []).map((st) => [st.id, st]));
@@ -74,9 +71,7 @@ export default async function PipelinePage({
             phase: st.phase,
           }))
       : STAGES.map((phase) => ({ id: phase, label: s(phase), phase }));
-  const score = new Map(
-    (assessments ?? []).map((a) => [`${a.candidate_id}:${a.job_id}`, a.score]),
-  );
+  const now = Date.now();
 
   const jobTitle = new Map((jobs ?? []).map((j) => [j.id, j.title]));
   const byId = new Map((candidates ?? []).map((c) => [c.id, c]));
@@ -85,7 +80,7 @@ export default async function PipelinePage({
     const cand = byId.get(a.candidate_id);
     if (!cand) return [];
     if (term && !cand.full_name.toLowerCase().includes(term)) return [];
-    const appScore = score.get(`${a.candidate_id}:${a.job_id}`) ?? null;
+    const appScore = score.get(scoreKey(a.candidate_id, a.job_id)) ?? null;
     const mismatch = isMismatch(a.mismatch, appScore);
     if (marks.has("starred") && !a.starred) return [];
     if (marks.has("flagged") && !a.flagged) return [];
@@ -101,7 +96,7 @@ export default async function PipelinePage({
         stageName:
           mode === "phase" ? (stageById.get(a.stage_id)?.name ?? null) : null,
         position: a.position,
-        stageChangedAt: a.stage_changed_at,
+        days: daysSince(a.stage_changed_at, now),
         score: appScore,
         linkedinUrl: cand.linkedin_url,
         starred: a.starred,

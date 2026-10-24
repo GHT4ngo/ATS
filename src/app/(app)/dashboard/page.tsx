@@ -18,7 +18,11 @@ import {
 import { ScoreBadge } from "@/components/assessments/score-badge";
 import { ActivityChart } from "@/components/dashboard/activity-chart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getActiveOrganization, requireUser } from "@/lib/auth/session";
+import {
+  getActiveOrganization,
+  getViewMode,
+  requireUser,
+} from "@/lib/auth/session";
 import {
   RANGES,
   STUCK_DAYS,
@@ -27,34 +31,16 @@ import {
   isActive,
   parseRange,
   periodCounts,
-  spanDays,
+  TIME_ZONE,
 } from "@/lib/data/dashboard";
+import { allRows } from "@/lib/data/paging";
+import { latestScores, scoreKey } from "@/lib/data/scores";
 import { STAGES, type Stage } from "@/lib/data/schemas";
 import { getScope } from "@/lib/data/scope";
 import { PHASE_STYLE, isMismatch } from "@/lib/phase-style";
 import { cn, initials } from "@/lib/utils";
 
 const LIST_LIMIT = 6;
-const PAGE = 1000;
-
-/**
- * Reads every page of a query. PostgREST returns at most 1000 rows per
- * request, and the dashboard's numbers must not be cut off silently.
- */
-async function allRows<T>(
-  query: (
-    from: number,
-    to: number,
-  ) => PromiseLike<{ data: T[] | null; error: unknown }>,
-): Promise<{ data: T[] }> {
-  const rows: T[] = [];
-  for (let from = 0; ; from += PAGE) {
-    const { data, error } = await query(from, from + PAGE - 1);
-    if (error) throw error;
-    rows.push(...(data ?? []));
-    if (!data || data.length < PAGE) return { data: rows };
-  }
-}
 
 export default async function DashboardPage({
   searchParams,
@@ -62,6 +48,7 @@ export default async function DashboardPage({
   searchParams: Promise<{ range?: string }>;
 }) {
   const { profile } = await requireUser();
+  const { isAdmin } = await getViewMode();
   const org = await getActiveOrganization();
   const t = await getTranslations("Dashboard");
   const s = await getTranslations("Stages");
@@ -78,34 +65,40 @@ export default async function DashboardPage({
       <div className="mx-auto grid w-full max-w-7xl gap-3">
         {heading}
         <p className="text-muted-foreground">{t("pickOrganization")}</p>
-        <Link
-          href="/admin/customers"
-          className="text-primary inline-flex items-center gap-1 text-sm font-medium hover:underline"
-        >
-          {t("toCustomers")}
-          <ArrowRight className="size-4" />
-        </Link>
+        {isAdmin && (
+          <Link
+            href="/admin/customers"
+            className="text-primary inline-flex items-center gap-1 text-sm font-medium hover:underline"
+          >
+            {t("toCustomers")}
+            <ArrowRight className="size-4" />
+          </Link>
+        )}
       </div>
     );
   }
 
   const range = parseRange((await searchParams).range);
   const now = Date.now();
-  const since = new Date(now - 2 * spanDays(range) * 86_400_000 - 86_400_000);
+  const since = new Date(periodCounts(range, now, TIME_ZONE, []).prevStart);
   const scope = await getScope();
 
   const [
     { data: jobs },
     { data: apps },
     { data: candidates },
-    { data: scores },
+    score,
     { data: moves },
     { data: members },
   ] = await Promise.all([
-    scope.supabase
-      .from("jobs")
-      .select("id, title, status")
-      .eq("organization_id", scope.orgId),
+    allRows((from, to) =>
+      scope.supabase
+        .from("jobs")
+        .select("id, title, status")
+        .eq("organization_id", scope.orgId)
+        .order("id")
+        .range(from, to),
+    ),
     allRows((from, to) =>
       scope.supabase
         .from("applications")
@@ -116,14 +109,15 @@ export default async function DashboardPage({
         .order("id")
         .range(from, to),
     ),
-    scope.supabase
-      .from("candidates")
-      .select("id, full_name, cv_path")
-      .eq("organization_id", scope.orgId),
-    scope.supabase
-      .from("latest_cv_assessments")
-      .select("candidate_id, job_id, score")
-      .eq("organization_id", scope.orgId),
+    allRows((from, to) =>
+      scope.supabase
+        .from("candidates")
+        .select("id, full_name, cv_path")
+        .eq("organization_id", scope.orgId)
+        .order("id")
+        .range(from, to),
+    ),
+    latestScores(scope),
     allRows((from, to) =>
       scope.supabase
         .from("activity_log")
@@ -141,59 +135,51 @@ export default async function DashboardPage({
       .order("full_name"),
   ]);
 
-  const jobTitle = new Map((jobs ?? []).map((j) => [j.id, j.title]));
-  const cand = new Map((candidates ?? []).map((c) => [c.id, c]));
-  const score = new Map(
-    (scores ?? []).map((a) => [`${a.candidate_id}:${a.job_id}`, a.score]),
-  );
-  const allApps = (apps ?? []).filter((a) => cand.has(a.candidate_id));
-  // A move between two stages of the same phase is not a new interview or hire.
-  const moveList = (moves ?? []).flatMap((m) => {
+  const jobTitle = new Map(jobs.map((j) => [j.id, j.title]));
+  const cand = new Map(candidates.map((c) => [c.id, c]));
+  const allApps = apps.filter((a) => cand.has(a.candidate_id));
+  // Moves into the interview phase; a move between two interview stages of a
+  // job is not a new interview.
+  const interviewMoves = moves.filter((m) => {
     const p = (m.payload ?? {}) as Record<string, unknown>;
-    if (p.from === p.to) return [];
-    return [
-      {
-        at: m.created_at,
-        to: String(p.to ?? ""),
-        actor: m.actor_id,
-        app: m.entity_id,
-      },
-    ];
+    return p.to === "interview" && p.from !== "interview";
   });
+  // A hire is an application that is hired now, dated by its move to hired,
+  // so a mistaken move to hired and back does not count.
+  const hired = allApps.filter((a) => a.stage === "hired");
 
   // Headline numbers
-  const openJobs = (jobs ?? []).filter((j) => j.status === "open").length;
+  const openJobs = jobs.filter((j) => j.status === "open").length;
   const activeCandidates = new Set(
     allApps.filter((a) => isActive(a.stage)).map((a) => a.candidate_id),
   ).size;
   const newApps = periodCounts(
     range,
     now,
+    TIME_ZONE,
     allApps.map((a) => a.created_at),
   );
-  const hireMoves = moveList.filter((m) => m.to === "hired");
   const hires = periodCounts(
     range,
     now,
-    hireMoves.map((m) => m.at),
+    TIME_ZONE,
+    hired.map((a) => a.stage_changed_at),
   );
-  const created = new Map(allApps.map((a) => [a.id, a.created_at]));
-  const hireDays = hireMoves
-    .filter(
-      (m) => new Date(m.at).getTime() >= hires.start && created.has(m.app),
-    )
-    .map((m) => daysSince(created.get(m.app)!, new Date(m.at).getTime()));
+  const hireDays = hired
+    .filter((a) => new Date(a.stage_changed_at).getTime() >= hires.start)
+    .map((a) =>
+      daysSince(a.created_at, new Date(a.stage_changed_at).getTime()),
+    );
   const avgDaysToHire = hireDays.length
     ? Math.round(hireDays.reduce((a, b) => a + b, 0) / hireDays.length)
     : null;
 
   // Chart
-  const buckets = buildSeries(
-    range,
-    now,
-    allApps.map((a) => a.created_at),
-    moveList,
-  );
+  const buckets = buildSeries(range, now, TIME_ZONE, {
+    applications: allApps.map((a) => a.created_at),
+    interviews: interviewMoves.map((m) => m.created_at),
+    hires: hired.map((a) => a.stage_changed_at),
+  });
   const weekly = range === 90;
   const labels = buckets.map((b) =>
     format.dateTime(new Date(b.start), { day: "numeric", month: "short" }),
@@ -233,7 +219,7 @@ export default async function DashboardPage({
     name: cand.get(a.candidate_id)!.full_name,
     job: jobTitle.get(a.job_id) ?? "",
     days: daysSince(a.stage_changed_at, now),
-    score: score.get(`${a.candidate_id}:${a.job_id}`) ?? null,
+    score: score.get(scoreKey(a.candidate_id, a.job_id)) ?? null,
   }));
   const active = rows.filter((r) => isActive(r.stage));
   const attention = active
@@ -267,9 +253,9 @@ export default async function DashboardPage({
     );
 
   const movesBy = new Map<string, number>();
-  for (const m of moveList)
-    if (m.actor && new Date(m.at).getTime() >= newApps.start)
-      movesBy.set(m.actor, (movesBy.get(m.actor) ?? 0) + 1);
+  for (const m of moves)
+    if (m.actor_id && new Date(m.created_at).getTime() >= newApps.start)
+      movesBy.set(m.actor_id, (movesBy.get(m.actor_id) ?? 0) + 1);
 
   const href = (r: Row) => `/pipeline?candidate=${r.candidate_id}`;
   const rangeLabel = t("rangeDays", { days: range });

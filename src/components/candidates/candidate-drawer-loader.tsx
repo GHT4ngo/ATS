@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { AssessmentView } from "@/components/assessments/assessment-panel";
+import { daysSince } from "@/lib/data/dashboard";
 import { getScope } from "@/lib/data/scope";
 import { isMismatch } from "@/lib/phase-style";
 import type { Database } from "@/lib/supabase/database.types";
@@ -14,6 +15,7 @@ export async function CandidateDrawerLoader({
   const id = z.uuid().safeParse(candidateId);
   if (!id.success) return null;
   const scope = await getScope();
+  const now = Date.now();
 
   const { data: candidate } = await scope
     .candidates()
@@ -84,7 +86,7 @@ export async function CandidateDrawerLoader({
         jobTitle: jobTitle.get(a.job_id) ?? "",
         stage: a.stage,
         stageName: stageName.get(a.stage_id) ?? null,
-        stageChangedAt: a.stage_changed_at,
+        days: daysSince(a.stage_changed_at, now),
         assessment: toView(latest.get(a.job_id)),
         starred: a.starred,
         flagged: a.flagged,

@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/table";
 import { STAGES, type Stage } from "@/lib/data/schemas";
 import { getScope } from "@/lib/data/scope";
+import { latestScores, scoreKey } from "@/lib/data/scores";
 import { parseMarks } from "@/lib/marks";
 import { PHASE_STYLE, isMismatch } from "@/lib/phase-style";
 import { cn, initials } from "@/lib/utils";
@@ -56,26 +57,16 @@ export default async function CandidatesPage({
   const term = q?.trim().replace(/[%_,()]/g, " ");
   if (term) query = query.ilike("full_name", `%${term}%`);
 
-  const [
-    { data: candidates },
-    { data: jobs },
-    { data: apps },
-    { data: scores },
-  ] = await Promise.all([
-    query,
-    scope.jobs().order("title"),
-    scope
-      .applications()
-      .select("id, candidate_id, job_id, stage, starred, flagged, mismatch"),
-    scope.supabase
-      .from("latest_cv_assessments")
-      .select("candidate_id, job_id, score")
-      .eq("organization_id", scope.orgId),
-  ]);
+  const [{ data: candidates }, { data: jobs }, { data: apps }, score] =
+    await Promise.all([
+      query,
+      scope.jobs().order("title"),
+      scope
+        .applications()
+        .select("id, candidate_id, job_id, stage, starred, flagged, mismatch"),
+      latestScores(scope),
+    ]);
   const jobTitle = new Map((jobs ?? []).map((j) => [j.id, j.title]));
-  const score = new Map(
-    (scores ?? []).map((a) => [`${a.candidate_id}:${a.job_id}`, a.score]),
-  );
 
   type App = NonNullable<typeof apps>[number] & {
     score: number | null;
@@ -83,7 +74,7 @@ export default async function CandidatesPage({
   };
   const appsOf = new Map<string, App[]>();
   for (const a of apps ?? []) {
-    const appScore = score.get(`${a.candidate_id}:${a.job_id}`) ?? null;
+    const appScore = score.get(scoreKey(a.candidate_id, a.job_id)) ?? null;
     const row = {
       ...a,
       score: appScore,

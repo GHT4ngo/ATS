@@ -30,7 +30,7 @@ import { toast } from "sonner";
 import { moveApplication } from "@/app/actions/pipeline";
 import { ScoreBadge } from "@/components/assessments/score-badge";
 import { Badge } from "@/components/ui/badge";
-import { STUCK_DAYS, daysSince, isActive } from "@/lib/data/dashboard";
+import { STUCK_DAYS, isActive } from "@/lib/data/dashboard";
 import type { Stage } from "@/lib/data/schemas";
 import { PHASE_STYLE } from "@/lib/phase-style";
 import { cn, initials } from "@/lib/utils";
@@ -49,7 +49,8 @@ export type BoardCard = {
   /** A custom stage name, shown on the all jobs board. */
   stageName: string | null;
   position: number;
-  stageChangedAt: string;
+  /** Days in the current stage, counted on the server so hydration matches. */
+  days: number;
   score: number | null;
   linkedinUrl: string | null;
   starred: boolean;
@@ -69,7 +70,7 @@ function CardBody({
   const t = useTranslations("Candidates");
   const ai = useTranslations("Assessment");
   const m = useTranslations("Marks");
-  const days = daysSince(card.stageChangedAt, Date.now());
+  const { days } = card;
   return (
     <>
       <div
@@ -390,10 +391,7 @@ export function KanbanBoard({
       // The phase and the days in stage follow the new column, so the colours
       // and the stuck highlight are right before the next refresh.
       const phase = columns.find((c) => c.id === to)?.phase ?? card.stage;
-      const restarted =
-        saved.column !== to
-          ? { stage: phase, stageChangedAt: new Date().toISOString() }
-          : {};
+      const restarted = saved.column !== to ? { stage: phase, days: 0 } : {};
       const done = {
         ...moved,
         ...restarted,

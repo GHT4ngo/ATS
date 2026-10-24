@@ -3,16 +3,58 @@ import type { Stage } from "./schemas";
 export const RANGES = [7, 30, 90] as const;
 export type Range = (typeof RANGES)[number];
 
+/** The customers are in Sweden; days start at midnight there. */
+export const TIME_ZONE = "Europe/Stockholm";
+
 export function parseRange(value: string | undefined): Range {
   const n = Number(value);
   return (RANGES as readonly number[]).includes(n) ? (n as Range) : 30;
 }
 
 const DAY = 86_400_000;
+const HALF_DAY = DAY / 2;
 
-/** Start of the UTC day, so buckets line up however late in the day it is. */
-function dayStart(t: number) {
-  return Math.floor(t / DAY) * DAY;
+/** How far the time zone is ahead of UTC at this moment, in ms. */
+function offset(t: number, timeZone: string) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hourCycle: "h23",
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    second: "numeric",
+  }).formatToParts(t);
+  const get = (type: string) =>
+    Number(parts.find((p) => p.type === type)?.value);
+  const local = Date.UTC(
+    get("year"),
+    get("month") - 1,
+    get("day"),
+    get("hour"),
+    get("minute"),
+    get("second"),
+  );
+  return local - Math.floor(t / 1000) * 1000;
+}
+
+/** Local midnight at the start of the day that contains t. */
+export function dayStart(t: number, timeZone: string) {
+  const off = offset(t, timeZone);
+  return Math.floor((t + off) / DAY) * DAY - off;
+}
+
+/** Days the period covers: 90 days is shown as 13 whole weeks. */
+export function spanDays(range: Range) {
+  return range === 90 ? 91 : range;
+}
+
+/** Local midnight `days` days before the end of today. */
+function daysBack(now: number, days: number, timeZone: string) {
+  const end = dayStart(now, timeZone) + DAY;
+  // Aim at midday, so a daylight saving day still lands on the right date.
+  return dayStart(end - days * DAY + HALF_DAY, timeZone);
 }
 
 export type Bucket = {
@@ -23,55 +65,53 @@ export type Bucket = {
   hires: number;
 };
 
-type Move = { at: string; to: string };
-
-/** Days the period covers: 90 days is shown as 13 whole weeks. */
-export function spanDays(range: Range) {
-  return range === 90 ? 91 : range;
-}
-
 /**
- * Counts per bucket over the last `range` days: daily for 7 and 30 days,
- * weekly for 90. The last bucket ends today.
+ * Counts per bucket over the period: daily for 7 and 30 days, weekly for 90.
+ * The last bucket ends at the end of today, local time.
  */
 export function buildSeries(
   range: Range,
   now: number,
-  applicationsCreated: string[],
-  moves: Move[],
+  timeZone: string,
+  series: { applications: string[]; interviews: string[]; hires: string[] },
 ): Bucket[] {
-  const size = range === 90 ? 7 * DAY : DAY;
-  const count = range === 90 ? 13 : range;
-  const end = dayStart(now) + DAY;
-  const first = end - count * size;
-  const buckets: Bucket[] = Array.from({ length: count }, (_, i) => ({
-    start: first + i * size,
+  const step = range === 90 ? 7 : 1;
+  const count = spanDays(range) / step;
+  const starts = Array.from({ length: count }, (_, i) =>
+    daysBack(now, (count - i) * step, timeZone),
+  );
+  const end = dayStart(now, timeZone) + DAY;
+  const buckets: Bucket[] = starts.map((start) => ({
+    start,
     applications: 0,
     interviews: 0,
     hires: 0,
   }));
   const at = (iso: string) => {
-    const i = Math.floor((new Date(iso).getTime() - first) / size);
-    return i >= 0 && i < count ? buckets[i] : undefined;
+    const t = new Date(iso).getTime();
+    if (t < starts[0] || t >= end) return undefined;
+    let i = count - 1;
+    while (starts[i] > t) i--;
+    return buckets[i];
   };
-  for (const iso of applicationsCreated) {
-    const b = at(iso);
-    if (b) b.applications += 1;
-  }
-  for (const m of moves) {
-    const b = at(m.at);
-    if (!b) continue;
-    if (m.to === "interview") b.interviews += 1;
-    if (m.to === "hired") b.hires += 1;
-  }
+  for (const key of ["applications", "interviews", "hires"] as const)
+    for (const iso of series[key]) {
+      const b = at(iso);
+      if (b) b[key] += 1;
+    }
   return buckets;
 }
 
 /** How many timestamps fall in this period and in the one before it. */
-export function periodCounts(range: Range, now: number, times: string[]) {
-  const end = dayStart(now) + DAY;
-  const start = end - spanDays(range) * DAY;
-  const prevStart = start - spanDays(range) * DAY;
+export function periodCounts(
+  range: Range,
+  now: number,
+  timeZone: string,
+  times: string[],
+) {
+  const end = dayStart(now, timeZone) + DAY;
+  const start = daysBack(now, spanDays(range), timeZone);
+  const prevStart = daysBack(now, 2 * spanDays(range), timeZone);
   let current = 0;
   let previous = 0;
   for (const iso of times) {
@@ -79,7 +119,7 @@ export function periodCounts(range: Range, now: number, times: string[]) {
     if (t >= start && t < end) current += 1;
     else if (t >= prevStart && t < start) previous += 1;
   }
-  return { current, previous, start };
+  return { current, previous, start, prevStart };
 }
 
 /** Days in a stage before a candidate counts as stuck. */

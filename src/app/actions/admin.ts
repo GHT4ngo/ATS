@@ -172,7 +172,9 @@ const ADMIN_COOKIE = {
 export async function setDevMode(on: boolean): Promise<void> {
   await requireAdmin();
   const store = await cookies();
-  if (z.boolean().parse(on)) store.set(DEV_MODE_COOKIE, "1", ADMIN_COOKIE);
+  const parsed = z.boolean().safeParse(on);
+  if (!parsed.success) return;
+  if (parsed.data) store.set(DEV_MODE_COOKIE, "1", ADMIN_COOKIE);
   else {
     store.delete(DEV_MODE_COOKIE);
     store.delete(PREVIEW_COOKIE);

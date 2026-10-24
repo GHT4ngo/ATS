@@ -42,10 +42,15 @@ export function MarkButtons({
     const value = !marks[mark];
     setMarks((m) => ({ ...m, [mark]: value }));
     startTransition(async () => {
-      const result = await markApplication({ applicationId, mark, value });
-      if (result.error) {
+      let error: string | undefined = "generic";
+      try {
+        error = (await markApplication({ applicationId, mark, value })).error;
+      } catch {
+        // A network failure or a crash rolls back like a refusal.
+      }
+      if (error) {
         setMarks((m) => ({ ...m, [mark]: !value }));
-        toast.error(e(result.error));
+        toast.error(e(error));
       }
     });
   }
@@ -137,12 +142,19 @@ export function MismatchMenu({
           onValueChange={(v) =>
             startTransition(async () => {
               const next = v === AUTO ? null : v === "no";
-              const result = await markApplication({
-                applicationId,
-                mark: "mismatch",
-                value: next,
-              });
-              if (result.error) toast.error(e(result.error));
+              let error: string | undefined = "generic";
+              try {
+                error = (
+                  await markApplication({
+                    applicationId,
+                    mark: "mismatch",
+                    value: next,
+                  })
+                ).error;
+              } catch {
+                // Reported below, like a refusal.
+              }
+              if (error) toast.error(e(error));
             })
           }
         >

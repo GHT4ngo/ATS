@@ -62,9 +62,10 @@ export default async function AppLayout({
       <SettingsDialog
         fullName={profile.full_name}
         locale={profile.locale as "sv" | "en"}
-        devMode={isAdmin ? devMode : undefined}
+        devMode={adminUi ? devMode : undefined}
       />
-      {devMode && (
+      {/* Hidden in a preview, which the banner ends. */}
+      {devMode && adminUi && (
         <DevMenu
           organizations={organizations}
           previewing={preview ? (activeOrg?.id ?? null) : null}

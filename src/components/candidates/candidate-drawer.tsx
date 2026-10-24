@@ -34,7 +34,8 @@ export type DrawerApplication = {
   jobTitle: string;
   stage: Stage;
   stageName: string | null;
-  stageChangedAt: string;
+  /** Days in the current stage, counted on the server. */
+  days: number;
   assessment: AssessmentView | null;
   starred: boolean;
   flagged: boolean;
@@ -203,12 +204,7 @@ export function CandidateDrawer({
                     {a.stageName ?? s(a.stage)}
                   </span>
                   <span className="text-muted-foreground text-xs">
-                    {t("daysInStage", {
-                      days: Math.floor(
-                        (Date.now() - new Date(a.stageChangedAt).getTime()) /
-                          86_400_000,
-                      ),
-                    })}
+                    {t("daysInStage", { days: a.days })}
                   </span>
                   <span className="ml-auto">
                     <MismatchMenu

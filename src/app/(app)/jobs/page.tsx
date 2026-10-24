@@ -124,7 +124,8 @@ export default async function JobsPage() {
                       >
                         {row[st] ? (
                           <Link
-                            href={board}
+                            href={`/candidates?jobs=${job.id}&phase=${st}`}
+                            aria-label={`${s(st)}: ${row[st]}`}
                             className={cn(
                               "inline-flex min-w-7 justify-center rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums",
                               PHASE_STYLE[st].soft,
