@@ -23,10 +23,15 @@ const inputs = {
   get_candidate: z.object({ candidate_id: z.uuid() }),
   list_jobs: z.object({}),
   pipeline_summary: z.object({ job_id: z.uuid().optional() }),
-  move_candidate: z.object({
-    application_id: z.uuid(),
-    stage: z.enum(STAGES),
-  }),
+  move_candidate: z
+    .object({
+      application_id: z.uuid(),
+      stage_id: z.uuid().optional(),
+      stage: z.enum(STAGES).optional(),
+    })
+    .refine((v) => Boolean(v.stage_id) !== Boolean(v.stage), {
+      message: "Give either stage_id or stage, not both",
+    }),
 };
 
 export type ToolName = keyof typeof inputs;
@@ -67,7 +72,7 @@ const definitions: Anthropic.Beta.BetaTool[] = [
   {
     name: "list_jobs",
     description:
-      "All jobs in the organization with status, location and the number of candidates per stage.",
+      "All jobs in the organization with status, location, their own pipeline stages (stage_id, name, phase) and the number of candidates per phase.",
     input_schema: { type: "object", properties: {} },
   },
   {
@@ -83,11 +88,15 @@ const definitions: Anthropic.Beta.BetaTool[] = [
   {
     name: "move_candidate",
     description:
-      "Move one application to another stage. The user is asked to approve the move before it happens; call it only when the user asked for a move.",
+      "Move one application to another stage. Give stage_id for one of the job's own stages (from list_jobs), or stage for a phase, which picks that phase's first stage. The user is asked to approve the move before it happens; call it only when the user asked for a move.",
     input_schema: {
       type: "object",
-      properties: { application_id: uuid, stage },
-      required: ["application_id", "stage"],
+      properties: {
+        application_id: uuid,
+        stage_id: { ...uuid, description: "One of the job's own stages" },
+        stage: { ...stage, description: "A phase, when no stage_id is given" },
+      },
+      required: ["application_id"],
     },
   },
 ];
@@ -101,8 +110,11 @@ export type PendingAction = {
   toolUseId: string;
   candidate: string;
   job: string;
+  /** Phases, and the custom stage names when the stages have one. */
   from: string;
   to: string;
+  fromName: string | null;
+  toName: string | null;
 };
 
 export class ToolInputError extends Error {}
@@ -119,15 +131,24 @@ export function isToolName(name: string): name is ToolName {
   return name in inputs;
 }
 
+function stagesOf(scope: Scope) {
+  return scope.supabase
+    .from("job_stages")
+    .select("id, job_id, name, phase, position")
+    .eq("organization_id", scope.orgId)
+    .order("position");
+}
+
 /** Loads what a tool needs; candidates and scores only when asked for. */
 async function loadContext(
   scope: Scope,
   need: { candidates?: boolean; scores?: boolean } = {},
 ) {
-  const [{ data: jobs }, { data: apps }, candidates, scores] =
+  const [{ data: jobs }, { data: apps }, { data: stages }, candidates, scores] =
     await Promise.all([
       scope.jobs(),
       scope.applications(),
+      stagesOf(scope),
       need.candidates
         ? scope.candidates().then((r) => r.data ?? [])
         : Promise.resolve([]),
@@ -142,8 +163,12 @@ async function loadContext(
   const score = new Map(
     scores.map((s) => [`${s.candidate_id}:${s.job_id}`, s.score]),
   );
+  const stageName = new Map((stages ?? []).map((st) => [st.id, st.name]));
   return {
     jobs: jobs ?? [],
+    stages: stages ?? [],
+    /** A custom stage name, or null for a default stage. */
+    stageName: (id: string) => stageName.get(id) ?? null,
     jobTitle: new Map((jobs ?? []).map((j) => [j.id, j.title])),
     candidates,
     candidateName: new Map(candidates.map((c) => [c.id, c.full_name])),
@@ -170,16 +195,29 @@ export async function describeMove(
     .eq("id", parsed.application_id)
     .maybeSingle();
   if (!app) return null;
-  const [{ data: cand }, { data: job }] = await Promise.all([
+  const [{ data: cand }, { data: job }, { data: stages }] = await Promise.all([
     scope.candidates().eq("id", app.candidate_id).maybeSingle(),
     scope.jobs().eq("id", app.job_id).maybeSingle(),
+    scope.supabase
+      .from("job_stages")
+      .select("id, name, phase, position")
+      .eq("organization_id", scope.orgId)
+      .eq("job_id", app.job_id)
+      .order("position"),
   ]);
+  const target = parsed.stage_id
+    ? stages?.find((st) => st.id === parsed.stage_id)
+    : stages?.find((st) => st.phase === parsed.stage);
+  if (!target) return null;
+  const current = stages?.find((st) => st.id === app.stage_id);
   return {
     toolUseId,
     candidate: cand?.full_name ?? "",
     job: job?.title ?? "",
     from: app.stage,
-    to: parsed.stage,
+    to: target.phase,
+    fromName: current?.name ?? null,
+    toName: target.name ?? null,
   };
 }
 
@@ -211,6 +249,7 @@ export async function runTool(
               application_id: a.id,
               job: ctx.jobTitle.get(a.job_id),
               stage: a.stage,
+              stage_name: ctx.stageName(a.stage_id),
               days_in_stage: daysSince(a.stage_changed_at),
               ai_score: ctx.score(c.id, a.job_id),
             })),
@@ -228,12 +267,18 @@ export async function runTool(
         .eq("id", candidate_id)
         .maybeSingle();
       if (!cand) return { result: { error: "Candidate not found" } };
-      const [{ data: apps }, { data: jobs }, { data: assessments }] =
-        await Promise.all([
-          scope.applications().eq("candidate_id", cand.id),
-          scope.jobs(),
-          scope.latestAssessments().eq("candidate_id", cand.id),
-        ]);
+      const [
+        { data: apps },
+        { data: jobs },
+        { data: assessments },
+        { data: stages },
+      ] = await Promise.all([
+        scope.applications().eq("candidate_id", cand.id),
+        scope.jobs(),
+        scope.latestAssessments().eq("candidate_id", cand.id),
+        stagesOf(scope),
+      ]);
+      const stageName = new Map((stages ?? []).map((st) => [st.id, st.name]));
       const appIds = (apps ?? []).map((a) => a.id);
       const { data: log } = await scope.supabase
         .from("activity_log")
@@ -259,6 +304,7 @@ export async function runTool(
               application_id: a.id,
               job: jobTitle.get(a.job_id),
               stage: a.stage,
+              stage_name: stageName.get(a.stage_id) ?? null,
               days_in_stage: daysSince(a.stage_changed_at),
               ai_assessment: ai
                 ? {
@@ -284,12 +330,25 @@ export async function runTool(
           title: j.title,
           status: j.status,
           location: j.location,
-          candidates_per_stage: Object.fromEntries(
+          candidates_per_phase: Object.fromEntries(
             STAGES.map((s) => [
               s,
               ctx.apps.filter((a) => a.job_id === j.id && a.stage === s).length,
             ]),
           ),
+          stages: ctx.stages
+            .filter((st) => st.job_id === j.id)
+            .sort(
+              (a, b) =>
+                STAGES.indexOf(a.phase) - STAGES.indexOf(b.phase) ||
+                a.position - b.position,
+            )
+            .map((st) => ({
+              stage_id: st.id,
+              name: st.name,
+              phase: st.phase,
+              candidates: ctx.apps.filter((a) => a.stage_id === st.id).length,
+            })),
         })),
       };
     }
@@ -322,6 +381,7 @@ export async function runTool(
               candidate: ctx.candidateName.get(a.candidate_id),
               job: ctx.jobTitle.get(a.job_id),
               stage: a.stage,
+              stage_name: ctx.stageName(a.stage_id),
               days_in_stage: daysSince(a.stage_changed_at),
             })),
         },
@@ -329,10 +389,13 @@ export async function runTool(
     }
 
     case "move_candidate": {
-      const { application_id, stage } = parseInput(name, input);
-      const result = await moveApplicationTo(scope, application_id, stage, {
-        via: "assistant",
-      });
+      const { application_id, stage_id, stage } = parseInput(name, input);
+      const result = await moveApplicationTo(
+        scope,
+        application_id,
+        stage_id ? { stageId: stage_id } : { phase: stage! },
+        { via: "assistant" },
+      );
       if ("error" in result)
         return {
           result: {
@@ -343,8 +406,8 @@ export async function runTool(
           },
         };
       return {
-        result: { ok: true, from: result.from, to: stage },
-        changed: result.from !== stage,
+        result: { ok: true, from: result.from, to: result.to },
+        changed: result.changed,
       };
     }
   }

@@ -5,7 +5,9 @@ import { FilterBar } from "@/components/filters/filter-bar";
 import {
   KanbanBoard,
   type BoardCard,
+  type BoardColumn,
 } from "@/components/pipeline/kanban-board";
+import { STAGES } from "@/lib/data/schemas";
 import { getScope } from "@/lib/data/scope";
 
 export default async function PipelinePage({
@@ -15,6 +17,7 @@ export default async function PipelinePage({
 }) {
   const { q, jobs: jobsParam, candidate } = await searchParams;
   const t = await getTranslations("Pipeline");
+  const s = await getTranslations("Stages");
   const scope = await getScope();
 
   // Ids come from a shared URL, so drop anything that is not a uuid.
@@ -33,6 +36,7 @@ export default async function PipelinePage({
     { data: candidates },
     { data: apps },
     { data: assessments },
+    { data: stages },
   ] = await Promise.all([
     scope.jobs().order("title"),
     scope.candidates(),
@@ -40,7 +44,27 @@ export default async function PipelinePage({
       ? scope.applications().in("job_id", jobFilter)
       : scope.applications(),
     jobFilter.length ? latestScores().in("job_id", jobFilter) : latestScores(),
+    scope.supabase
+      .from("job_stages")
+      .select("id, job_id, name, phase, position")
+      .eq("organization_id", scope.orgId)
+      .order("position"),
   ]);
+  const stageById = new Map((stages ?? []).map((st) => [st.id, st]));
+
+  // One job filtered: its own stages as columns. Otherwise the six phases.
+  const mode = jobFilter.length === 1 ? "stage" : "phase";
+  const columns: BoardColumn[] =
+    mode === "stage"
+      ? (stages ?? [])
+          .filter((st) => st.job_id === jobFilter[0])
+          .sort(
+            (a, b) =>
+              STAGES.indexOf(a.phase) - STAGES.indexOf(b.phase) ||
+              a.position - b.position,
+          )
+          .map((st) => ({ id: st.id, label: st.name ?? s(st.phase) }))
+      : STAGES.map((phase) => ({ id: phase, label: s(phase) }));
   const score = new Map(
     (assessments ?? []).map((a) => [`${a.candidate_id}:${a.job_id}`, a.score]),
   );
@@ -59,6 +83,9 @@ export default async function PipelinePage({
         name: cand.full_name,
         jobTitle: jobTitle.get(a.job_id) ?? "",
         stage: a.stage,
+        column: mode === "stage" ? a.stage_id : a.stage,
+        stageName:
+          mode === "phase" ? (stageById.get(a.stage_id)?.name ?? null) : null,
         position: a.position,
         stageChangedAt: a.stage_changed_at,
         score: score.get(`${a.candidate_id}:${a.job_id}`) ?? null,
@@ -73,7 +100,12 @@ export default async function PipelinePage({
       <FilterBar
         jobs={(jobs ?? []).map((j) => ({ id: j.id, title: j.title }))}
       />
-      <KanbanBoard initialCards={cards} />
+      <KanbanBoard
+        key={mode === "stage" ? jobFilter[0] : "all"}
+        initialCards={cards}
+        columns={columns}
+        mode={mode}
+      />
       {candidate && (
         <CandidateDrawerLoader key={candidate} candidateId={candidate} />
       )}

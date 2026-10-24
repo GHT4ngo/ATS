@@ -29,8 +29,10 @@ import { toast } from "sonner";
 import { moveApplication } from "@/app/actions/pipeline";
 import { ScoreBadge } from "@/components/assessments/score-badge";
 import { Badge } from "@/components/ui/badge";
-import { STAGES, type Stage } from "@/lib/data/schemas";
+import type { Stage } from "@/lib/data/schemas";
 import { cn } from "@/lib/utils";
+
+export type BoardColumn = { id: string; label: string };
 
 export type BoardCard = {
   id: string;
@@ -38,6 +40,10 @@ export type BoardCard = {
   name: string;
   jobTitle: string;
   stage: Stage;
+  /** The column the card sits in: a stage id on a job board, else the phase. */
+  column: string;
+  /** A custom stage name, shown on the all jobs board. */
+  stageName: string | null;
   position: number;
   stageChangedAt: string;
   score: number | null;
@@ -107,6 +113,11 @@ function CardBody({
             {t("daysShort", { days: daysSince(card.stageChangedAt) })}
           </span>
         </div>
+        {card.stageName && (
+          <span className="text-muted-foreground mt-1 block truncate text-xs">
+            {card.stageName}
+          </span>
+        )}
       </div>
       {card.linkedinUrl && (
         <a
@@ -138,7 +149,7 @@ function SortableCard({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: card.id, data: { stage: card.stage } });
+  } = useSortable({ id: card.id, data: { column: card.column } });
   return (
     <li
       ref={setNodeRef}
@@ -156,26 +167,28 @@ function SortableCard({
 }
 
 function Column({
-  stage,
+  column,
   cards,
   drawerHref,
 }: {
-  stage: Stage;
+  column: BoardColumn;
   cards: BoardCard[];
   drawerHref: (card: BoardCard) => string;
 }) {
-  const s = useTranslations("Stages");
-  const { setNodeRef, isOver } = useDroppable({ id: stage, data: { stage } });
+  const { setNodeRef, isOver } = useDroppable({
+    id: column.id,
+    data: { column: column.id },
+  });
   return (
     <section
-      aria-label={s(stage)}
+      aria-label={column.label}
       className={cn(
         "bg-muted/40 flex w-60 shrink-0 flex-col gap-2 rounded-xl p-2",
         isOver && "ring-ring/40 ring-2",
       )}
     >
       <h2 className="flex items-center justify-between px-1 text-sm font-medium">
-        {s(stage)}
+        {column.label}
         <span className="text-muted-foreground text-xs tabular-nums">
           {cards.length}
         </span>
@@ -202,7 +215,16 @@ function byPosition(a: BoardCard, b: BoardCard) {
   return a.position - b.position;
 }
 
-export function KanbanBoard({ initialCards }: { initialCards: BoardCard[] }) {
+export function KanbanBoard({
+  initialCards,
+  columns,
+  mode,
+}: {
+  initialCards: BoardCard[];
+  columns: BoardColumn[];
+  /** "stage": columns are one job's stages; "phase": the fixed phases. */
+  mode: "stage" | "phase";
+}) {
   const e = useTranslations("Errors");
   const pathname = usePathname();
   const params = useSearchParams();
@@ -232,9 +254,9 @@ export function KanbanBoard({ initialCards }: { initialCards: BoardCard[] }) {
     return `${pathname}?${next}`;
   };
 
-  const stageOf = (id: string | number): Stage | null => {
-    if ((STAGES as readonly string[]).includes(String(id))) return id as Stage;
-    return cards.find((c) => c.id === id)?.stage ?? null;
+  const columnOf = (id: string | number): string | null => {
+    if (columns.some((c) => c.id === id)) return String(id);
+    return cards.find((c) => c.id === id)?.column ?? null;
   };
 
   function onDragStart(event: DragStartEvent) {
@@ -245,11 +267,11 @@ export function KanbanBoard({ initialCards }: { initialCards: BoardCard[] }) {
   // makes room for it.
   function onDragOver({ active, over }: DragOverEvent) {
     if (!over) return;
-    const to = stageOf(over.id);
-    const from = stageOf(active.id);
+    const to = columnOf(over.id);
+    const from = columnOf(active.id);
     if (!to || !from || to === from) return;
     setCards((prev) =>
-      prev.map((c) => (c.id === active.id ? { ...c, stage: to } : c)),
+      prev.map((c) => (c.id === active.id ? { ...c, column: to } : c)),
     );
   }
 
@@ -260,14 +282,14 @@ export function KanbanBoard({ initialCards }: { initialCards: BoardCard[] }) {
       return;
     }
     const card = cards.find((c) => c.id === active.id);
-    const to = stageOf(over.id);
+    const to = columnOf(over.id);
     if (!card || !to) return;
 
     // The column in its current order, including the dragged card (onDragOver
     // has already moved it here). Dropping on a card takes that card's place,
     // as arrayMove does, so a card dropped on one below it lands after it.
     // Dropping on the column itself appends.
-    const column = cards.filter((c) => c.stage === to).sort(byPosition);
+    const column = cards.filter((c) => c.column === to).sort(byPosition);
     const from = column.findIndex((c) => c.id === card.id);
     const overIndex = column.findIndex((c) => c.id === over.id);
     const ordered =
@@ -288,19 +310,24 @@ export function KanbanBoard({ initialCards }: { initialCards: BoardCard[] }) {
 
     const saved = synced.find((c) => c.id === card.id);
     if (!saved) return;
-    if (saved.stage === to && saved.position === position) {
+    if (saved.column === to && saved.position === position) {
       setCards((prev) => prev.map((c) => (c.id === card.id ? saved : c)));
       return;
     }
 
-    const moved = { ...card, stage: to, position };
+    const moved = { ...card, column: to, position };
     setCards((prev) => prev.map((c) => (c.id === card.id ? moved : c)));
 
     let ok = false;
     try {
       ok = Boolean(
-        (await moveApplication({ applicationId: card.id, stage: to, position }))
-          .ok,
+        (
+          await moveApplication({
+            applicationId: card.id,
+            ...(mode === "stage" ? { stageId: to } : { stage: to }),
+            position,
+          })
+        ).ok,
       );
     } catch {
       ok = false;
@@ -329,11 +356,11 @@ export function KanbanBoard({ initialCards }: { initialCards: BoardCard[] }) {
       }}
     >
       <div className="flex gap-3 overflow-x-auto pb-3">
-        {STAGES.map((stage) => (
+        {columns.map((column) => (
           <Column
-            key={stage}
-            stage={stage}
-            cards={cards.filter((c) => c.stage === stage).sort(byPosition)}
+            key={column.id}
+            column={column}
+            cards={cards.filter((c) => c.column === column.id).sort(byPosition)}
             drawerHref={drawerHref}
           />
         ))}

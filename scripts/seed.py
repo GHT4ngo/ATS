@@ -87,6 +87,15 @@ JOBS = {
 
 # name, location, years, skills, current role, previous role, education,
 # LinkedIn handle (or None), and the applications as (job, stage, days in stage)
+# The frontend job shows custom stages: the defaults for screening and
+# interview are renamed, and interview gets a second stage.
+FRONTEND_STAGES = {
+    "screening": ["Telefonintervju"],
+    "interview": ["Kodtest", "Slutintervju"],
+}
+# Candidates placed in a named stage instead of their phase's first stage
+IN_STAGE = {"Oskar Holm": "Slutintervju"}
+
 CANDIDATES = [
     (
         "Elin Sandberg",
@@ -441,6 +450,37 @@ def seed(db: Client, password: str) -> None:
         job_ids[key] = row["id"]
         log("job", row["id"], "created", created, title=job["title"])
 
+    # A trigger created one default stage per phase for each job.
+    stage_ids = {}
+    for phase, names in FRONTEND_STAGES.items():
+        default = (
+            db.table("job_stages")
+            .select("id")
+            .eq("job_id", job_ids["frontend"])
+            .eq("phase", phase)
+            .single()
+            .execute()
+            .data
+        )
+        db.table("job_stages").update({"name": names[0]}).eq("id", default["id"]).execute()
+        stage_ids[names[0]] = default["id"]
+        for n, name in enumerate(names[1:], start=2):
+            row = (
+                db.table("job_stages")
+                .insert(
+                    {
+                        "organization_id": org_id,
+                        "job_id": job_ids["frontend"],
+                        "phase": phase,
+                        "name": name,
+                        "position": 10 + n,
+                    }
+                )
+                .execute()
+                .data[0]
+            )
+            stage_ids[name] = row["id"]
+
     positions = {}
     for i, c in enumerate(CANDIDATES):
         name, location, *_, linkedin, apps = c
@@ -490,6 +530,12 @@ def seed(db: Client, password: str) -> None:
                         "candidate_id": cand["id"],
                         "job_id": job_ids[job],
                         "stage": stage,
+                        # Set at insert, so the backdated stage time is kept
+                        **(
+                            {"stage_id": stage_ids[IN_STAGE[name]]}
+                            if job == "frontend" and name in IN_STAGE
+                            else {}
+                        ),
                         "position": pos,
                         "created_at": created.isoformat(),
                         "stage_changed_at": changed.isoformat(),

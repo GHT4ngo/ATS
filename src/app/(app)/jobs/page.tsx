@@ -1,5 +1,9 @@
 import { getTranslations } from "next-intl/server";
 import { JobFormDialog } from "@/components/jobs/job-form-dialog";
+import {
+  JobStagesDialog,
+  type StageRow,
+} from "@/components/jobs/job-stages-dialog";
 import { JobStatusSelect } from "@/components/jobs/job-status-select";
 import {
   Table,
@@ -17,10 +21,32 @@ export default async function JobsPage() {
   const s = await getTranslations("Stages");
   const scope = await getScope();
 
-  const [{ data: jobs }, { data: apps }] = await Promise.all([
+  const [{ data: jobs }, { data: apps }, { data: stages }] = await Promise.all([
     scope.jobs().order("created_at", { ascending: false }),
-    scope.applications().select("job_id, stage"),
+    scope.applications(),
+    scope.supabase
+      .from("job_stages")
+      .select("id, job_id, name, phase, position")
+      .eq("organization_id", scope.orgId)
+      .order("position"),
   ]);
+  const perStage = new Map<string, number>();
+  for (const a of apps ?? [])
+    perStage.set(a.stage_id, (perStage.get(a.stage_id) ?? 0) + 1);
+  const stagesOf = (jobId: string): StageRow[] =>
+    (stages ?? [])
+      .filter((st) => st.job_id === jobId)
+      .sort(
+        (a, b) =>
+          STAGES.indexOf(a.phase) - STAGES.indexOf(b.phase) ||
+          a.position - b.position,
+      )
+      .map((st) => ({
+        id: st.id,
+        name: st.name,
+        phase: st.phase,
+        candidates: perStage.get(st.id) ?? 0,
+      }));
 
   const counts = new Map<string, Record<string, number>>();
   for (const a of apps ?? []) {
@@ -75,7 +101,14 @@ export default async function JobsPage() {
                   </TableCell>
                 ))}
                 <TableCell className="text-right">
-                  <JobFormDialog job={job} />
+                  <div className="flex justify-end gap-2">
+                    <JobStagesDialog
+                      jobId={job.id}
+                      jobTitle={job.title}
+                      stages={stagesOf(job.id)}
+                    />
+                    <JobFormDialog job={job} />
+                  </div>
                 </TableCell>
               </TableRow>
             ))}

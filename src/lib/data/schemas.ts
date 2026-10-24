@@ -55,11 +55,21 @@ export const candidateSchema = z.object({
   jobIds: z.array(z.uuid()).default([]),
 });
 
-export const moveSchema = z.object({
-  applicationId: z.uuid(),
-  stage: z.enum(STAGES),
-  position: z.number().finite(),
-});
+/** A move targets either a job's own stage or a phase (its first stage). */
+export const moveSchema = z.union([
+  z.object({
+    applicationId: z.uuid(),
+    stageId: z.uuid(),
+    position: z.number().finite(),
+  }),
+  z.object({
+    applicationId: z.uuid(),
+    stage: z.enum(STAGES),
+    position: z.number().finite(),
+  }),
+]);
+
+export const stageNameSchema = z.string().trim().min(1).max(60);
 
 export const noteSchema = z.object({
   candidateId: z.uuid(),

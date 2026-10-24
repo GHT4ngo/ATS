@@ -63,7 +63,9 @@
     "agentUnavailable": "The assistant is not configured.",
     "agentRefused": "The assistant declined this request.",
     "agentFailed": "The assistant ran into a problem. Try again.",
-    "conversationTooLong": "The conversation is too long. Start a new one to continue."
+    "conversationTooLong": "The conversation is too long. Start a new one to continue.",
+    "stageLast": "Every phase needs at least one stage.",
+    "stageInUse": "Move the candidates out of this stage before deleting it."
   },
   "Auth": {
     "loginTitle": "Sign in",
@@ -288,5 +290,20 @@
       "pipeline_summary": "Summarizing the pipeline...",
       "move_candidate": "Proposing a move..."
     }
+  },
+  "JobStages": {
+    "open": "Stages",
+    "title": "Stages for {job}",
+    "description": "Add the job's own stages inside the fixed phases. The board for this job shows them as columns; the all jobs board and the dashboard keep the phases.",
+    "nameLabel": "Stage name ({phase})",
+    "newName": "Name of the new {phase} stage",
+    "addTo": "Add a {phase} stage",
+    "add": "Add",
+    "cancel": "Cancel",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "delete": "Delete stage",
+    "lastInPhase": "Every phase needs at least one stage",
+    "inUse": "{count, plural, one {# candidate is} other {# candidates are}} in this stage"
   }
 }
