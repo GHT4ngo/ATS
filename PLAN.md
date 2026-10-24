@@ -12,7 +12,7 @@
   * Smoke test one real CV assessment on the live site (about a cent per run).
   * One unexplained failure of the core e2e test (`e2e/core.spec.ts`), not reproduced in two full runs since; watch CI.
   * The admin organization switcher needs the sidebar expanded; empty states are plain text.
-* **Next:** Phase 8: the recruiter agent (`feat/agent`), then custom pipeline stages; then Phase 9 deliverables.
+* **Next:** custom pipeline stages (`feat/stages`, PR pending, needs its migration on production before merge); then Phase 9 deliverables.
 
 ## Goal
 
@@ -117,7 +117,7 @@ Additions to the table above: `applications` and `activity_log` also carry `orga
 Prioritized on 24 Oct: the agent first, then custom pipeline stages; the rest only if time allows.
 
 1. [x] **Claude recruiter agent:** a chat panel using tool use over server side tools (search candidates, move stage, summarize the pipeline, draft emails). It runs as the logged in user, so RLS still applies.
-2. [ ] Custom pipeline stages per job
+2. [x] Custom pipeline stages per job
 3. Public career page per job, where applicants land directly in Applied
 4. Email invites and notifications (Resend)
 5. Comments and mentions on candidates
@@ -175,3 +175,7 @@ Prioritized on 24 Oct: the agent first, then custom pipeline stages; the rest on
 * **Human approval:** `move_candidate` never runs on its own; the loop stops, the panel shows an approve or decline card, and the next request resumes with the decision. Emails are drafts in the chat only.
 * **State:** the browser keeps the API history (thinking blocks echoed unchanged) and sends it each turn; the server validates its shape, allows only text and tool results in user turns, caps size and runs at most 8 model calls per request.
 * **Prompt:** stage names come from the UI message files; candidates are referred to by name, never with a gender guessed from it (found in a real run).
+* **Custom stages:** per job, on top of the six fixed phases (decided 24 Oct). `job_stages` holds each job's stages; `applications.stage_id` points at one, and a trigger keeps `applications.stage` as its phase, so the dashboard, filters, agent summaries and assessments are unchanged. New jobs get one default stage per phase (no name, shown with the phase name in the UI language).
+* **Stage rules in the database:** a stage keeps its job and phase; the last stage of a phase and stages with candidates cannot be deleted; an application can only use a stage of its own job. Moving between two stages of one phase restarts days in stage.
+* **Board:** one job filtered shows that job's stages as columns; otherwise the phases, with custom stage names on the cards.
+* **Migration safety:** the backfill was checked against seeded data: phase, days in stage and position were identical for every application before and after.

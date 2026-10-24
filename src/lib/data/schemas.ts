@@ -24,6 +24,16 @@ export const MAX_CV_BYTES = 4 * 1024 * 1024;
 
 export type Stage = (typeof STAGES)[number];
 
+/** Stage order everywhere: by phase, then position within the phase. */
+export function compareStages(
+  a: { phase: Stage; position: number },
+  b: { phase: Stage; position: number },
+) {
+  return (
+    STAGES.indexOf(a.phase) - STAGES.indexOf(b.phase) || a.position - b.position
+  );
+}
+
 export const jobSchema = z.object({
   title: z.string().trim().min(1).max(200),
   description: z.string().trim().max(20000).default(""),
@@ -55,11 +65,21 @@ export const candidateSchema = z.object({
   jobIds: z.array(z.uuid()).default([]),
 });
 
-export const moveSchema = z.object({
-  applicationId: z.uuid(),
-  stage: z.enum(STAGES),
-  position: z.number().finite(),
-});
+/** A move targets either a job's own stage or a phase (its first stage). */
+export const moveSchema = z.union([
+  z.object({
+    applicationId: z.uuid(),
+    stageId: z.uuid(),
+    position: z.number().finite(),
+  }),
+  z.object({
+    applicationId: z.uuid(),
+    stage: z.enum(STAGES),
+    position: z.number().finite(),
+  }),
+]);
+
+export const stageNameSchema = z.string().trim().min(1).max(60);
 
 export const noteSchema = z.object({
   candidateId: z.uuid(),

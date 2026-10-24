@@ -15,6 +15,8 @@ type Pending = {
   job: string;
   from: string;
   to: string;
+  fromName: string | null;
+  toName: string | null;
 };
 type Event =
   | { type: "text"; delta: string }
@@ -285,8 +287,8 @@ export function AgentPanel({
                 {t("moveQuestion", {
                   candidate: p.candidate,
                   job: p.job,
-                  from: s(p.from),
-                  to: s(p.to),
+                  from: p.fromName ?? s(p.from),
+                  to: p.toName ?? s(p.to),
                 })}
               </p>
               <div className="flex gap-2">

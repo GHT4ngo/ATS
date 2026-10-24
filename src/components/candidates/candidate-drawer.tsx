@@ -30,6 +30,7 @@ export type DrawerApplication = {
   id: string;
   jobTitle: string;
   stage: string;
+  stageName: string | null;
   stageChangedAt: string;
   assessment: AssessmentView | null;
 };
@@ -88,8 +89,8 @@ export function CandidateDrawer({
     if (a.action === "moved") {
       return t("activity.moved", {
         job: String(p.job ?? ""),
-        from: s(String(p.from)),
-        to: s(String(p.to)),
+        from: p.from_stage ? String(p.from_stage) : s(String(p.from)),
+        to: p.to_stage ? String(p.to_stage) : s(String(p.to)),
       });
     }
     if (a.action === "assessed") {
@@ -178,7 +179,7 @@ export function CandidateDrawer({
                       ),
                     })}
                   </span>
-                  <Badge variant="secondary">{s(a.stage)}</Badge>
+                  <Badge variant="secondary">{a.stageName ?? s(a.stage)}</Badge>
                 </span>
               </div>
             ))

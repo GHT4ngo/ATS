@@ -63,7 +63,9 @@
     "agentUnavailable": "Assistenten är inte konfigurerad.",
     "agentRefused": "Assistenten avböjde förfrågan.",
     "agentFailed": "Assistenten stötte på ett problem. Försök igen.",
-    "conversationTooLong": "Konversationen är för lång. Starta en ny för att fortsätta."
+    "conversationTooLong": "Konversationen är för lång. Starta en ny för att fortsätta.",
+    "stageLast": "Varje fas behöver minst ett steg.",
+    "stageInUse": "Flytta kandidaterna från steget innan du tar bort det."
   },
   "Auth": {
     "loginTitle": "Logga in",
@@ -288,5 +290,20 @@
       "pipeline_summary": "Sammanfattar pipelinen...",
       "move_candidate": "Föreslår en flytt..."
     }
+  },
+  "JobStages": {
+    "open": "Steg",
+    "title": "Steg för {job}",
+    "description": "Lägg till tjänstens egna steg inom de fasta faserna. Tavlan för tjänsten visar dem som kolumner; tavlan för alla tjänster och översikten visar faserna.",
+    "nameLabel": "Stegets namn ({phase})",
+    "newName": "Namn på det nya steget i {phase}",
+    "addTo": "Lägg till ett steg i {phase}",
+    "add": "Lägg till",
+    "cancel": "Avbryt",
+    "moveUp": "Flytta upp",
+    "moveDown": "Flytta ned",
+    "delete": "Ta bort steget",
+    "lastInPhase": "Varje fas behöver minst ett steg",
+    "inUse": "{count, plural, one {# kandidat är} other {# kandidater är}} i steget"
   }
 }

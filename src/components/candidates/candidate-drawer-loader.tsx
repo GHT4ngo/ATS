@@ -27,6 +27,13 @@ export async function CandidateDrawerLoader({
       scope.latestAssessments().eq("candidate_id", candidate.id),
     ]);
   const latest = new Map((assessments ?? []).map((a) => [a.job_id, a]));
+  const { data: stages } = (apps ?? []).length
+    ? await scope.jobStages().in(
+        "id",
+        (apps ?? []).map((a) => a.stage_id),
+      )
+    : { data: [] };
+  const stageName = new Map((stages ?? []).map((st) => [st.id, st.name]));
   const appIds = (apps ?? []).map((a) => a.id);
   const jobTitle = new Map((jobs ?? []).map((j) => [j.id, j.title]));
 
@@ -75,6 +82,7 @@ export async function CandidateDrawerLoader({
         id: a.id,
         jobTitle: jobTitle.get(a.job_id) ?? "",
         stage: a.stage,
+        stageName: stageName.get(a.stage_id) ?? null,
         stageChangedAt: a.stage_changed_at,
         assessment: toView(latest.get(a.job_id)),
       }))}

@@ -37,6 +37,13 @@ export async function getOptionalScope() {
       supabase.from("candidates").select("*").eq("organization_id", orgId),
     applications: () =>
       supabase.from("applications").select("*").eq("organization_id", orgId),
+    /** Pipeline stages of every job; sort with compareStages. */
+    jobStages: () =>
+      supabase
+        .from("job_stages")
+        .select("*")
+        .eq("organization_id", orgId)
+        .order("position"),
     /** The newest assessment per candidate and job. */
     latestAssessments: () =>
       supabase
@@ -48,12 +55,19 @@ export async function getOptionalScope() {
     insertCandidate: (
       row: Omit<Tables["candidates"]["Insert"], "organization_id">,
     ) => supabase.from("candidates").insert({ ...row, organization_id: orgId }),
+    // stage_id may be left out: a trigger picks the phase's first stage.
     insertApplications: (
-      rows: Omit<Tables["applications"]["Insert"], "organization_id">[],
+      rows: (Omit<
+        Tables["applications"]["Insert"],
+        "organization_id" | "stage_id"
+      > & { stage_id?: string })[],
     ) =>
-      supabase
-        .from("applications")
-        .insert(rows.map((row) => ({ ...row, organization_id: orgId }))),
+      supabase.from("applications").insert(
+        rows.map((row) => ({
+          ...row,
+          organization_id: orgId,
+        })) as Tables["applications"]["Insert"][],
+      ),
     deleteCandidate: (id: string) =>
       supabase
         .from("candidates")
