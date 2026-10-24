@@ -51,14 +51,14 @@ isOneToOne: false
                   ]
                 },"applications": {
                   Row: {
-                    "candidate_id": string,"created_at": string,"id": string,"job_id": string,"organization_id": string,"position": number,"rating": number | null,"stage": Database["public"]['Enums']["application_stage"],"stage_changed_at": string,"stage_id": string,"updated_at": string
+                    "candidate_id": string,"created_at": string,"flagged": boolean,"id": string,"job_id": string,"mismatch": boolean | null,"organization_id": string,"position": number,"rating": number | null,"stage": Database["public"]['Enums']["application_stage"],"stage_changed_at": string,"stage_id": string,"starred": boolean,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "candidate_id": string,"created_at"?: string,"id"?: string,"job_id": string,"organization_id": string,"position"?: number,"rating"?: number | null,"stage"?: Database["public"]['Enums']["application_stage"],"stage_changed_at"?: string,"stage_id": string,"updated_at"?: string
+                    "candidate_id": string,"created_at"?: string,"flagged"?: boolean,"id"?: string,"job_id": string,"mismatch"?: boolean | null,"organization_id": string,"position"?: number,"rating"?: number | null,"stage"?: Database["public"]['Enums']["application_stage"],"stage_changed_at"?: string,"stage_id": string,"starred"?: boolean,"updated_at"?: string
                   }
                   Update: {
-                    "candidate_id"?: string,"created_at"?: string,"id"?: string,"job_id"?: string,"organization_id"?: string,"position"?: number,"rating"?: number | null,"stage"?: Database["public"]['Enums']["application_stage"],"stage_changed_at"?: string,"stage_id"?: string,"updated_at"?: string
+                    "candidate_id"?: string,"created_at"?: string,"flagged"?: boolean,"id"?: string,"job_id"?: string,"mismatch"?: boolean | null,"organization_id"?: string,"position"?: number,"rating"?: number | null,"stage"?: Database["public"]['Enums']["application_stage"],"stage_changed_at"?: string,"stage_id"?: string,"starred"?: boolean,"updated_at"?: string
                   }
                   Relationships: [
                     {
