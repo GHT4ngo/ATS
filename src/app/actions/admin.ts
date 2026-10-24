@@ -1,8 +1,14 @@
 "use server";
 
 import { cookies } from "next/headers";
+import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { ACTING_ORG_COOKIE, requireAdmin } from "@/lib/auth/session";
+import {
+  ACTING_ORG_COOKIE,
+  DEV_MODE_COOKIE,
+  PREVIEW_COOKIE,
+  requireAdmin,
+} from "@/lib/auth/session";
 import {
   createUserSchema,
   organizationSchema,
@@ -34,7 +40,7 @@ export async function createOrganization(
     .insert({ name: parsed.data.name, slug });
   if (error) return { error: error.code === "23505" ? "slugTaken" : "generic" };
 
-  revalidatePath("/admin/organizations");
+  revalidatePath("/admin/customers");
   return { ok: true };
 }
 
@@ -71,7 +77,7 @@ export async function createUser(
   if (error)
     return { error: error.code === "email_exists" ? "emailTaken" : "generic" };
 
-  revalidatePath("/admin/users");
+  revalidatePath("/admin/customers");
   return { ok: true };
 }
 
@@ -104,7 +110,7 @@ export async function setUserActive(
     return { error: "generic" };
   }
 
-  revalidatePath("/admin/users");
+  revalidatePath("/admin/customers");
   return { ok: true };
 }
 
@@ -136,6 +142,7 @@ export async function setActingOrganization(
   const store = await cookies();
   if (!parsed.data.organizationId) {
     store.delete(ACTING_ORG_COOKIE);
+    store.delete(PREVIEW_COOKIE);
   } else {
     const { data } = await (
       await createClient()
@@ -151,5 +158,58 @@ export async function setActingOrganization(
       sameSite: "lax",
     });
   }
+  revalidatePath("/", "layout");
+}
+
+const ADMIN_COOKIE = {
+  path: "/",
+  httpOnly: true,
+  sameSite: "lax",
+  maxAge: 60 * 60 * 24 * 365,
+} as const;
+
+export async function setDevMode(on: boolean): Promise<void> {
+  await requireAdmin();
+  const store = await cookies();
+  if (z.boolean().parse(on)) store.set(DEV_MODE_COOKIE, "1", ADMIN_COOKIE);
+  else {
+    store.delete(DEV_MODE_COOKIE);
+    store.delete(PREVIEW_COOKIE);
+  }
+  revalidatePath("/", "layout");
+}
+
+/**
+ * Acts as the organization and hides every admin tool, so an admin sees the
+ * app as that customer does. Changes are still made, and logged, as the admin.
+ */
+export async function startCustomerPreview(
+  organizationId: string,
+): Promise<void> {
+  await requireAdmin();
+  const parsed = z.uuid().safeParse(organizationId);
+  if (!parsed.success) return;
+  const { data } = await (
+    await createClient()
+  )
+    .from("organizations")
+    .select("id")
+    .eq("id", parsed.data)
+    .maybeSingle();
+  if (!data) return;
+  const store = await cookies();
+  store.set(ACTING_ORG_COOKIE, data.id, {
+    path: "/",
+    httpOnly: true,
+    sameSite: "lax",
+  });
+  // A session cookie, so a preview never outlives the browser session.
+  store.set(PREVIEW_COOKIE, "1", { ...ADMIN_COOKIE, maxAge: undefined });
+  revalidatePath("/", "layout");
+}
+
+export async function exitCustomerPreview(): Promise<void> {
+  await requireAdmin();
+  (await cookies()).delete(PREVIEW_COOKIE);
   revalidatePath("/", "layout");
 }

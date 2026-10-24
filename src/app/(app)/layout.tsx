@@ -2,12 +2,21 @@ import { cookies } from "next/headers";
 import { LogOut } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { logout } from "@/app/actions/auth";
-import { setActingOrganization } from "@/app/actions/admin";
+import {
+  exitCustomerPreview,
+  setActingOrganization,
+} from "@/app/actions/admin";
 import { AppShell } from "@/components/app/app-shell";
+import { DevMenu } from "@/components/app/dev-menu";
 import { LanguageToggle, ThemeToggle } from "@/components/app/preferences";
 import { OrgSwitcher } from "@/components/app/org-switcher";
+import { SettingsDialog } from "@/components/app/settings-dialog";
 import { Button } from "@/components/ui/button";
-import { getActiveOrganization, requireUser } from "@/lib/auth/session";
+import {
+  getActiveOrganization,
+  getViewMode,
+  requireUser,
+} from "@/lib/auth/session";
 import { SIDEBAR_COOKIE } from "@/lib/sidebar";
 import { createClient } from "@/lib/supabase/server";
 
@@ -19,8 +28,8 @@ export default async function AppLayout({
   const { profile } = await requireUser();
   const t = await getTranslations("Nav");
   const c = await getTranslations("Common");
-  const isAdmin = profile.role === "admin";
   const activeOrg = await getActiveOrganization();
+  const { isAdmin, adminUi, devMode, preview } = await getViewMode();
 
   let organizations: { id: string; name: string }[] = [];
   if (isAdmin) {
@@ -35,19 +44,66 @@ export default async function AppLayout({
     { href: "/pipeline", icon: "pipeline", label: t("pipeline") },
     { href: "/jobs", icon: "jobs", label: t("jobs") },
     { href: "/candidates", icon: "candidates", label: t("candidates") },
-    { href: "/team", icon: "team", label: t("team") },
-    { href: "/settings", icon: "settings", label: t("settings") },
-    ...(isAdmin
+    ...(adminUi
       ? [
           {
-            href: "/admin/organizations",
-            icon: "organizations",
-            label: t("organizations"),
+            href: "/admin/customers",
+            icon: "customers",
+            label: t("customers"),
           },
-          { href: "/admin/users", icon: "users", label: t("users") },
         ]
       : []),
   ];
+
+  const tools = (
+    <>
+      <ThemeToggle />
+      <LanguageToggle />
+      <SettingsDialog
+        fullName={profile.full_name}
+        locale={profile.locale as "sv" | "en"}
+        devMode={isAdmin ? devMode : undefined}
+      />
+      {devMode && (
+        <DevMenu
+          organizations={organizations}
+          previewing={preview ? (activeOrg?.id ?? null) : null}
+        />
+      )}
+    </>
+  );
+
+  let banner: React.ReactNode;
+  if (preview && activeOrg) {
+    banner = (
+      <div className="bg-violet-600 text-white dark:bg-violet-900 dark:text-violet-50">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-1.5 text-sm">
+          <span className="font-medium">
+            {t("previewing", { name: activeOrg.name })}
+          </span>
+          <span className="opacity-80">{t("previewNote")}</span>
+          <form action={exitCustomerPreview} className="ml-auto">
+            <button type="submit" className="font-medium underline">
+              {t("exitPreview")}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  } else if (isAdmin && activeOrg) {
+    banner = (
+      <div className="bg-amber-100 text-amber-950 dark:bg-amber-950 dark:text-amber-100">
+        <div className="flex items-center gap-3 px-4 py-1.5 text-sm">
+          <span>{t("viewingAs", { name: activeOrg.name })}</span>
+          <form action={setActingOrganization.bind(null, "")}>
+            <button type="submit" className="underline">
+              {t("exitViewing")}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   const defaultCollapsed = (await cookies()).get(SIDEBAR_COOKIE)?.value === "1";
 
@@ -57,24 +113,10 @@ export default async function AppLayout({
       appName={c("appName")}
       defaultCollapsed={defaultCollapsed}
       assistant={Boolean(activeOrg)}
-      banner={
-        isAdmin && activeOrg ? (
-          <div className="bg-amber-100 text-amber-950 dark:bg-amber-950 dark:text-amber-100">
-            <div className="flex items-center gap-3 px-4 py-1.5 text-sm">
-              <span>{t("viewingAs", { name: activeOrg.name })}</span>
-              <form action={setActingOrganization.bind(null, "")}>
-                <button type="submit" className="underline">
-                  {t("exitViewing")}
-                </button>
-              </form>
-            </div>
-          </div>
-        ) : undefined
-      }
+      banner={banner}
       compactFooter={
         <div className="flex flex-col items-center gap-1">
-          <ThemeToggle />
-          <LanguageToggle />
+          {tools}
           <form action={logout}>
             <Button
               type="submit"
@@ -90,16 +132,13 @@ export default async function AppLayout({
       }
       footer={
         <div className="grid gap-3">
-          {isAdmin && (
+          {adminUi && (
             <OrgSwitcher
               organizations={organizations}
               activeId={activeOrg?.id ?? null}
             />
           )}
-          <div className="flex items-center gap-1">
-            <ThemeToggle />
-            <LanguageToggle />
-          </div>
+          <div className="flex items-center gap-1">{tools}</div>
           <span className="text-muted-foreground truncate text-sm">
             {profile.full_name || profile.email}
           </span>

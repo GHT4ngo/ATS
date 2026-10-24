@@ -4,6 +4,10 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
 export const ACTING_ORG_COOKIE = "acting_org";
+/** Admin only: shows the developer menu. */
+export const DEV_MODE_COOKIE = "dev_mode";
+/** Admin only: the app looks exactly as the acting organization's customers see it. */
+export const PREVIEW_COOKIE = "customer_preview";
 
 /** The signed in user and their profile, or null when signed out. */
 export const getCurrentUser = cache(async () => {
@@ -57,4 +61,24 @@ export const getActiveOrganization = cache(async () => {
     .eq("id", orgId)
     .maybeSingle();
   return data;
+});
+
+/**
+ * How the app should present itself. Preview is only on for an admin who acts
+ * as an organization; it changes what is shown, never what RLS allows.
+ */
+export const getViewMode = cache(async () => {
+  const { profile } = await requireUser();
+  const isAdmin = profile.role === "admin";
+  const store = await cookies();
+  const org = await getActiveOrganization();
+  const preview =
+    isAdmin && Boolean(org) && store.get(PREVIEW_COOKIE)?.value === "1";
+  return {
+    isAdmin,
+    devMode: isAdmin && store.get(DEV_MODE_COOKIE)?.value === "1",
+    preview,
+    /** Admin tools are shown: an admin outside preview. */
+    adminUi: isAdmin && !preview,
+  };
 });

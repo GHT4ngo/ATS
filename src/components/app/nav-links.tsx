@@ -7,10 +7,7 @@ import {
   Building2,
   KanbanSquare,
   LayoutDashboard,
-  Settings,
-  UserCog,
   Users,
-  UsersRound,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -20,10 +17,7 @@ const icons: Record<string, LucideIcon> = {
   pipeline: KanbanSquare,
   jobs: Briefcase,
   candidates: Users,
-  team: UsersRound,
-  settings: Settings,
-  organizations: Building2,
-  users: UserCog,
+  customers: Building2,
 };
 
 export type NavLink = { href: string; label: string; icon: string };
@@ -55,11 +49,16 @@ export function NavLinks({
               "focus-visible:ring-ring flex items-center gap-3 rounded-md px-3 py-2 text-sm whitespace-nowrap transition-colors outline-none focus-visible:ring-2",
               collapsed && "justify-center px-2",
               active
-                ? "bg-muted text-foreground font-medium"
+                ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
             )}
           >
-            <Icon className="size-4 shrink-0" />
+            <Icon
+              className={cn(
+                "size-4 shrink-0",
+                active && "text-violet-600 dark:text-violet-400",
+              )}
+            />
             {!collapsed && label}
           </Link>
         );

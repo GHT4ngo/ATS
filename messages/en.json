@@ -87,10 +87,6 @@
   },
   "Nav": {
     "dashboard": "Dashboard",
-    "team": "Team",
-    "settings": "Settings",
-    "organizations": "Organizations",
-    "users": "Users",
     "signOut": "Sign out",
     "actAs": "Act as customer",
     "actAsNone": "No customer selected",
@@ -114,7 +110,11 @@
     "closeMenu": "Close menu",
     "shortcut": "Ctrl K",
     "menu": "Menu",
-    "assistant": "Assistant"
+    "assistant": "Assistant",
+    "customers": "Customers",
+    "previewing": "Customer preview: {name}",
+    "previewNote": "You see the app as the customer does. Changes are logged under you as admin.",
+    "exitPreview": "Exit preview"
   },
   "Dashboard": {
     "welcome": "Welcome, {name}",
@@ -122,14 +122,39 @@
     "comingSoon": "Jobs, candidates and the pipeline arrive in the next phase.",
     "openJobs": "Open jobs",
     "activeCandidates": "Active candidates",
-    "hiresThisMonth": "Hires this month",
-    "funnel": "Pipeline funnel"
-  },
-  "Team": {
-    "title": "Team",
-    "description": "Everyone with access to {organization}.",
-    "empty": "No users in this organization yet.",
-    "pickOrganization": "Choose a customer in the switcher above to see their team."
+    "funnel": "Pipeline funnel",
+    "toCustomers": "Go to customers",
+    "range": "Period",
+    "rangeShort": "{days} d",
+    "rangeDays": "Last {days} days",
+    "newApplications": "New applications",
+    "hires": "Hires",
+    "vsPrevious": "vs the previous {days} days",
+    "avgDaysToHire": "Average {days} days to hire",
+    "activity": "Activity",
+    "activityCaption": "New applications, hires and interviews over the last {days} days",
+    "seriesApplications": "Applications",
+    "seriesHires": "Hires",
+    "seriesInterviews": "Interviews",
+    "funnelNote": "Where every application is right now",
+    "attention": "Needs attention",
+    "reason": {
+      "flagged": "Flagged",
+      "stuck": "{days} days in stage",
+      "unassessed": "Not assessed"
+    },
+    "attentionEmpty": "Nothing waiting. Nice work.",
+    "andMore": "and {count} more",
+    "standouts": "Standouts",
+    "starred": "Starred",
+    "score": "AI score {score}",
+    "standoutsEmpty": "Star candidates or assess CVs and they show up here.",
+    "team": "Team",
+    "teamNote": "Moves in the last {days} days",
+    "inactive": "Inactive",
+    "moves": "{count, plural, one {# move} other {# moves}}",
+    "teamEmpty": "No users in this organization.",
+    "weekOf": "Week of {date}"
   },
   "Settings": {
     "title": "Settings",
@@ -138,7 +163,9 @@
     "fullName": "Full name",
     "language": "Language",
     "passwordTitle": "Change password",
-    "passwordDescription": "Choose a new password for your account."
+    "passwordDescription": "Choose a new password for your account.",
+    "devMode": "Developer mode",
+    "devModeDescription": "Shows a tools menu for admins, such as customer preview."
   },
   "Admin": {
     "organizationsTitle": "Organizations",
@@ -165,7 +192,16 @@
     "userReactivated": "User reactivated.",
     "adminNoOrganization": "Internal",
     "confirmDeactivateTitle": "Deactivate {name}?",
-    "confirmDeactivateBody": "They will no longer be able to sign in. You can reactivate them later."
+    "confirmDeactivateBody": "They will no longer be able to sign in. You can reactivate them later.",
+    "customersTitle": "Customers",
+    "customersDescription": "Organizations and their users.",
+    "addUser": "Add user",
+    "noUsers": "No users yet.",
+    "sinceDate": "since {date}",
+    "openOrganization": "Open",
+    "userCount": "{count, plural, one {# user} other {# users}}",
+    "openJobCount": "{count, plural, one {# open job} other {# open jobs}}",
+    "administrators": "Administrators"
   },
   "Stages": {
     "applied": "Applied",
@@ -187,7 +223,7 @@
     "employmentType": "Employment type",
     "statusLabel": "Status",
     "description": "Description",
-    "empty": "No jobs yet. Create the first one.",
+    "empty": "No jobs yet.",
     "type": {
       "full_time": "Full time",
       "part_time": "Part time",
@@ -198,12 +234,17 @@
       "open": "Open",
       "paused": "Paused",
       "closed": "Closed"
-    }
+    },
+    "candidates": "Candidates",
+    "candidatesCount": "{count, plural, one {# candidate} other {# candidates}}",
+    "emptyHint": "Create the first job with the button above."
   },
   "Filters": {
     "search": "Search candidates",
     "jobs": "Filter by job",
-    "clear": "Clear"
+    "clear": "Clear",
+    "marks": "Marks",
+    "phase": "Phase"
   },
   "Candidates": {
     "heading": "Candidates",
@@ -241,7 +282,11 @@
     },
     "daysShort": "{days}d",
     "linkedin": "LinkedIn",
-    "linkedinShort": "in"
+    "linkedinShort": "in",
+    "count": "{count, plural, one {# candidate} other {# candidates}}",
+    "noMatches": "No candidates match the filters",
+    "noMatchesHint": "Try removing a filter.",
+    "emptyHint": "Add the first candidate with the button above."
   },
   "Pipeline": {
     "heading": "Pipeline"
@@ -305,5 +350,28 @@
     "delete": "Delete stage",
     "lastInPhase": "Every phase needs at least one stage",
     "inUse": "{count, plural, one {# candidate is} other {# candidates are}} in this stage"
+  },
+  "Dev": {
+    "menu": "Developer tools",
+    "previewAs": "Preview as customer",
+    "exitPreview": "Exit preview"
+  },
+  "Marks": {
+    "star": "Star",
+    "unstar": "Remove star",
+    "flag": "Flag",
+    "unflag": "Remove flag",
+    "starred": "Starred",
+    "flagged": "Flagged",
+    "mismatch": "Does not meet requirements",
+    "requirements": "Requirements",
+    "auto": "Automatic (AI score below 40)",
+    "markMismatch": "Does not meet requirements",
+    "markFits": "Meets requirements",
+    "filter": {
+      "starred": "Starred",
+      "flagged": "Flagged",
+      "mismatch": "Not a match"
+    }
   }
 }
