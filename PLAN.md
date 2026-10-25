@@ -10,7 +10,7 @@
 * **Done in Phase 8:** the recruiter agent (PR #7) and custom pipeline stages per job (PR #8), both reviewed and live.
 * **Open items:**
   * Send the v1 delivery (admin login, live URL, repo link).
-  * Smoke test one real CV assessment and one assistant question on the live site.
+  * Smoke test one assistant question on the live site (a real CV assessment ran fine on 25 Oct).
   * The pipeline and candidates pages read one page of up to 1000 applications.
   * The admin organization switcher needs the sidebar expanded.
 * **Next:** review and send the assumptions email, record the Loom video, send the v1 delivery. Phase 9 docs are in `docs/`.
