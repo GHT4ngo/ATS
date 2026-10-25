@@ -444,18 +444,23 @@ export function KanbanBoard({
       toast.error(e("generic"));
       return;
     }
+    // A rejected card on its last day would leave the board again at once,
+    // so it gets no undo.
+    const undoable = card.stage !== "rejected" || card.days < REJECTED_DAYS - 1;
     toast.success(p("removed", { name: card.name }), {
-      action: {
-        label: p("undo"),
-        onClick: async () => {
-          const result = await archiveApplication({
-            applicationId: card.id,
-            archived: false,
-          }).catch(() => ({ error: "generic" as const }));
-          if ("error" in result && result.error) toast.error(e("generic"));
-          router.refresh();
-        },
-      },
+      action: undoable
+        ? {
+            label: p("undo"),
+            onClick: async () => {
+              const result = await archiveApplication({
+                applicationId: card.id,
+                archived: false,
+              }).catch(() => ({ error: "generic" as const }));
+              if ("error" in result && result.error) toast.error(e("generic"));
+              router.refresh();
+            },
+          }
+        : undefined,
     });
   }
 

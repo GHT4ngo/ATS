@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireAdmin } from "@/lib/auth/session";
+import { hiresByJob, isHiring } from "@/lib/data/openings";
+import { allRows } from "@/lib/data/paging";
 import { createClient } from "@/lib/supabase/server";
 import { cn, initials } from "@/lib/utils";
 
@@ -31,23 +33,39 @@ export default async function UsersPage() {
   const c = await getTranslations("Common");
   const supabase = await createClient();
 
-  const [{ data: organizations }, { data: users }, { data: jobs }] =
-    await Promise.all([
+  const [
+    { data: organizations },
+    { data: users },
+    { data: jobs },
+    { data: hires },
+  ] = await Promise.all([
+    supabase
+      .from("organizations")
+      .select("id, name, slug, created_at")
+      .order("name"),
+    supabase
+      .from("profiles")
+      .select("id, full_name, email, role, is_active, organization_id")
+      .order("full_name"),
+    supabase
+      .from("jobs")
+      .select("id, organization_id, status, openings")
+      .eq("status", "open"),
+    allRows((from, to) =>
       supabase
-        .from("organizations")
-        .select("id, name, slug, created_at")
-        .order("name"),
-      supabase
-        .from("profiles")
-        .select("id, full_name, email, role, is_active, organization_id")
-        .order("full_name"),
-      supabase.from("jobs").select("organization_id").eq("status", "open"),
-    ]);
+        .from("applications")
+        .select("job_id, stage")
+        .eq("stage", "hired")
+        .order("id")
+        .range(from, to),
+    ),
+  ]);
   const orgs = (organizations ?? []).sort((a, b) =>
     a.name.localeCompare(b.name, "sv"),
   );
   const openJobs = new Map<string, number>();
-  for (const j of jobs ?? [])
+  const hired = hiresByJob(hires);
+  for (const j of (jobs ?? []).filter((j) => isHiring(j, hired)))
     openJobs.set(j.organization_id, (openJobs.get(j.organization_id) ?? 0) + 1);
   const admins = (users ?? []).filter((u) => u.role === "admin");
   const orgIds = new Set(orgs.map((o) => o.id));

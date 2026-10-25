@@ -123,7 +123,6 @@
     "openJobs": "Öppna tjänster",
     "activeCandidates": "Aktiva kandidater",
     "funnel": "Pipelinetratt",
-    "toCustomers": "Gå till användare",
     "range": "Period",
     "rangeShort": "{days} d",
     "rangeDays": "Senaste {days} dagarna",
@@ -147,7 +146,8 @@
     "teamNote": "Flyttar de senaste {days} dagarna",
     "moves": "{count, plural, one {# flytt} other {# flyttar}}",
     "teamEmpty": "Inga användare i organisationen.",
-    "weekOf": "Veckan från {date}"
+    "weekOf": "Veckan från {date}",
+    "toUsers": "Gå till användare"
   },
   "Settings": {
     "title": "Inställningar",
@@ -188,7 +188,6 @@
     "confirmDeactivateBody": "Personen kan inte längre logga in. Du kan återaktivera kontot senare.",
     "addUser": "Lägg till användare",
     "noUsers": "Inga användare än.",
-    "sinceDate": "sedan {date}",
     "openOrganization": "Öppna",
     "userCount": "{count, plural, one {# användare} other {# användare}}",
     "openJobCount": "{count, plural, one {# öppen tjänst} other {# öppna tjänster}}",
@@ -245,7 +244,8 @@
     "jobs": "Filtrera på tjänst",
     "clear": "Rensa",
     "marks": "Markeringar",
-    "phase": "Fas"
+    "phase": "Fas",
+    "allPhases": "Alla faser"
   },
   "Candidates": {
     "heading": "Kandidater",

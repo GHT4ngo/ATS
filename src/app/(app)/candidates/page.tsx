@@ -118,8 +118,14 @@ export default async function CandidatesPage({
   const fresh = shown
     .filter((r) => daysSince(r.created_at, now) < NEW_DAYS)
     .sort((a, b) => b.created_at.localeCompare(a.created_at));
+  const byJob = new Map<string, Row[]>();
+  for (const r of shown) {
+    const list = byJob.get(r.job_id);
+    if (list) list.push(r);
+    else byJob.set(r.job_id, [r]);
+  }
   const perJob = (jobs ?? [])
-    .map((job) => ({ job, rows: shown.filter((r) => r.job_id === job.id) }))
+    .map((job) => ({ job, rows: byJob.get(job.id) ?? [] }))
     .filter((g) => g.rows.length || (!filtering && !term));
   // Candidates with no application yet; hidden while filtering on jobs or marks.
   const withApps = new Set(rows.map((r) => r.candidate_id));
@@ -259,25 +265,29 @@ export default async function CandidatesPage({
     </ul>
   );
 
-  const phaseCounts = (items: Row[]) => (
-    <span className="hidden items-center gap-1 sm:flex">
-      {ORDER.map((st) => {
-        const n = items.filter((r) => r.stage === st).length;
-        return n ? (
-          <span
-            key={st}
-            title={`${s(st)}: ${n}`}
-            className={cn(
-              "inline-flex min-w-6 justify-center rounded-full px-1.5 text-xs leading-5 font-medium tabular-nums",
-              PHASE_STYLE[st].soft,
-            )}
-          >
-            {n}
-          </span>
-        ) : null;
-      })}
-    </span>
-  );
+  const phaseCounts = (items: Row[]) => {
+    const count = new Map<Stage, number>();
+    for (const r of items) count.set(r.stage, (count.get(r.stage) ?? 0) + 1);
+    return (
+      <span className="hidden items-center gap-1 sm:flex">
+        {ORDER.map((st) => {
+          const n = count.get(st) ?? 0;
+          return n ? (
+            <span
+              key={st}
+              title={`${s(st)}: ${n}`}
+              className={cn(
+                "inline-flex min-w-6 justify-center rounded-full px-1.5 text-xs leading-5 font-medium tabular-nums",
+                PHASE_STYLE[st].soft,
+              )}
+            >
+              {n}
+            </span>
+          ) : null;
+        })}
+      </span>
+    );
+  };
 
   return (
     <div className="mx-auto grid w-full max-w-7xl gap-4">

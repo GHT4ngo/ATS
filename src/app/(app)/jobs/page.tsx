@@ -19,6 +19,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { STAGES, compareStages } from "@/lib/data/schemas";
+import { hiresByJob, isFilled } from "@/lib/data/openings";
+import { allRows } from "@/lib/data/paging";
 import { getScope } from "@/lib/data/scope";
 import { PHASE_STYLE } from "@/lib/phase-style";
 import { cn } from "@/lib/utils";
@@ -30,14 +32,18 @@ export default async function JobsPage() {
 
   const [{ data: jobs }, { data: apps }, { data: stages }] = await Promise.all([
     scope.jobs().order("created_at", { ascending: false }),
-    scope.supabase
-      .from("applications")
-      .select("job_id, stage, stage_id")
-      .eq("organization_id", scope.orgId),
+    allRows((from, to) =>
+      scope.supabase
+        .from("applications")
+        .select("job_id, stage, stage_id")
+        .eq("organization_id", scope.orgId)
+        .order("id")
+        .range(from, to),
+    ),
     scope.jobStages(),
   ]);
   const perStage = new Map<string, number>();
-  for (const a of apps ?? [])
+  for (const a of apps)
     perStage.set(a.stage_id, (perStage.get(a.stage_id) ?? 0) + 1);
   const stagesOf = (jobId: string): StageRow[] =>
     (stages ?? [])
@@ -51,17 +57,16 @@ export default async function JobsPage() {
       }));
 
   const counts = new Map<string, Record<string, number>>();
-  for (const a of apps ?? []) {
+  for (const a of apps) {
     const row = counts.get(a.job_id) ?? {};
     row[a.stage] = (row[a.stage] ?? 0) + 1;
     counts.set(a.job_id, row);
   }
 
-  const hiredOf = (jobId: string) => counts.get(jobId)?.hired ?? 0;
-  const isFilled = (job: { id: string; openings: number }) =>
-    hiredOf(job.id) >= job.openings;
-  const open = (jobs ?? []).filter((job) => !isFilled(job));
-  const filled = (jobs ?? []).filter(isFilled);
+  const hires = hiresByJob(apps);
+  const hiredOf = (jobId: string) => hires.get(jobId) ?? 0;
+  const open = (jobs ?? []).filter((job) => !isFilled(job, hires));
+  const filled = (jobs ?? []).filter((job) => isFilled(job, hires));
 
   const table = (list: NonNullable<typeof jobs>, done: boolean) => (
     <div
@@ -74,7 +79,7 @@ export default async function JobsPage() {
         <TableHeader>
           <TableRow className="bg-muted/40">
             <TableHead>{t("title")}</TableHead>
-            {!done && <TableHead>{t("statusLabel")}</TableHead>}
+            <TableHead>{t("statusLabel")}</TableHead>
             <TableHead>{t("openings")}</TableHead>
             {!done &&
               STAGES.map((st) => (
@@ -112,15 +117,13 @@ export default async function JobsPage() {
                       .join(" · ")}
                   </div>
                 </TableCell>
-                {!done && (
-                  <TableCell>
-                    <JobStatusSelect
-                      jobId={job.id}
-                      status={job.status}
-                      label={t("statusLabel")}
-                    />
-                  </TableCell>
-                )}
+                <TableCell>
+                  <JobStatusSelect
+                    jobId={job.id}
+                    status={job.status}
+                    label={t("statusLabel")}
+                  />
+                </TableCell>
                 <TableCell>
                   <span
                     className="flex items-center gap-2"

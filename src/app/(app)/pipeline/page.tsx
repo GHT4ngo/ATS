@@ -10,7 +10,9 @@ import {
   type BoardColumn,
 } from "@/components/pipeline/kanban-board";
 import { compareStages } from "@/lib/data/schemas";
-import { daysSince, onBoard } from "@/lib/data/dashboard";
+import { DAY, REJECTED_DAYS, daysSince, onBoard } from "@/lib/data/dashboard";
+import { hiresByJob, isFilled } from "@/lib/data/openings";
+import { allRows } from "@/lib/data/paging";
 import { getScope } from "@/lib/data/scope";
 import { latestScores, scoreKey } from "@/lib/data/scores";
 import { parseMarks } from "@/lib/marks";
@@ -43,6 +45,8 @@ export default async function PipelinePage({
     .split(",")
     .filter((id) => z.uuid().safeParse(id).success);
   const term = q?.trim().toLowerCase();
+  const now = Date.now();
+  const rejectedSince = new Date(now - REJECTED_DAYS * DAY).toISOString();
 
   const [
     { data: jobs },
@@ -50,23 +54,34 @@ export default async function PipelinePage({
     { data: apps },
     score,
     { data: stages },
+    { data: hires },
   ] = await Promise.all([
     scope.jobs().order("title"),
     scope.candidates(),
-    jobFilter.length
+    // Only cards that can be on the board: not archived, and not rejected
+    // longer ago than the board keeps them (onBoard checks it exactly).
+    (jobFilter.length
       ? scope.applications().in("job_id", jobFilter)
-      : scope.applications(),
+      : scope.applications()
+    )
+      .is("archived_at", null)
+      .or(`stage.neq.rejected,stage_changed_at.gte.${rejectedSince}`),
     latestScores(scope, jobFilter),
     scope.jobStages(),
+    // Hires count cleared cards too: a cleared card still filled an opening.
+    allRows((from, to) =>
+      scope.supabase
+        .from("applications")
+        .select("job_id, stage")
+        .eq("organization_id", scope.orgId)
+        .eq("stage", "hired")
+        .order("id")
+        .range(from, to),
+    ),
   ]);
-  const now = Date.now();
   const byId = new Map((candidates ?? []).map((c) => [c.id, c]));
 
-  // Hires count archived cards too: a cleared card still filled an opening.
-  const hiredOf = new Map<string, number>();
-  for (const a of apps ?? [])
-    if (a.stage === "hired")
-      hiredOf.set(a.job_id, (hiredOf.get(a.job_id) ?? 0) + 1);
+  const hiredOf = hiresByJob(hires);
 
   const cardsOf = new Map<string, BoardCard[]>();
   for (const a of apps ?? []) {
@@ -93,7 +108,9 @@ export default async function PipelinePage({
       flagged: a.flagged,
       mismatch,
     };
-    cardsOf.set(a.job_id, [...(cardsOf.get(a.job_id) ?? []), card]);
+    const list = cardsOf.get(a.job_id);
+    if (list) list.push(card);
+    else cardsOf.set(a.job_id, [card]);
   }
 
   const columnsOf = (jobId: string): BoardColumn[] =>
@@ -107,7 +124,7 @@ export default async function PipelinePage({
       }));
 
   const filled = (job: { id: string; openings: number }) =>
-    (hiredOf.get(job.id) ?? 0) >= job.openings;
+    isFilled(job, hiredOf);
   // Jobs still hiring first, then filled and closed ones; by title within.
   const shown = (jobs ?? [])
     .filter((job) => !jobFilter.length || jobFilter.includes(job.id))

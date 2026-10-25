@@ -33,6 +33,7 @@ import {
   periodCounts,
   TIME_ZONE,
 } from "@/lib/data/dashboard";
+import { hiresByJob, isHiring } from "@/lib/data/openings";
 import { allRows } from "@/lib/data/paging";
 import { latestScores, scoreKey } from "@/lib/data/scores";
 import { STAGES, type Stage } from "@/lib/data/schemas";
@@ -70,7 +71,7 @@ export default async function DashboardPage({
             href="/admin/users"
             className="text-primary inline-flex items-center gap-1 text-sm font-medium hover:underline"
           >
-            {t("toCustomers")}
+            {t("toUsers")}
             <ArrowRight className="size-4" />
           </Link>
         )}
@@ -94,7 +95,7 @@ export default async function DashboardPage({
     allRows((from, to) =>
       scope.supabase
         .from("jobs")
-        .select("id, title, status")
+        .select("id, title, status, openings")
         .eq("organization_id", scope.orgId)
         .order("id")
         .range(from, to),
@@ -149,7 +150,9 @@ export default async function DashboardPage({
   const hired = allApps.filter((a) => a.stage === "hired");
 
   // Headline numbers
-  const openJobs = jobs.filter((j) => j.status === "open").length;
+  // Filled jobs are done hiring, even while their status is still open.
+  const hiresPerJob = hiresByJob(allApps);
+  const openJobs = jobs.filter((j) => isHiring(j, hiresPerJob)).length;
   const activeCandidates = new Set(
     allApps.filter((a) => isActive(a.stage)).map((a) => a.candidate_id),
   ).size;
@@ -433,7 +436,7 @@ export default async function DashboardPage({
               <ul className="grid gap-0.5">
                 {attention.slice(0, LIST_LIMIT).map(({ row, reasons }) => (
                   <li key={row.id}>
-                    <PersonLink href={href(row)} row={row}>
+                    <PersonLink href={href(row)} row={row} phase={s(row.stage)}>
                       {reasons.includes("flagged") && <Signal kind="flagged" />}
                       {reasons.includes("unassessed") && (
                         <Signal kind="unassessed" />
@@ -471,7 +474,7 @@ export default async function DashboardPage({
               <ul className="grid gap-0.5">
                 {standouts.slice(0, LIST_LIMIT).map((row) => (
                   <li key={row.id}>
-                    <PersonLink href={href(row)} row={row}>
+                    <PersonLink href={href(row)} row={row} phase={s(row.stage)}>
                       {row.starred && <Signal kind="starred" />}
                       {row.score !== null && (
                         <ScoreBadge
@@ -666,10 +669,12 @@ function Stat({
 function PersonLink({
   href,
   row,
+  phase,
   children,
 }: {
   href: string;
   row: { name: string; job: string; stage: Stage };
+  phase: string;
   children: React.ReactNode;
 }) {
   return (
@@ -689,7 +694,7 @@ function PersonLink({
       <span className="min-w-0 flex-1">
         <span className="block truncate font-medium">{row.name}</span>
         <span className="text-muted-foreground block truncate text-xs">
-          {row.job}
+          {row.job} · {phase}
         </span>
       </span>
       <span className="flex shrink-0 items-center gap-2.5">{children}</span>

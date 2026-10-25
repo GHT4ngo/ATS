@@ -196,8 +196,12 @@ export function FilterBar({
           <DropdownMenuContent align="start" className="w-48">
             <DropdownMenuRadioGroup
               value={phase}
-              onValueChange={(v) => update("phase", v === phase ? "" : v)}
+              onValueChange={(v) => update("phase", String(v))}
             >
+              <DropdownMenuRadioItem value="">
+                <span className="size-2" aria-hidden />
+                {t("allPhases")}
+              </DropdownMenuRadioItem>
               {STAGES.map((p) => (
                 <DropdownMenuRadioItem key={p} value={p}>
                   <span

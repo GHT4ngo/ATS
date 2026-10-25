@@ -11,7 +11,7 @@ export function parseRange(value: string | undefined): Range {
   return (RANGES as readonly number[]).includes(n) ? (n as Range) : 30;
 }
 
-const DAY = 86_400_000;
+export const DAY = 86_400_000;
 const HALF_DAY = DAY / 2;
 
 /** How far the time zone is ahead of UTC at this moment, in ms. */

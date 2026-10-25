@@ -78,6 +78,7 @@ export async function moveApplicationTo(
   }
   revalidatePath("/dashboard");
   revalidatePath("/jobs");
+  revalidatePath("/pipeline");
   return {
     ok: true,
     from: app.stage,
