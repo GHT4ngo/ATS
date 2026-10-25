@@ -277,10 +277,7 @@ function Column({
         >
           <ChevronsLeftRight className="size-3.5" />
           {count}
-          <span
-            className={cn("size-2 rounded-full", style.dot)}
-            aria-hidden
-          />
+          <span className={cn("size-2 rounded-full", style.dot)} aria-hidden />
           <span className="text-foreground/80 text-xs font-medium [writing-mode:vertical-rl]">
             {column.label}
           </span>
@@ -432,7 +429,10 @@ export function KanbanBoard({
     setSynced(drop);
     let ok = false;
     try {
-      ok = Boolean((await archiveApplication({ applicationId: card.id, archived: true })).ok);
+      ok = Boolean(
+        (await archiveApplication({ applicationId: card.id, archived: true }))
+          .ok,
+      );
     } catch {
       ok = false;
     }

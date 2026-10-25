@@ -43,8 +43,12 @@ export function ProfileLinks({
   const t = useTranslations("Candidates");
   if (!linkedinUrl && !repoUrl) return null;
   const icon = size === "sm" ? "size-3.5" : "size-4";
-  const link =
-    "inline-flex items-center gap-1.5 rounded-sm outline-none transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring";
+  const link = cn(
+    "inline-flex items-center gap-1.5 outline-none focus-visible:ring-2 focus-visible:ring-ring",
+    size === "sm"
+      ? "rounded-sm transition-opacity hover:opacity-80"
+      : "h-8 rounded-md border px-2.5 text-sm font-medium transition-colors hover:bg-muted",
+  );
   const stop = {
     onPointerDown: (e: React.PointerEvent) => e.stopPropagation(),
     onKeyDown: (e: React.KeyboardEvent) => e.stopPropagation(),

@@ -20,6 +20,7 @@ export type CandidateFormValues = {
   phone: string | null;
   location: string | null;
   linkedin_url: string | null;
+  repo_url: string | null;
   jobIds: string[];
   hasCv: boolean;
 };
@@ -115,6 +116,17 @@ export function CandidateForm({
             maxLength={500}
             placeholder="https://www.linkedin.com/in/..."
             defaultValue={candidate?.linkedin_url ?? ""}
+          />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="cand-repo">{t("repo")}</Label>
+          <Input
+            id="cand-repo"
+            name="repoUrl"
+            type="url"
+            maxLength={500}
+            placeholder="https://github.com/..."
+            defaultValue={candidate?.repo_url ?? ""}
           />
         </div>
       </div>

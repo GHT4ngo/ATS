@@ -10,6 +10,7 @@ import {
   type AssessmentView,
 } from "@/components/assessments/assessment-panel";
 import { MarkButtons, MismatchMenu } from "@/components/pipeline/marks";
+import { ProfileLinks } from "@/components/profile-links";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -130,22 +131,11 @@ export function CandidateDrawer({
         </DialogHeader>
 
         <div className="flex flex-wrap gap-2">
-          {candidate.linkedin_url && (
-            <Button
-              variant="outline"
-              size="sm"
-              nativeButton={false}
-              render={
-                <a
-                  href={candidate.linkedin_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                />
-              }
-            >
-              {t("linkedin")}
-            </Button>
-          )}
+          <ProfileLinks
+            linkedinUrl={candidate.linkedin_url}
+            repoUrl={candidate.repo_url}
+            size="md"
+          />
           {candidate.hasCv && (
             <Button
               variant="outline"

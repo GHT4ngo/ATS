@@ -76,6 +76,7 @@ export async function CandidateDrawerLoader({
         phone: candidate.phone,
         location: candidate.location,
         linkedin_url: candidate.linkedin_url,
+        repo_url: candidate.repo_url,
         jobIds: (apps ?? []).map((a) => a.job_id),
         hasCv: Boolean(candidate.cv_path),
       }}

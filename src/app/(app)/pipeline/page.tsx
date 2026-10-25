@@ -118,7 +118,9 @@ export default async function PipelinePage({
         a.title.localeCompare(b.title, "sv"),
     );
   const filtering = Boolean(term) || marks.size > 0;
-  const visible = filtering ? shown.filter((job) => cardsOf.has(job.id)) : shown;
+  const visible = filtering
+    ? shown.filter((job) => cardsOf.has(job.id))
+    : shown;
 
   return (
     <div className="grid gap-4">
@@ -133,28 +135,28 @@ export default async function PipelinePage({
       </div>
       {visible.length ? (
         visible.map((job) => (
-            <JobBoard
-              key={job.id}
-              jobId={job.id}
-              title={job.title}
-              meta={[
-                job.location,
-                job.status !== "open" && j(`status.${job.status}`),
-              ]
-                .filter(Boolean)
-                .join(" · ")}
-              cards={cardsOf.get(job.id)?.length ?? 0}
-              hired={hiredOf.get(job.id) ?? 0}
-              openings={job.openings}
-              foldedByDefault={filled(job) || job.status === "closed"}
-            >
-              <KanbanBoard
-                boardId={job.id}
-                initialCards={cardsOf.get(job.id) ?? []}
-                columns={columnsOf(job.id)}
-              />
-            </JobBoard>
-          ))
+          <JobBoard
+            key={job.id}
+            jobId={job.id}
+            title={job.title}
+            meta={[
+              job.location,
+              job.status !== "open" && j(`status.${job.status}`),
+            ]
+              .filter(Boolean)
+              .join(" · ")}
+            cards={cardsOf.get(job.id)?.length ?? 0}
+            hired={hiredOf.get(job.id) ?? 0}
+            openings={job.openings}
+            foldedByDefault={filled(job) || job.status === "closed"}
+          >
+            <KanbanBoard
+              boardId={job.id}
+              initialCards={cardsOf.get(job.id) ?? []}
+              columns={columnsOf(job.id)}
+            />
+          </JobBoard>
+        ))
       ) : (
         <EmptyState
           title={filtering ? t("noMatches") : t("noJobs")}

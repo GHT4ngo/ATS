@@ -236,7 +236,15 @@
     },
     "candidates": "Candidates",
     "candidatesCount": "{count, plural, one {# candidate} other {# candidates}}",
-    "emptyHint": "Create the first job with the button above."
+    "emptyHint": "Create the first job with the button above.",
+    "openings": "Openings",
+    "hiredOf": "{hired} of {openings} openings filled",
+    "filledHeading": "Filled jobs",
+    "filledNote": "Every opening has been filled.",
+    "reopen": "Reopen",
+    "reopenHint": "Adds an opening and opens the job again",
+    "allFilled": "Every job is filled",
+    "allFilledHint": "Create a new job or reopen a filled one."
   },
   "Filters": {
     "search": "Search candidates",
@@ -288,7 +296,11 @@
     "noMatches": "No candidates match the filters",
     "noMatchesHint": "Try removing a filter.",
     "emptyHint": "Add the first candidate with the button above.",
-    "repo": "Code profile"
+    "repo": "Code profile",
+    "newHeading": "New applicants",
+    "newNote": "Applications from the last {days} days",
+    "noApplicants": "No applicants yet.",
+    "noJobHeading": "Without a job"
   },
   "Pipeline": {
     "heading": "Pipeline",

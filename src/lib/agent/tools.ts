@@ -291,6 +291,7 @@ export async function runTool(
           phone: cand.phone,
           location: cand.location,
           linkedin_url: cand.linkedin_url,
+          repo_url: cand.repo_url,
           has_cv: Boolean(cand.cv_path),
           notes: cand.notes,
           applications: (apps ?? []).map((a) => {

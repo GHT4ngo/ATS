@@ -236,7 +236,15 @@
     },
     "candidates": "Kandidater",
     "candidatesCount": "{count, plural, one {# kandidat} other {# kandidater}}",
-    "emptyHint": "Skapa den första tjänsten med knappen ovan."
+    "emptyHint": "Skapa den första tjänsten med knappen ovan.",
+    "openings": "Platser",
+    "hiredOf": "{hired} av {openings} platser tillsatta",
+    "filledHeading": "Tillsatta tjänster",
+    "filledNote": "Alla platser har fått en anställd.",
+    "reopen": "Öppna igen",
+    "reopenHint": "Lägger till en plats och öppnar tjänsten igen",
+    "allFilled": "Alla tjänster är tillsatta",
+    "allFilledHint": "Skapa en ny tjänst eller öppna en tillsatt igen."
   },
   "Filters": {
     "search": "Sök kandidater",
@@ -288,7 +296,11 @@
     "noMatches": "Inga kandidater matchar filtren",
     "noMatchesHint": "Prova att ta bort ett filter.",
     "emptyHint": "Lägg till den första kandidaten med knappen ovan.",
-    "repo": "Kodprofil"
+    "repo": "Kodprofil",
+    "newHeading": "Nya sökande",
+    "newNote": "Ansökningar de senaste {days} dagarna",
+    "noApplicants": "Inga sökande än.",
+    "noJobHeading": "Utan tjänst"
   },
   "Pipeline": {
     "heading": "Pipeline",

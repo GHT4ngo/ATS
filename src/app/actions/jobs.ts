@@ -64,3 +64,28 @@ export async function setJobStatus(jobId: string, status: string) {
     await scope.log("job", id.data, "status", { status: parsed.data });
   revalidatePath("/jobs");
 }
+
+/**
+ * Brings a filled job back to the open list: one more opening than it has
+ * hires, and open for applications again.
+ */
+export async function reopenJob(jobId: string) {
+  const scope = await getScope();
+  const id = z.uuid().safeParse(jobId);
+  if (!id.success) return;
+
+  const { count } = await scope.supabase
+    .from("applications")
+    .select("id", { count: "exact", head: true })
+    .eq("organization_id", scope.orgId)
+    .eq("job_id", id.data)
+    .eq("stage", "hired");
+  const openings = Math.min(999, (count ?? 0) + 1);
+  const { error } = await scope.updateJob(id.data, {
+    openings,
+    status: "open",
+  });
+  if (!error) await scope.log("job", id.data, "reopened", { openings });
+  revalidatePath("/jobs");
+  revalidatePath("/pipeline");
+}

@@ -193,11 +193,7 @@ export default async function UsersPage() {
         })}
 
         {unassigned.length > 0 && (
-          <Card
-            role="region"
-            aria-label={t("unassigned")}
-            className="h-full"
-          >
+          <Card role="region" aria-label={t("unassigned")} className="h-full">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <span className="bg-muted text-muted-foreground flex size-8 items-center justify-center rounded-lg">
