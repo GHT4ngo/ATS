@@ -85,7 +85,7 @@ function CardBody({
       <div
         className={cn(
           // Narrow lanes give the name the room instead.
-          "hidden size-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold @[13rem]:flex",
+          "hidden size-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold @[12rem]:flex",
           card.mismatch
             ? "bg-rose-500/10 text-rose-700 ring-1 ring-rose-500/20 ring-inset dark:text-rose-300"
             : PHASE_STYLE[card.stage].soft,
@@ -182,7 +182,7 @@ function CardBody({
 
 function cardClass(card: BoardCard) {
   return cn(
-    "group/card flex items-start gap-2 rounded-lg border border-l-[3px] p-2 elevated transition-[box-shadow,opacity] hover:elevated-hover",
+    "group/card @container flex items-start gap-2 rounded-lg border border-l-[3px] p-2 elevated transition-[box-shadow,opacity] hover:elevated-hover",
     card.mismatch
       ? "border-rose-500/25 border-l-rose-500/60 bg-rose-500/[0.06] dark:bg-rose-500/[0.09]"
       : ["bg-card", PHASE_STYLE[card.stage].edge],
@@ -292,7 +292,7 @@ function Column({
     <section
       aria-label={column.label}
       className={cn(
-        "ring-foreground/5 @container flex min-w-40 flex-1 basis-0 flex-col gap-2 rounded-xl p-2 ring-1 transition-shadow",
+        "ring-foreground/5 flex min-w-40 flex-1 basis-0 flex-col gap-2 rounded-xl p-2 ring-1 transition-shadow",
         style.wash,
         isOver && "ring-ring/50 ring-2",
       )}

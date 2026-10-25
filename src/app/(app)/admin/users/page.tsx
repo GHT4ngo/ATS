@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getFormatter, getTranslations } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 import { ArrowRight, ShieldCheck, UserX } from "lucide-react";
 import { setActingOrganization } from "@/app/actions/admin";
 import { CreateOrganizationDialog } from "@/components/admin/create-organization-dialog";
@@ -29,7 +29,6 @@ export default async function UsersPage() {
   const { profile: me } = await requireAdmin();
   const t = await getTranslations("Admin");
   const c = await getTranslations("Common");
-  const format = await getFormatter();
   const supabase = await createClient();
 
   const [{ data: organizations }, { data: users }, { data: jobs }] =
@@ -160,12 +159,6 @@ export default async function UsersPage() {
                   <div className="min-w-0">
                     <CardTitle className="truncate">{o.name}</CardTitle>
                     <p className="text-muted-foreground truncate text-xs">
-                      {t("sinceDate", {
-                        date: format.dateTime(new Date(o.created_at), {
-                          dateStyle: "medium",
-                        }),
-                      })}
-                      {" · "}
                       {t("userCount", { count: members.length })}
                       {" · "}
                       {t("openJobCount", { count: openJobs.get(o.id) ?? 0 })}
