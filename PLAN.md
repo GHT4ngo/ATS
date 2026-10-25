@@ -1,15 +1,14 @@
 # PLAN: Mini ATS
 
-> **Status:** Phases 1 to 8, 10 and 11 merged and live (PR #11 is the latest); Phase 9 deliverables in progress. Next: reseed the production demo, then the v1 delivery.
+> **Status:** Phases 1 to 8, 10 and 11 merged and live (PR #11 is the latest); Phase 9 deliverables in progress. Next: the v1 delivery.
 > **Deadline:** Friday 30 October 2026. **Live URL:** https://ats.t4ngo.com
 > Usage budget and model routing: [BUDGET.md](./BUDGET.md). Review process: [REVIEW.md](./REVIEW.md).
 
 ## Where we left off (25 Oct)
 
-* **Production:** all seven migrations applied; Phase 11 (PR #11) is live. The Nordlys Tech demo still holds the 24 Oct seed and needs a reseed for openings, code profiles and the candidates marked as not meeting the requirements (logins `sara.lindqvist@nordlys.example` and `johan.ek@nordlys.example`, the password the reseed prints is kept outside the repo); `ANTHROPIC_API_KEY` is set on Vercel (Production only, not Preview).
+* **Production:** all seven migrations applied; Phase 11 (PR #11) is live. The Nordlys Tech demo was reseeded on 25 Oct with openings, code profiles and candidates marked as not meeting the requirements (logins `sara.lindqvist@nordlys.example` and `johan.ek@nordlys.example`, the password the reseed prints is kept outside the repo); `ANTHROPIC_API_KEY` is set on Vercel (Production only, not Preview).
 * **Done in Phase 8:** the recruiter agent (PR #7) and custom pipeline stages per job (PR #8), both reviewed and live.
 * **Open items:**
-  * Reseed the production demo with the Phase 11 seed.
   * Send the v1 delivery (admin login, live URL, repo link).
   * Smoke test one real CV assessment and one assistant question on the live site.
   * The pipeline and candidates pages read one page of up to 1000 applications.
@@ -167,7 +166,7 @@ Toned down colours and a pipeline per job. Branch `feat/phase-11-polish`, PR #11
 * [x] Fix: a backdrop blur offset the drag preview, so a keyboard move could skip a lane
 * [x] Review with `/code-review medium`, 10 findings fixed
 * [x] Apply the migration in production
-* [ ] Reseed the production demo
+* [x] Reseed the production demo (25 Oct, new password kept outside the repo)
 * [x] New README screenshots and storyboard
 
 ## Assumptions (for the email)
