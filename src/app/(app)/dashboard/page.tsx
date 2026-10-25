@@ -67,7 +67,7 @@ export default async function DashboardPage({
         <p className="text-muted-foreground">{t("pickOrganization")}</p>
         {isAdmin && (
           <Link
-            href="/admin/customers"
+            href="/admin/users"
             className="text-primary inline-flex items-center gap-1 text-sm font-medium hover:underline"
           >
             {t("toCustomers")}

@@ -108,6 +108,9 @@ export function CandidateDrawer({
         score: Number(p.score),
       });
     }
+    if (a.action === "archived" || a.action === "restored") {
+      return t(`activity.${a.action}`, { job: String(p.job ?? "") });
+    }
     if (a.action === "created") return t("activity.created");
     if (a.action === "updated") return t("activity.updated");
     if (a.action === "notes") return t("activity.notes");

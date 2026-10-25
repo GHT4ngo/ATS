@@ -111,10 +111,10 @@
     "shortcut": "Ctrl K",
     "menu": "Menu",
     "assistant": "Assistant",
-    "customers": "Customers",
     "previewing": "Customer preview: {name}",
     "previewNote": "You see the app as the customer does. Changes are logged under you as admin.",
-    "exitPreview": "Exit preview"
+    "exitPreview": "Exit preview",
+    "users": "Users"
   },
   "Dashboard": {
     "welcome": "Welcome, {name}",
@@ -123,7 +123,7 @@
     "openJobs": "Open jobs",
     "activeCandidates": "Active candidates",
     "funnel": "Pipeline funnel",
-    "toCustomers": "Go to customers",
+    "toCustomers": "Go to users",
     "range": "Period",
     "rangeShort": "{days} d",
     "rangeDays": "Last {days} days",
@@ -175,7 +175,7 @@
     "slug": "Identifier",
     "noOrganizations": "No organizations yet.",
     "usersTitle": "Users",
-    "usersDescription": "Every account on the platform.",
+    "usersDescription": "Administrators first, then the customer organizations.",
     "newUser": "New user",
     "temporaryPassword": "Temporary password",
     "generatePassword": "Generate",
@@ -193,8 +193,6 @@
     "adminNoOrganization": "Internal",
     "confirmDeactivateTitle": "Deactivate {name}?",
     "confirmDeactivateBody": "They will no longer be able to sign in. You can reactivate them later.",
-    "customersTitle": "Customers",
-    "customersDescription": "Organizations and their users.",
     "addUser": "Add user",
     "noUsers": "No users yet.",
     "sinceDate": "since {date}",
@@ -279,7 +277,9 @@
       "created": "Candidate created",
       "updated": "Profile updated",
       "notes": "Notes updated",
-      "assessed": "{job}: AI assessment, score {score}"
+      "assessed": "{job}: AI assessment, score {score}",
+      "archived": "{job}: removed from the board",
+      "restored": "{job}: back on the board"
     },
     "daysShort": "{days}d",
     "linkedin": "LinkedIn",
@@ -287,10 +287,23 @@
     "count": "{count, plural, one {# candidate} other {# candidates}}",
     "noMatches": "No candidates match the filters",
     "noMatchesHint": "Try removing a filter.",
-    "emptyHint": "Add the first candidate with the button above."
+    "emptyHint": "Add the first candidate with the button above.",
+    "repo": "Code profile"
   },
   "Pipeline": {
-    "heading": "Pipeline"
+    "heading": "Pipeline",
+    "remove": "Remove {name} from the board",
+    "removeHint": "Remove from the board. The application stays in the history.",
+    "removed": "{name} was removed from the board",
+    "undo": "Undo",
+    "fold": "Fold {name}",
+    "unfold": "Unfold {name}",
+    "cardCount": "{count, plural, one {# candidate} other {# candidates}}",
+    "hiredOf": "{hired} of {openings} hired",
+    "noJobs": "No jobs yet",
+    "noJobsHint": "Create a job under Jobs and it gets its own board here.",
+    "noMatches": "No cards match the filters",
+    "noMatchesHint": "Try removing a filter."
   },
   "Assessment": {
     "heading": "AI assessment",
@@ -375,5 +388,14 @@
       "mismatch": "Not a match"
     },
     "mismatchShort": "No match"
+  },
+  "Signals": {
+    "starred": "Starred",
+    "flagged": "Flagged, needs attention",
+    "mismatch": "Does not meet the requirements for the job",
+    "unassessed": "CV not assessed with AI yet",
+    "days": "{days, plural, one {# day} other {# days}} in this stage",
+    "stuck": "No movement for {days} days",
+    "removal": "Leaves the board in {days, plural, one {# day} other {# days}}"
   }
 }

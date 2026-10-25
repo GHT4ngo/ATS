@@ -60,3 +60,41 @@ export async function markApplication(
   revalidatePath("/dashboard");
   return { ok: true };
 }
+
+const archiveSchema = z.object({
+  applicationId: z.uuid(),
+  archived: z.boolean(),
+});
+
+/**
+ * Clears a hired or rejected card off the board, or brings it back (the undo
+ * in the toast). The application stays, so hires still count.
+ */
+export async function archiveApplication(
+  input: z.input<typeof archiveSchema>,
+): Promise<ActionState> {
+  const scope = await getScope();
+  const parsed = archiveSchema.safeParse(input);
+  if (!parsed.success) return { error: "invalidInput" };
+  const { applicationId, archived } = parsed.data;
+
+  const { data, error } = await scope
+    .updateApplication(applicationId, {
+      archived_at: archived ? new Date().toISOString() : null,
+    })
+    .in("stage", ["hired", "rejected"])
+    .select("job_id");
+  if (error || !data?.length) return { error: "generic" };
+  const { data: job } = await scope
+    .jobs()
+    .eq("id", data[0].job_id)
+    .maybeSingle();
+  await scope.log(
+    "application",
+    applicationId,
+    archived ? "archived" : "restored",
+    { job: job?.title ?? null },
+  );
+  revalidatePath("/pipeline");
+  return { ok: true };
+}

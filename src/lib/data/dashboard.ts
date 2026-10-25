@@ -132,3 +132,18 @@ export function daysSince(iso: string, now: number) {
 export function isActive(stage: Stage) {
   return stage !== "hired" && stage !== "rejected";
 }
+
+/** Rejected cards leave the board on their own after this many days. */
+export const REJECTED_DAYS = 7;
+
+/** Whether an application still has a card on the board. */
+export function onBoard(
+  app: { stage: Stage; stage_changed_at: string; archived_at: string | null },
+  now: number,
+) {
+  if (app.archived_at) return false;
+  return (
+    app.stage !== "rejected" ||
+    daysSince(app.stage_changed_at, now) < REJECTED_DAYS
+  );
+}

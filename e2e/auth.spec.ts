@@ -93,7 +93,7 @@ test("customer signs in, sees the team and cannot reach the admin pages", async 
   await expect(page.getByText(emails.customer)).toBeVisible();
   await expect(page.getByRole("link", { name: "Kunder" })).toHaveCount(0);
 
-  await page.goto("/admin/customers");
+  await page.goto("/admin/users");
   await expect(page).toHaveURL(/\/dashboard$/);
 
   await page.getByRole("button", { name: "Logga ut" }).click();
@@ -117,7 +117,7 @@ test("admin creates an organization and a user, acts as the customer and deactiv
   page,
 }) => {
   await signIn(page, emails.admin);
-  await page.goto("/admin/customers");
+  await page.goto("/admin/users");
   await page.getByRole("button", { name: "Ny organisation" }).click();
   await page.getByLabel("Organisationens namn").fill(`E2E New Org ${run}`);
   await page
@@ -147,7 +147,7 @@ test("admin creates an organization and a user, acts as the customer and deactiv
   await expect(page.getByText(emails.created)).toBeVisible();
 
   // Deactivate the new user.
-  await page.goto("/admin/customers");
+  await page.goto("/admin/users");
   await row.getByRole("button", { name: "Inaktivera" }).click();
   await page
     .getByRole("dialog")

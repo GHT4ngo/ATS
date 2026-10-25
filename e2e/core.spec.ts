@@ -47,7 +47,7 @@ test("admin creates a customer, who creates a job and candidates, moves a card a
 }) => {
   // Admin creates the customer organization and its first user
   await signIn(page, emails.admin);
-  await page.goto("/admin/customers");
+  await page.goto("/admin/users");
   await page.getByRole("button", { name: "Ny organisation" }).click();
   await page.getByLabel("Organisationens namn").fill(orgName);
   await page
