@@ -25,9 +25,9 @@ Covers stories 1 and 7.
 
 **Show:**
 
-1. Log in as the admin. Open Customers: each organization with its users on one page.
-2. On Nordlys Tech AB, Add user: name, email, click Generate for a temporary password, Create. The user appears in the card.
-3. Turn on developer mode under the cog, then use the wrench menu to preview the app as Nordlys Tech AB. Point at the purple banner: the admin tools are gone, but every change is still logged as the admin. Exit the preview.
+1. Log in as the admin. Open Users: the administrators first, then each organization with its users, in cards of the same size.
+2. On Nordlys Tech AB, Add user: name, email, click Generate for a temporary password, Create. The user appears in the card; the dots menu resets a password or deactivates.
+3. Turn on developer mode under the cog, then use the wrench menu to preview the app as Nordlys Tech AB. Point at the green banner: the admin tools are gone, but every change is still logged as the admin. Exit the preview.
 
 **Say:** "Every customer is an organization with its own users. Admins create the accounts with a temporary password, since there is no self signup. To help a customer, an admin acts as their organization: the banner makes it clear, and every change is still logged as the admin, so there is no impersonation."
 
@@ -38,13 +38,13 @@ Covers stories 2 to 6.
 **Show:**
 
 1. Sign out, log in as Sara. The dashboard: switch the chart between 7, 30 and 90 days, point at Needs attention (flagged, stuck, not assessed) and click a candidate to open the drawer.
-2. Jobs: the four jobs with candidates per phase. Open Edit on one job to show the fields, then cancel.
-3. Candidates, New candidate: Nils Ekman, an email, a LinkedIn link, attach `cv-nils-ekman.pdf`, tick Frontendutvecklare, Save.
-4. Pipeline: Nils is in Ansökt. Drag him to Screening. Star him, and point at the colours: one per phase, amber days after two weeks, a red card for a candidate who does not meet the requirements.
-5. Filters: click the Frontendutvecklare chip, then type "Nils" in the search. Point at the URL: the view can be shared. Clear.
+2. Jobs: candidates per phase and the openings, such as 1 of 2. Customer Success Manager has filled both openings, so it sits under Filled jobs with Reopen. Open Edit on one job to show the fields, then cancel.
+3. Candidates: new applicants of the last week on top, then one list per job from hired down to rejected. New candidate: Nils Ekman, an email, a LinkedIn link, attach `cv-nils-ekman.pdf`, tick Frontendutvecklare, Save.
+4. Pipeline: one board per job. Nils is in Ansökt on the Frontendutvecklare board. Drag him to Screening and star him. Point at the red tinted cards in Ansökt: candidates who do not meet the requirements are marked, not rejected. Hover the clock for days in stage, then open the folded Anställd lane.
+5. Filters: pick Frontendutvecklare in the jobs menu, then type "Nils" in the search. Point at the URL: the view can be shared. Clear.
 6. Press Ctrl K and jump to a candidate by name.
 
-**Say:** "The kanban shows every candidate across jobs. Drag and drop also works with the keyboard. Filters live in the URL, so a recruiter can send a colleague the exact view."
+**Say:** "Every job has its own board, and lanes fold away when they are not needed. Drag and drop also works with the keyboard. Finished cards can be cleared off the board, and rejected ones leave on their own after a week. Filters live in the URL, so a recruiter can send a colleague the exact view."
 
 ### 4. AI CV assessment (2:30 to 3:30)
 
@@ -72,7 +72,7 @@ Covers the extra task.
 **Show:**
 
 1. Jobs, Steg on Frontendutvecklare: stages inside the fixed phases, such as Telefonintervju, Kodtest and Slutintervju.
-2. Pipeline filtered to Frontendutvecklare: the job's own columns. Clear the filter: the all jobs board keeps the six phases.
+2. Back on the pipeline: the Frontendutvecklare board shows those stages as its own lanes, while the dashboard and the filters keep the six common phases.
 
 **Say:** "Each job can have its own process, while reporting keeps a common scale across jobs."
 

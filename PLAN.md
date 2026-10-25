@@ -1,18 +1,19 @@
 # PLAN: Mini ATS
 
-> **Status:** Phase 4 (core customer features) merged (PR #3). Phase 5 (polish) merged (PR #4). Phase 6 merged (PR #5), production seeded on 2026-10-23; v1 delivery pending. Phase 7 (AI CV assessment) merged (PR #6). Next: v1 delivery, then Phase 8 extras.
+> **Status:** Phases 1 to 8, 10 and 11 merged and live (PR #11 is the latest); Phase 9 deliverables in progress. Next: reseed the production demo, then the v1 delivery.
 > **Deadline:** Friday 30 October 2026. **Live URL:** https://ats.t4ngo.com
 > Usage budget and model routing: [BUDGET.md](./BUDGET.md). Review process: [REVIEW.md](./REVIEW.md).
 
-## Where we left off (24 Oct)
+## Where we left off (25 Oct)
 
-* **Production:** all six migrations applied; Phase 10 (PR #10) is live; the Nordlys Tech demo was reseeded on 24 Oct with 23 candidates, history, stars and flags (logins `sara.lindqvist@nordlys.example` and `johan.ek@nordlys.example`, new password kept outside the repo); `ANTHROPIC_API_KEY` is set on Vercel (Production only, not Preview).
+* **Production:** all seven migrations applied; Phase 11 (PR #11) is live. The Nordlys Tech demo still holds the 24 Oct seed and needs a reseed for openings, code profiles and the candidates marked as not meeting the requirements (logins `sara.lindqvist@nordlys.example` and `johan.ek@nordlys.example`, the password the reseed prints is kept outside the repo); `ANTHROPIC_API_KEY` is set on Vercel (Production only, not Preview).
 * **Done in Phase 8:** the recruiter agent (PR #7) and custom pipeline stages per job (PR #8), both reviewed and live.
 * **Open items:**
+  * Reseed the production demo with the Phase 11 seed.
   * Send the v1 delivery (admin login, live URL, repo link).
   * Smoke test one real CV assessment and one assistant question on the live site.
-  * One unexplained failure of the core e2e test (`e2e/core.spec.ts`) on 23 Oct, not seen since; watch CI.
-  * The admin organization switcher needs the sidebar expanded; empty states are plain text.
+  * The pipeline and candidates pages read one page of up to 1000 applications.
+  * The admin organization switcher needs the sidebar expanded.
 * **Next:** review and send the assumptions email, record the Loom video, send the v1 delivery. Phase 9 docs are in `docs/`.
 
 ## Goal
@@ -147,6 +148,27 @@ From the first walk through of v1. Branch `feat/phase-10-ux`.
 * [x] Fix: the activity log kept no backdated seed history, so the demo timeline showed the seed time
 * [x] Apply the migration in production and reseed the demo (24 Oct, new password kept outside the repo)
 * [x] New README screenshots, including the dashboard
+
+## Phase 11: Second feedback round (Sun 25)
+
+Toned down colours and a pipeline per job. Branch `feat/phase-11-polish`, PR #11.
+
+* [x] Translucent phase colours, layered shadows and a soft glow; a green or blue translucent banner when viewing a company
+* [x] Dashboard with depth and motion (cards rise in, lines draw, bars grow) and less text; flagged, not assessed and days in stage as icons with hover explanations
+* [x] One board per job with hiring progress; every lane folds, hired and rejected start folded
+* [x] Candidates who do not meet the requirements stay in Applied with a red tinted card instead of being rejected
+* [x] Hired and rejected cards can be removed with undo; rejected cards leave the board after 7 days, with a countdown
+* [x] LinkedIn logo in its own blue; a new code profile link with the GitHub logo
+* [x] Openings per job; filled jobs move to their own table and can be reopened
+* [x] Candidates: new applicants of the last 7 days on top, then a foldable list per job from hired down to rejected, rejected greyed out
+* [x] Icon filters with a search field
+* [x] Customers renamed Users: administrators first, organizations in alphabetical order, cards of equal size, user actions in a menu
+* [x] Theme icons and language flags in the sidebar footer
+* [x] Fix: a backdrop blur offset the drag preview, so a keyboard move could skip a lane
+* [x] Review with `/code-review medium`, 10 findings fixed
+* [x] Apply the migration in production
+* [ ] Reseed the production demo
+* [x] New README screenshots and storyboard
 
 ## Assumptions (for the email)
 

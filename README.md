@@ -15,7 +15,7 @@
 
 </div>
 
-![The pipeline for all jobs: one colour per phase, AI scores, stars, flags and red cards for candidates who do not meet the requirements](docs/screenshots/pipeline.png)
+![The pipeline: one board per job with foldable lanes, AI scores, stars, flags and a red tint for candidates who do not meet the requirements](docs/screenshots/pipeline.png)
 
 ## What it does
 
@@ -25,23 +25,31 @@ Mini ATS is a recruiting tool for small and medium sized companies. An internal 
 
 | # | As a | I can | Where |
 |:--|:-----|:------|:------|
-| 1 | **Admin** | create accounts, both admin and customer accounts | Customers: each organization with its users; email, role and a generated temporary password |
+| 1 | **Admin** | create accounts, both admin and customer accounts | Users: administrators first, then each organization with its users; email, role and a generated temporary password |
 | 2 | **Customer** | log in | Email and password, password reset by email, change password under the settings cog |
 | 3 | **Customer** | post jobs I'm recruiting for | Jobs: title, description, location, employment type, open, paused or closed |
-| 4 | **Customer** | add candidates with profile information | Candidates: contact details, LinkedIn link, notes, a CV as PDF, one or more jobs |
-| 5 | **Customer** | see a compact kanban view of all my candidates | Pipeline: drag and drop with mouse or keyboard, one colour per phase, days in stage, AI score |
-| 6 | **Customer** | filter the kanban view by job and candidate name | Pipeline: job chips, a name search and mark filters, kept in the URL so a view can be shared |
+| 4 | **Customer** | add candidates with profile information | Candidates: contact details, LinkedIn and code profile links, notes, a CV as PDF, one or more jobs |
+| 5 | **Customer** | see a compact kanban view of all my candidates | Pipeline: one board per job with foldable lanes, drag and drop with mouse or keyboard, days in stage, AI score |
+| 6 | **Customer** | filter the kanban view by job and candidate name | Pipeline: a name search and icon filters for jobs and marks, kept in the URL so a view can be shared |
 | 7 | **Admin** | do everything customers can do, on their behalf | An organization switcher with a "Viewing as" banner, and a customer preview in developer mode; no impersonation, so every change is logged as the admin |
 
 All seven are live, covered by end to end tests and backed by row level security tested per policy.
 
 ### Beyond the brief
 
-**Dashboard.** Stats that link to the page behind them, each compared with the previous period; an activity chart of applications, hires and interviews over 7, 30 or 90 days; a funnel that opens the candidates in a phase; a list of candidates who need attention (flagged, stuck for more than two weeks, CV not assessed); standouts; and the team's activity.
+**Dashboard.** Stats that link to the page behind them, each compared with the previous period; an activity chart of applications, hires and interviews over 7, 30 or 90 days; a funnel that opens the candidates in a phase; a list of candidates who need attention; standouts; and the team's activity. Flags, missing assessments and days in stage are icons that explain themselves on hover.
 
 ![The dashboard](docs/screenshots/dashboard.png)
 
-**Marks.** A star for a candidate who stands out and a flag for one that needs a follow up. A candidate whose AI score is below 40 gets a red card as not meeting the requirements, and the recruiter can confirm or overrule that by hand.
+**Marks.** A star for a candidate who stands out and a flag for one that needs a follow up. A candidate whose AI score is below 40 is marked as not meeting the requirements, and the recruiter can confirm or overrule that by hand. Nobody is rejected automatically: the candidate stays in Applied with a red tinted card.
+
+**A board per job.** Every job has its own board with its own lanes, and every lane folds away; hired and rejected start folded. Finished cards can be cleared off the board with an undo, and rejected cards leave on their own after a week, with a countdown on the card. The application stays in the history either way, so hires still count.
+
+**Openings.** Each job has a number of openings. When they are all filled, the job moves to a list of filled jobs, and reopening it adds one more opening.
+
+| Jobs, open and filled | Candidates per job, new applicants on top |
+|:---|:---|
+| ![The jobs page with a filled jobs table](docs/screenshots/jobs.png) | ![The candidates page, one list per job](docs/screenshots/candidates.png) |
 
 **AI CV assessment.** One click scores a candidate's CV against a job from 0 to 100, with a summary, strengths, gaps, a match per requirement with evidence, and suggested interview questions. It is never automatic, it states clearly that it is decision support, and the prompt keeps protected traits out of the judgement. A consistency eval runs each sample CV several times: the spread stays within 6 points and the ranking holds.
 
@@ -51,13 +59,13 @@ All seven are live, covered by end to end tests and backed by row level security
 
 ![The assistant proposing a move, waiting for approval](docs/screenshots/assistant.png)
 
-**Custom stages per job.** Each job can have its own stages, such as a phone screen, a coding test or a final interview, inside six fixed phases. A job's board shows its own columns, while the all jobs board, the dashboard and the assistant keep the common phases.
+**Custom stages per job.** Each job can have its own stages, such as a phone screen, a coding test or a final interview, inside six fixed phases. A job's board shows its own lanes, while the dashboard, the filters and the assistant keep the common phases.
 
-| Board for one job | Stage editor (dark mode) |
+| Pipeline (dark mode) | Stage editor (dark mode) |
 |:---|:---|
-| ![A job board with its own stages](docs/screenshots/pipeline-job-stages.png) | ![The stage editor](docs/screenshots/stages-editor-dark.png) |
+| ![The pipeline in dark mode](docs/screenshots/pipeline-dark.png) | ![The stage editor](docs/screenshots/stages-editor-dark.png) |
 
-**Polish.** Swedish and English, dark, light and system theme, a collapsible sidebar, a command palette (Ctrl K) over pages, candidates and jobs, keyboard drag and drop, skeleton loading states, error and 404 pages, and a responsive layout down to phone width.
+**Polish.** Swedish and English behind flags, dark, light and system theme, a collapsible sidebar, a command palette (Ctrl K) over pages, candidates and jobs, keyboard drag and drop, skeleton loading states, error and 404 pages, and a responsive layout down to phone width.
 
 ## Architecture
 
@@ -75,7 +83,7 @@ flowchart LR
   AG -->|tool loop| O[Claude Opus 5.5]
 ```
 
-**Data model.** `organizations` (the customers), `profiles` (users, with role and organization), `jobs`, `job_stages`, `candidates`, `applications` (a candidate in a job, with stage and position), `cv_assessments`, `activity_log` and a private `cvs` storage bucket. Composite foreign keys make sure a row can only point at rows of its own organization, and a CV path must sit in its own candidate's folder.
+**Data model.** `organizations` (the customers), `profiles` (users, with role and organization), `jobs` (with a number of openings), `job_stages`, `candidates`, `applications` (a candidate in a job, with stage, position, marks and an archived time), `cv_assessments`, `activity_log` and a private `cvs` storage bucket. Composite foreign keys make sure a row can only point at rows of its own organization, and a CV path must sit in its own candidate's folder.
 
 **Security.**
 
