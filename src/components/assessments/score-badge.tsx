@@ -3,10 +3,10 @@ import { cn } from "@/lib/utils";
 /** Colour bands follow the scoring rubric in the assessment prompt. */
 export function scoreTone(score: number) {
   if (score >= 70)
-    return "bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200";
+    return "bg-emerald-500/10 text-emerald-700 ring-1 ring-emerald-500/25 ring-inset dark:text-emerald-300";
   if (score >= 50)
-    return "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200";
-  return "bg-rose-100 text-rose-900 dark:bg-rose-950 dark:text-rose-200";
+    return "bg-amber-500/10 text-amber-700 ring-1 ring-amber-500/25 ring-inset dark:text-amber-300";
+  return "bg-rose-500/10 text-rose-700 ring-1 ring-rose-500/25 ring-inset dark:text-rose-300";
 }
 
 export function ScoreBadge({

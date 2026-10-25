@@ -13,8 +13,8 @@ const nextConfig: NextConfig = {
       { source: "/team", destination: "/dashboard", permanent: false },
       { source: "/settings", destination: "/dashboard", permanent: false },
       {
-        source: "/admin/:page(organizations|users)",
-        destination: "/admin/customers",
+        source: "/admin/:page(organizations|customers)",
+        destination: "/admin/users",
         permanent: false,
       },
     ];

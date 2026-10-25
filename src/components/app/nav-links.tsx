@@ -17,7 +17,7 @@ const icons: Record<string, LucideIcon> = {
   pipeline: KanbanSquare,
   jobs: Briefcase,
   candidates: Users,
-  customers: Building2,
+  users: Building2,
 };
 
 export type NavLink = { href: string; label: string; icon: string };

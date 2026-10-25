@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getFormatter, getTranslations } from "next-intl/server";
-import { ArrowRight, ShieldCheck } from "lucide-react";
+import { ArrowRight, ShieldCheck, UserX } from "lucide-react";
 import { setActingOrganization } from "@/app/actions/admin";
 import { CreateOrganizationDialog } from "@/components/admin/create-organization-dialog";
 import { CreateUserDialog } from "@/components/admin/create-user-dialog";
@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireAdmin } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
-import { cn } from "@/lib/utils";
+import { cn, initials } from "@/lib/utils";
 
 type User = {
   id: string;
@@ -20,8 +20,12 @@ type User = {
   organization_id: string | null;
 };
 
-/** Organizations and their users on one page; admins have their own card. */
-export default async function CustomersPage() {
+/**
+ * Every user on one page: the administrators first, then one card per
+ * organization in alphabetical order. The cards share one size and scroll
+ * inside, so the grid stays even however many users an organization has.
+ */
+export default async function UsersPage() {
   const { profile: me } = await requireAdmin();
   const t = await getTranslations("Admin");
   const c = await getTranslations("Common");
@@ -40,7 +44,9 @@ export default async function CustomersPage() {
         .order("full_name"),
       supabase.from("jobs").select("organization_id").eq("status", "open"),
     ]);
-  const orgs = organizations ?? [];
+  const orgs = (organizations ?? []).sort((a, b) =>
+    a.name.localeCompare(b.name, "sv"),
+  );
   const openJobs = new Map<string, number>();
   for (const j of jobs ?? [])
     openJobs.set(j.organization_id, (openJobs.get(j.organization_id) ?? 0) + 1);
@@ -65,7 +71,7 @@ export default async function CustomersPage() {
 
   const userList = (list: User[]) =>
     list.length ? (
-      <ul className="divide-y">
+      <ul className="divide-y overflow-y-auto pr-1">
         {list.map((u) => (
           <li
             key={u.id}
@@ -105,9 +111,9 @@ export default async function CustomersPage() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">
-            {t("customersTitle")}
+            {t("usersTitle")}
           </h1>
-          <p className="text-muted-foreground">{t("customersDescription")}</p>
+          <p className="text-muted-foreground">{t("usersDescription")}</p>
         </div>
         <div className="flex gap-2">
           <CreateOrganizationDialog />
@@ -115,79 +121,100 @@ export default async function CustomersPage() {
         </div>
       </div>
 
-      {orgs.length ? (
-        <div className="grid gap-4 lg:grid-cols-2">
-          {orgs.map((o) => {
-            const members = membersOf(o.id);
-            return (
-              <Card
-                key={o.id}
-                role="region"
-                aria-label={o.name}
-                className="border-t-4 border-t-violet-500"
-              >
-                <CardHeader className="flex flex-wrap items-start justify-between gap-2">
+      <div className="grid auto-rows-[22rem] gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <Card
+          role="region"
+          aria-label={t("administrators")}
+          className="h-full bg-gradient-to-b from-violet-500/[0.06] to-transparent"
+        >
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <span className="flex size-8 items-center justify-center rounded-lg bg-violet-500/10 text-violet-600 ring-1 ring-violet-500/20 dark:text-violet-300">
+                <ShieldCheck className="size-4" />
+              </span>
+              {t("administrators")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex min-h-0 flex-1 flex-col">
+            {userList(admins)}
+          </CardContent>
+        </Card>
+
+        {orgs.map((o) => {
+          const members = membersOf(o.id);
+          return (
+            <Card
+              key={o.id}
+              role="region"
+              aria-label={o.name}
+              className="h-full"
+            >
+              <CardHeader className="flex items-start justify-between gap-2">
+                <div className="flex min-w-0 items-center gap-3">
+                  <span
+                    className="bg-primary/10 text-primary ring-primary/20 flex size-8 shrink-0 items-center justify-center rounded-lg text-xs font-semibold ring-1"
+                    aria-hidden
+                  >
+                    {initials(o.name)}
+                  </span>
                   <div className="min-w-0">
                     <CardTitle className="truncate">{o.name}</CardTitle>
-                    <p className="text-muted-foreground text-xs">
-                      {[
-                        o.slug,
-                        t("sinceDate", {
-                          date: format.dateTime(new Date(o.created_at), {
-                            dateStyle: "medium",
-                          }),
+                    <p className="text-muted-foreground truncate text-xs">
+                      {t("sinceDate", {
+                        date: format.dateTime(new Date(o.created_at), {
+                          dateStyle: "medium",
                         }),
-                      ].join(" · ")}
+                      })}
+                      {" · "}
+                      {t("userCount", { count: members.length })}
+                      {" · "}
+                      {t("openJobCount", { count: openJobs.get(o.id) ?? 0 })}
                     </p>
                   </div>
-                  <form action={open.bind(null, o.id)}>
-                    <Button type="submit" variant="ghost" size="sm">
-                      {t("openOrganization")}
-                      <ArrowRight className="size-4" />
-                    </Button>
-                  </form>
-                </CardHeader>
-                <CardContent className="grid gap-3">
-                  <div className="flex flex-wrap gap-2 text-xs">
-                    <Badge className="bg-violet-100 text-violet-900 dark:bg-violet-950 dark:text-violet-200">
-                      {t("userCount", { count: members.length })}
-                    </Badge>
-                    <Badge className="bg-blue-100 text-blue-900 dark:bg-blue-950 dark:text-blue-200">
-                      {t("openJobCount", { count: openJobs.get(o.id) ?? 0 })}
-                    </Badge>
-                  </div>
-                  {userList(members)}
+                </div>
+                <form action={open.bind(null, o.id)}>
+                  <Button type="submit" variant="ghost" size="sm">
+                    {t("openOrganization")}
+                    <ArrowRight className="size-4" />
+                  </Button>
+                </form>
+              </CardHeader>
+              <CardContent className="flex min-h-0 flex-1 flex-col gap-2">
+                {userList(members)}
+                <div className="mt-auto">
                   <CreateUserDialog
                     organizations={orgs}
                     organizationId={o.id}
                   />
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      ) : (
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+
+        {unassigned.length > 0 && (
+          <Card
+            role="region"
+            aria-label={t("unassigned")}
+            className="h-full"
+          >
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <span className="bg-muted text-muted-foreground flex size-8 items-center justify-center rounded-lg">
+                  <UserX className="size-4" />
+                </span>
+                {t("unassigned")}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex min-h-0 flex-1 flex-col">
+              {userList(unassigned)}
+            </CardContent>
+          </Card>
+        )}
+      </div>
+      {!orgs.length && (
         <p className="text-muted-foreground">{t("noOrganizations")}</p>
       )}
-
-      {unassigned.length > 0 && (
-        <Card role="region" aria-label={t("unassigned")}>
-          <CardHeader>
-            <CardTitle>{t("unassigned")}</CardTitle>
-          </CardHeader>
-          <CardContent>{userList(unassigned)}</CardContent>
-        </Card>
-      )}
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <ShieldCheck className="size-4 text-violet-600 dark:text-violet-400" />
-            {t("administrators")}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>{userList(admins)}</CardContent>
-      </Card>
     </div>
   );
 }
