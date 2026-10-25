@@ -47,7 +47,7 @@ test("admin creates a customer, who creates a job and candidates, moves a card a
 }) => {
   // Admin creates the customer organization and its first user
   await signIn(page, emails.admin);
-  await page.goto("/admin/customers");
+  await page.goto("/admin/users");
   await page.getByRole("button", { name: "Ny organisation" }).click();
   await page.getByLabel("Organisationens namn").fill(orgName);
   await page
@@ -99,15 +99,17 @@ test("admin creates a customer, who creates a job and candidates, moves a card a
   ]) {
     await page.getByRole("button", { name: "Ny kandidat" }).click();
     await page.getByLabel("Namn").fill(name);
-    await page.getByLabel(job).check();
+    await page.getByRole("checkbox", { name: job }).check();
     await page.getByRole("button", { name: "Spara kandidat" }).click();
-    await expect(page.getByRole("link", { name })).toBeVisible();
+    // Also listed under new applicants, so take the first link.
+    await expect(page.getByRole("link", { name }).first()).toBeVisible();
   }
 
   // Drag Anna from Applied to Screening with the keyboard
   await page.goto("/pipeline");
-  const applied = page.getByRole("region", { name: "Ansökt" });
-  const screening = page.getByRole("region", { name: "Screening" });
+  const board = page.getByRole("region", { name: "Frontendutvecklare" });
+  const applied = board.getByRole("region", { name: "Ansökt" });
+  const screening = board.getByRole("region", { name: "Screening" });
   await expect(applied.getByText("Anna Andersson")).toBeVisible();
   await applied.getByRole("button", { name: /Anna/ }).focus();
   await page.keyboard.press("Space");
@@ -129,9 +131,7 @@ test("admin creates a customer, who creates a job and candidates, moves a card a
     })
     .toBe(1);
   await page.reload();
-  await expect(
-    page.getByRole("region", { name: "Screening" }).getByText("Anna Andersson"),
-  ).toBeVisible();
+  await expect(screening.getByText("Anna Andersson")).toBeVisible();
 
   // Star Bo and filter on stars
   const bo = page.getByRole("button", { name: /Bo Berg/ });
@@ -147,9 +147,9 @@ test("admin creates a customer, who creates a job and candidates, moves a card a
   await expect(page.getByText("Anna Andersson")).toBeVisible();
 
   // Filter by job and by name, kept in the URL
-  await page
-    .getByRole("button", { name: "Produktdesigner", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Filtrera på tjänst" }).click();
+  await page.getByRole("menuitemcheckbox", { name: "Produktdesigner" }).click();
+  await page.keyboard.press("Escape");
   await expect(page).toHaveURL(/jobs=/);
   await expect(page.getByText("Anna Andersson")).toHaveCount(0);
   await expect(page.getByText("Bo Berg")).toBeVisible();
@@ -159,7 +159,7 @@ test("admin creates a customer, who creates a job and candidates, moves a card a
   await expect(page.getByText("Bo Berg")).toHaveCount(0);
 
   // Drawer shows the activity
-  await page.getByRole("link", { name: "Anna Andersson" }).click();
+  await page.getByRole("link", { name: "Anna Andersson" }).first().click();
   await expect(page.getByRole("dialog")).toContainText("Frontendutvecklare");
   await expect(page.getByRole("dialog")).toContainText("Ansökt till Screening");
 

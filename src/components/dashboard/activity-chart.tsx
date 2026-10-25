@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 export type ChartSeries = {
@@ -39,6 +39,7 @@ export function ActivityChart({
   const [width, setWidth] = useState(280);
   const [hidden, setHidden] = useState<Set<string>>(new Set());
   const [hover, setHover] = useState<number | null>(null);
+  const gradient = useId();
 
   useEffect(() => {
     const el = box.current;
@@ -86,7 +87,7 @@ export function ActivityChart({
               aria-pressed={on}
               onClick={() => toggle(s.key)}
               className={cn(
-                "hover:bg-muted flex items-center gap-2 rounded-md border px-2.5 py-1 text-sm transition-opacity",
+                "hover:bg-muted/60 ring-foreground/10 flex items-center gap-2 rounded-full px-3 py-1 text-sm ring-1 transition-opacity",
                 !on && "opacity-50",
               )}
             >
@@ -159,9 +160,39 @@ export function ActivityChart({
               className="stroke-muted-foreground/50"
             />
           )}
+          <defs>
+            {shown.map((s) => (
+              <linearGradient
+                key={s.key}
+                id={`${gradient}-${s.key}`}
+                x1="0"
+                x2="0"
+                y1="0"
+                y2="1"
+              >
+                <stop offset="0%" stopColor={s.color} stopOpacity={0.16} />
+                <stop offset="100%" stopColor={s.color} stopOpacity={0} />
+              </linearGradient>
+            ))}
+          </defs>
+          {shown.map((s) => (
+            <polygon
+              key={`${s.key}-${n}`}
+              className="chart-area"
+              fill={`url(#${gradient}-${s.key})`}
+              points={[
+                ...s.values.map((v, i) => `${x(i)},${y(v)}`),
+                `${x(n - 1)},${y(0)}`,
+                `${x(0)},${y(0)}`,
+              ].join(" ")}
+            />
+          ))}
           {shown.map((s) => (
             <polyline
-              key={s.key}
+              // A new key per range replays the drawing animation.
+              key={`${s.key}-${n}`}
+              className="chart-line"
+              pathLength={1}
               fill="none"
               stroke={s.color}
               strokeWidth={2}

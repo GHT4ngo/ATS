@@ -40,7 +40,7 @@ export async function createOrganization(
     .insert({ name: parsed.data.name, slug });
   if (error) return { error: error.code === "23505" ? "slugTaken" : "generic" };
 
-  revalidatePath("/admin/customers");
+  revalidatePath("/admin/users");
   return { ok: true };
 }
 
@@ -77,7 +77,7 @@ export async function createUser(
   if (error)
     return { error: error.code === "email_exists" ? "emailTaken" : "generic" };
 
-  revalidatePath("/admin/customers");
+  revalidatePath("/admin/users");
   return { ok: true };
 }
 
@@ -110,7 +110,7 @@ export async function setUserActive(
     return { error: "generic" };
   }
 
-  revalidatePath("/admin/customers");
+  revalidatePath("/admin/users");
   return { ok: true };
 }
 

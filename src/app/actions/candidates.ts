@@ -71,12 +71,13 @@ export async function createCandidate(
   const problem = cvProblem(cv);
   if (problem) return { error: problem };
 
-  const { jobIds, fullName, linkedinUrl, ...rest } = parsed.data;
+  const { jobIds, fullName, linkedinUrl, repoUrl, ...rest } = parsed.data;
   const id = randomUUID();
   const { error } = await scope.insertCandidate({
     id,
     full_name: fullName,
     linkedin_url: linkedinUrl,
+    repo_url: repoUrl,
     ...rest,
   });
   if (error)
@@ -116,11 +117,12 @@ export async function updateCandidate(
   const problem = cvProblem(cv);
   if (problem) return { error: problem };
 
-  const { jobIds, fullName, linkedinUrl, ...rest } = parsed.data;
+  const { jobIds, fullName, linkedinUrl, repoUrl, ...rest } = parsed.data;
   const { data: updated, error } = await scope
     .updateCandidate(id, {
       full_name: fullName,
       linkedin_url: linkedinUrl,
+      repo_url: repoUrl,
       ...rest,
     })
     .select("id");

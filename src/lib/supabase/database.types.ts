@@ -51,14 +51,14 @@ isOneToOne: false
                   ]
                 },"applications": {
                   Row: {
-                    "candidate_id": string,"created_at": string,"flagged": boolean,"id": string,"job_id": string,"mismatch": boolean | null,"organization_id": string,"position": number,"rating": number | null,"stage": Database["public"]['Enums']["application_stage"],"stage_changed_at": string,"stage_id": string,"starred": boolean,"updated_at": string
+                    "archived_at": string | null,"candidate_id": string,"created_at": string,"flagged": boolean,"id": string,"job_id": string,"mismatch": boolean | null,"organization_id": string,"position": number,"rating": number | null,"stage": Database["public"]['Enums']["application_stage"],"stage_changed_at": string,"stage_id": string,"starred": boolean,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "candidate_id": string,"created_at"?: string,"flagged"?: boolean,"id"?: string,"job_id": string,"mismatch"?: boolean | null,"organization_id": string,"position"?: number,"rating"?: number | null,"stage"?: Database["public"]['Enums']["application_stage"],"stage_changed_at"?: string,"stage_id": string,"starred"?: boolean,"updated_at"?: string
+                    "archived_at"?: string | null,"candidate_id": string,"created_at"?: string,"flagged"?: boolean,"id"?: string,"job_id": string,"mismatch"?: boolean | null,"organization_id": string,"position"?: number,"rating"?: number | null,"stage"?: Database["public"]['Enums']["application_stage"],"stage_changed_at"?: string,"stage_id": string,"starred"?: boolean,"updated_at"?: string
                   }
                   Update: {
-                    "candidate_id"?: string,"created_at"?: string,"flagged"?: boolean,"id"?: string,"job_id"?: string,"mismatch"?: boolean | null,"organization_id"?: string,"position"?: number,"rating"?: number | null,"stage"?: Database["public"]['Enums']["application_stage"],"stage_changed_at"?: string,"stage_id"?: string,"starred"?: boolean,"updated_at"?: string
+                    "archived_at"?: string | null,"candidate_id"?: string,"created_at"?: string,"flagged"?: boolean,"id"?: string,"job_id"?: string,"mismatch"?: boolean | null,"organization_id"?: string,"position"?: number,"rating"?: number | null,"stage"?: Database["public"]['Enums']["application_stage"],"stage_changed_at"?: string,"stage_id"?: string,"starred"?: boolean,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -89,14 +89,14 @@ isOneToOne: false
                   ]
                 },"candidates": {
                   Row: {
-                    "created_at": string,"created_by": string | null,"cv_path": string | null,"email": string | null,"full_name": string,"id": string,"linkedin_url": string | null,"location": string | null,"notes": string,"organization_id": string,"phone": string | null,"updated_at": string
+                    "created_at": string,"created_by": string | null,"cv_path": string | null,"email": string | null,"full_name": string,"id": string,"linkedin_url": string | null,"location": string | null,"notes": string,"organization_id": string,"phone": string | null,"repo_url": string | null,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"created_by"?: string | null,"cv_path"?: string | null,"email"?: string | null,"full_name": string,"id"?: string,"linkedin_url"?: string | null,"location"?: string | null,"notes"?: string,"organization_id": string,"phone"?: string | null,"updated_at"?: string
+                    "created_at"?: string,"created_by"?: string | null,"cv_path"?: string | null,"email"?: string | null,"full_name": string,"id"?: string,"linkedin_url"?: string | null,"location"?: string | null,"notes"?: string,"organization_id": string,"phone"?: string | null,"repo_url"?: string | null,"updated_at"?: string
                   }
                   Update: {
-                    "created_at"?: string,"created_by"?: string | null,"cv_path"?: string | null,"email"?: string | null,"full_name"?: string,"id"?: string,"linkedin_url"?: string | null,"location"?: string | null,"notes"?: string,"organization_id"?: string,"phone"?: string | null,"updated_at"?: string
+                    "created_at"?: string,"created_by"?: string | null,"cv_path"?: string | null,"email"?: string | null,"full_name"?: string,"id"?: string,"linkedin_url"?: string | null,"location"?: string | null,"notes"?: string,"organization_id"?: string,"phone"?: string | null,"repo_url"?: string | null,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -205,14 +205,14 @@ isOneToOne: false
                   ]
                 },"jobs": {
                   Row: {
-                    "created_at": string,"created_by": string | null,"description": string,"employment_type": Database["public"]['Enums']["employment_type"],"id": string,"location": string,"organization_id": string,"status": Database["public"]['Enums']["job_status"],"title": string,"updated_at": string
+                    "created_at": string,"created_by": string | null,"description": string,"employment_type": Database["public"]['Enums']["employment_type"],"id": string,"location": string,"openings": number,"organization_id": string,"status": Database["public"]['Enums']["job_status"],"title": string,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"created_by"?: string | null,"description"?: string,"employment_type"?: Database["public"]['Enums']["employment_type"],"id"?: string,"location"?: string,"organization_id": string,"status"?: Database["public"]['Enums']["job_status"],"title": string,"updated_at"?: string
+                    "created_at"?: string,"created_by"?: string | null,"description"?: string,"employment_type"?: Database["public"]['Enums']["employment_type"],"id"?: string,"location"?: string,"openings"?: number,"organization_id": string,"status"?: Database["public"]['Enums']["job_status"],"title": string,"updated_at"?: string
                   }
                   Update: {
-                    "created_at"?: string,"created_by"?: string | null,"description"?: string,"employment_type"?: Database["public"]['Enums']["employment_type"],"id"?: string,"location"?: string,"organization_id"?: string,"status"?: Database["public"]['Enums']["job_status"],"title"?: string,"updated_at"?: string
+                    "created_at"?: string,"created_by"?: string | null,"description"?: string,"employment_type"?: Database["public"]['Enums']["employment_type"],"id"?: string,"location"?: string,"openings"?: number,"organization_id"?: string,"status"?: Database["public"]['Enums']["job_status"],"title"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     {

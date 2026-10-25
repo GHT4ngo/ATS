@@ -111,10 +111,10 @@
     "shortcut": "Ctrl K",
     "menu": "Meny",
     "assistant": "Assistent",
-    "customers": "Kunder",
     "previewing": "Kundvy: {name}",
     "previewNote": "Du ser appen som kunden gör. Ändringar loggas på dig som admin.",
-    "exitPreview": "Avsluta kundvy"
+    "exitPreview": "Avsluta kundvy",
+    "users": "Användare"
   },
   "Dashboard": {
     "welcome": "Välkommen, {name}",
@@ -123,7 +123,6 @@
     "openJobs": "Öppna tjänster",
     "activeCandidates": "Aktiva kandidater",
     "funnel": "Pipelinetratt",
-    "toCustomers": "Gå till kunder",
     "range": "Period",
     "rangeShort": "{days} d",
     "rangeDays": "Senaste {days} dagarna",
@@ -138,23 +137,17 @@
     "seriesInterviews": "Intervjuer",
     "funnelNote": "Var alla ansökningar är just nu",
     "attention": "Behöver uppmärksamhet",
-    "reason": {
-      "flagged": "Flaggad",
-      "stuck": "{days} dagar i steget",
-      "unassessed": "Ej bedömd"
-    },
     "attentionEmpty": "Inget som väntar. Snyggt.",
     "andMore": "och {count} till",
     "standouts": "Utmärker sig",
-    "starred": "Stjärnmärkt",
     "score": "AI-poäng {score}",
     "standoutsEmpty": "Stjärnmärk kandidater eller bedöm CV:n så visas de här.",
     "team": "Team",
     "teamNote": "Flyttar de senaste {days} dagarna",
-    "inactive": "Inaktiv",
     "moves": "{count, plural, one {# flytt} other {# flyttar}}",
     "teamEmpty": "Inga användare i organisationen.",
-    "weekOf": "Veckan från {date}"
+    "weekOf": "Veckan från {date}",
+    "toUsers": "Gå till användare"
   },
   "Settings": {
     "title": "Inställningar",
@@ -175,7 +168,7 @@
     "slug": "Identifierare",
     "noOrganizations": "Det finns inga organisationer ännu.",
     "usersTitle": "Användare",
-    "usersDescription": "Alla konton på plattformen.",
+    "usersDescription": "Administratörer först, sedan kundernas organisationer.",
     "newUser": "Ny användare",
     "temporaryPassword": "Tillfälligt lösenord",
     "generatePassword": "Generera",
@@ -193,16 +186,14 @@
     "adminNoOrganization": "Internt",
     "confirmDeactivateTitle": "Inaktivera {name}?",
     "confirmDeactivateBody": "Personen kan inte längre logga in. Du kan återaktivera kontot senare.",
-    "customersTitle": "Kunder",
-    "customersDescription": "Organisationer och deras användare.",
     "addUser": "Lägg till användare",
     "noUsers": "Inga användare än.",
-    "sinceDate": "sedan {date}",
     "openOrganization": "Öppna",
     "userCount": "{count, plural, one {# användare} other {# användare}}",
     "openJobCount": "{count, plural, one {# öppen tjänst} other {# öppna tjänster}}",
     "administrators": "Administratörer",
-    "unassigned": "Utan organisation"
+    "unassigned": "Utan organisation",
+    "actionsFor": "Åtgärder för {name}"
   },
   "Stages": {
     "applied": "Ansökt",
@@ -238,14 +229,23 @@
     },
     "candidates": "Kandidater",
     "candidatesCount": "{count, plural, one {# kandidat} other {# kandidater}}",
-    "emptyHint": "Skapa den första tjänsten med knappen ovan."
+    "emptyHint": "Skapa den första tjänsten med knappen ovan.",
+    "openings": "Platser",
+    "hiredOf": "{hired} av {openings} platser tillsatta",
+    "filledHeading": "Tillsatta tjänster",
+    "filledNote": "Alla platser har fått en anställd.",
+    "reopen": "Öppna igen",
+    "reopenHint": "Lägger till en plats och öppnar tjänsten igen",
+    "allFilled": "Alla tjänster är tillsatta",
+    "allFilledHint": "Skapa en ny tjänst eller öppna en tillsatt igen."
   },
   "Filters": {
     "search": "Sök kandidater",
     "jobs": "Filtrera på tjänst",
     "clear": "Rensa",
     "marks": "Markeringar",
-    "phase": "Fas"
+    "phase": "Fas",
+    "allPhases": "Alla faser"
   },
   "Candidates": {
     "heading": "Kandidater",
@@ -279,18 +279,35 @@
       "created": "Kandidat skapad",
       "updated": "Profilen uppdaterades",
       "notes": "Anteckningarna uppdaterades",
-      "assessed": "{job}: AI-bedömning, poäng {score}"
+      "assessed": "{job}: AI-bedömning, poäng {score}",
+      "archived": "{job}: borttagen från tavlan",
+      "restored": "{job}: tillbaka på tavlan"
     },
-    "daysShort": "{days} d",
     "linkedin": "LinkedIn",
-    "linkedinShort": "in",
     "count": "{count, plural, one {# kandidat} other {# kandidater}}",
     "noMatches": "Inga kandidater matchar filtren",
     "noMatchesHint": "Prova att ta bort ett filter.",
-    "emptyHint": "Lägg till den första kandidaten med knappen ovan."
+    "emptyHint": "Lägg till den första kandidaten med knappen ovan.",
+    "repo": "Kodprofil",
+    "newHeading": "Nya sökande",
+    "newNote": "Ansökningar de senaste {days} dagarna",
+    "noApplicants": "Inga sökande än.",
+    "noJobHeading": "Utan tjänst"
   },
   "Pipeline": {
-    "heading": "Pipeline"
+    "heading": "Pipeline",
+    "remove": "Ta bort {name} från tavlan",
+    "removeHint": "Ta bort från tavlan. Ansökan finns kvar i historiken.",
+    "removed": "{name} togs bort från tavlan",
+    "undo": "Ångra",
+    "fold": "Fäll ihop {name}",
+    "unfold": "Fäll ut {name}",
+    "cardCount": "{count, plural, one {# kandidat} other {# kandidater}}",
+    "hiredOf": "{hired} av {openings} anställda",
+    "noJobs": "Inga tjänster än",
+    "noJobsHint": "Skapa en tjänst under Tjänster, så får den en egen tavla här.",
+    "noMatches": "Inga kort matchar filtren",
+    "noMatchesHint": "Prova att ta bort ett filter."
   },
   "Assessment": {
     "heading": "AI-bedömning",
@@ -373,7 +390,15 @@
       "starred": "Stjärnmärkta",
       "flagged": "Flaggade",
       "mismatch": "Uppfyller inte kraven"
-    },
-    "mismatchShort": "Matchar inte"
+    }
+  },
+  "Signals": {
+    "starred": "Stjärnmärkt",
+    "flagged": "Flaggad, behöver uppmärksamhet",
+    "mismatch": "Uppfyller inte kraven för tjänsten",
+    "unassessed": "CV:t är inte bedömt med AI än",
+    "days": "{days, plural, one {# dag} other {# dagar}} i steget",
+    "stuck": "Har stått still i {days} dagar",
+    "removal": "Tas bort från tavlan om {days, plural, one {# dag} other {# dagar}}"
   }
 }

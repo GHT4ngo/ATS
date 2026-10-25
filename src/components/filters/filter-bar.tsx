@@ -3,34 +3,55 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Flag, Star, X } from "lucide-react";
+import { Ban, Briefcase, Flag, Layers, Search, Star, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { STAGES } from "@/lib/data/schemas";
 import { MARKS, parseMarks, type Mark } from "@/lib/marks";
 import { PHASE_STYLE } from "@/lib/phase-style";
 import { cn } from "@/lib/utils";
 
-const MARK_STYLE: Record<Mark, { icon: typeof Star; on: string }> = {
+const MARK_STYLE: Record<
+  Mark,
+  { icon: typeof Star; on: string; filled: boolean }
+> = {
   starred: {
     icon: Star,
-    on: "border-amber-300 bg-amber-100 text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200",
+    on: "bg-amber-500/10 text-amber-600 ring-amber-500/30 dark:text-amber-400",
+    filled: true,
   },
   flagged: {
     icon: Flag,
-    on: "border-rose-300 bg-rose-100 text-rose-900 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-200",
+    on: "bg-rose-500/10 text-rose-600 ring-rose-500/30 dark:text-rose-400",
+    filled: true,
   },
   mismatch: {
-    icon: X,
-    on: "border-rose-300 bg-rose-100 text-rose-900 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-200",
+    icon: Ban,
+    on: "bg-rose-500/10 text-rose-600 ring-rose-500/30 dark:text-rose-400",
+    filled: false,
   },
 };
 
+const ICON_BUTTON =
+  "text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-ring relative inline-flex size-8 items-center justify-center rounded-md ring-1 ring-transparent transition-colors outline-none ring-inset focus-visible:ring-2";
+
 /**
- * Name search plus optional filters on jobs, marks and phase. They all live
- * in the URL (`q`, `jobs` and `marks` as comma separated lists, `phase`) so a
- * filtered view can be shared. The open candidate (`candidate`) is kept when
- * filters change.
+ * A search field and a row of icon filters: jobs and phase open a menu, marks
+ * toggle. They all live in the URL (`q`, `jobs` and `marks` as comma
+ * separated lists, `phase`) so a filtered view can be shared. The open
+ * candidate (`candidate`) is kept when filters change.
  */
 export function FilterBar({
   jobs,
@@ -81,111 +102,152 @@ export function FilterBar({
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   }
 
+  // The trigger element goes in render and its content in children, so the
+  // tooltip and the menu share one button.
+  const tip = (
+    label: string,
+    trigger: React.ReactElement,
+    children: React.ReactNode,
+  ) => (
+    <Tooltip>
+      <TooltipTrigger render={trigger}>{children}</TooltipTrigger>
+      <TooltipContent>{label}</TooltipContent>
+    </Tooltip>
+  );
+
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <Input
-        type="search"
-        aria-label={t("search")}
-        placeholder={t("search")}
-        value={q}
-        className="w-full sm:w-56"
-        onChange={(e) => {
-          setQ(e.target.value);
-          clearTimeout(timer.current);
-          timer.current = setTimeout(
-            () => update("q", e.target.value.trim()),
-            250,
-          );
-        }}
-      />
+    <div className="bg-card/70 ring-foreground/[0.07] elevated flex flex-wrap items-center gap-1 rounded-xl p-1 ring-1">
+      <label className="relative flex min-w-0 flex-1 items-center sm:w-56 sm:flex-none">
+        <Search
+          className="text-muted-foreground pointer-events-none absolute left-2.5 size-4"
+          aria-hidden
+        />
+        <input
+          type="search"
+          aria-label={t("search")}
+          placeholder={t("search")}
+          value={q}
+          className="placeholder:text-muted-foreground focus-visible:ring-ring h-8 w-full rounded-md bg-transparent pr-2 pl-8 text-sm outline-none focus-visible:ring-2"
+          onChange={(e) => {
+            setQ(e.target.value);
+            clearTimeout(timer.current);
+            timer.current = setTimeout(
+              () => update("q", e.target.value.trim()),
+              250,
+            );
+          }}
+        />
+      </label>
+      <span className="bg-border mx-1 hidden h-5 w-px sm:block" aria-hidden />
+
       {jobs && jobs.length > 0 && (
-        <div
-          role="group"
-          aria-label={t("jobs")}
-          className="flex flex-wrap items-center gap-1.5"
-        >
-          {jobs.map((job) => {
-            const on = selected.has(job.id);
-            return (
-              <Button
+        <DropdownMenu>
+          {tip(
+            t("jobs"),
+            <DropdownMenuTrigger
+              aria-label={t("jobs")}
+              className={cn(
+                ICON_BUTTON,
+                selected.size > 0 &&
+                  "bg-primary/10 text-primary ring-primary/30",
+              )}
+            />,
+            <>
+              <Briefcase className="size-4" />
+              {selected.size > 0 && (
+                <span className="bg-primary text-primary-foreground absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full text-[10px] font-semibold">
+                  {selected.size}
+                </span>
+              )}
+            </>,
+          )}
+          <DropdownMenuContent align="start" className="w-64">
+            {jobs.map((job) => (
+              <DropdownMenuCheckboxItem
                 key={job.id}
-                type="button"
-                size="sm"
-                variant={on ? "default" : "outline"}
-                aria-pressed={on}
-                className={cn("max-w-48 truncate")}
-                onClick={() => toggle("jobs", selected, job.id)}
+                checked={selected.has(job.id)}
+                onCheckedChange={() => toggle("jobs", selected, job.id)}
+                closeOnClick={false}
               >
-                {job.title}
-              </Button>
-            );
-          })}
-        </div>
+                <span className="truncate">{job.title}</span>
+              </DropdownMenuCheckboxItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       )}
-      {marks && (
-        <div
-          role="group"
-          aria-label={t("marks")}
-          className="flex flex-wrap items-center gap-1.5"
-        >
-          {MARKS.map((mark) => {
-            const on = selectedMarks.has(mark);
-            const { icon: Icon, on: onStyle } = MARK_STYLE[mark];
-            return (
-              <Button
-                key={mark}
-                type="button"
-                size="sm"
-                variant="outline"
-                aria-pressed={on}
-                className={cn(on && onStyle)}
-                onClick={() => toggle("marks", selectedMarks, mark)}
-              >
-                <Icon
-                  className={cn(
-                    "size-3.5",
-                    on && mark !== "mismatch" && "fill-current",
-                  )}
-                />
-                {m(`filter.${mark}`)}
-              </Button>
-            );
-          })}
-        </div>
-      )}
+
       {phases && (
-        <div
-          role="group"
-          aria-label={t("phase")}
-          className="flex flex-wrap items-center gap-1.5"
-        >
-          {STAGES.map((p) => {
-            const on = phase === p;
-            return (
-              <Button
-                key={p}
-                type="button"
-                size="sm"
-                variant="outline"
-                aria-pressed={on}
-                className={cn(
-                  on && PHASE_STYLE[p].soft,
-                  on && "border-transparent",
-                )}
-                onClick={() => update("phase", on ? "" : p)}
-              >
-                <span
-                  className={cn("size-2 rounded-full", PHASE_STYLE[p].dot)}
-                  aria-hidden
-                />
-                {st(p)}
-              </Button>
-            );
-          })}
-        </div>
+        <DropdownMenu>
+          {tip(
+            t("phase"),
+            <DropdownMenuTrigger
+              aria-label={t("phase")}
+              className={cn(
+                ICON_BUTTON,
+                phase &&
+                  cn(
+                    PHASE_STYLE[phase as keyof typeof PHASE_STYLE]?.soft,
+                    "ring-1",
+                  ),
+              )}
+            />,
+            <Layers className="size-4" />,
+          )}
+          <DropdownMenuContent align="start" className="w-48">
+            <DropdownMenuRadioGroup
+              value={phase}
+              onValueChange={(v) => update("phase", String(v))}
+            >
+              <DropdownMenuRadioItem value="">
+                <span className="size-2" aria-hidden />
+                {t("allPhases")}
+              </DropdownMenuRadioItem>
+              {STAGES.map((p) => (
+                <DropdownMenuRadioItem key={p} value={p}>
+                  <span
+                    className={cn("size-2 rounded-full", PHASE_STYLE[p].dot)}
+                    aria-hidden
+                  />
+                  {st(p)}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
       )}
+
+      {marks &&
+        MARKS.map((mark) => {
+          const on = selectedMarks.has(mark);
+          const { icon: Icon, on: onStyle, filled } = MARK_STYLE[mark];
+          return (
+            <span key={mark}>
+              {tip(
+                m(`filter.${mark}`),
+                <button
+                  type="button"
+                  aria-label={m(`filter.${mark}`)}
+                  aria-pressed={on}
+                  className={cn(ICON_BUTTON, on && onStyle)}
+                  onClick={() => toggle("marks", selectedMarks, mark)}
+                />,
+                <Icon
+                  className={cn("size-4", on && filled && "fill-current")}
+                />,
+              )}
+            </span>
+          );
+        })}
+
       {filtered && (
-        <Button type="button" size="sm" variant="ghost" onClick={clearAll}>
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          className="text-muted-foreground"
+          onClick={clearAll}
+        >
+          <X className="size-3.5" />
           {t("clear")}
         </Button>
       )}

@@ -29,6 +29,7 @@ export type JobFormValues = {
   location: string;
   employment_type: string;
   status: string;
+  openings: number;
 };
 
 export function JobFormDialog({ job }: { job?: JobFormValues }) {
@@ -73,14 +74,29 @@ export function JobFormDialog({ job }: { job?: JobFormValues }) {
               defaultValue={job?.title}
             />
           </div>
-          <div className="grid gap-2">
-            <Label htmlFor="job-location">{t("location")}</Label>
-            <Input
-              id="job-location"
-              name="location"
-              maxLength={200}
-              defaultValue={job?.location}
-            />
+          <div className="grid grid-cols-[1fr_7rem] gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="job-location">{t("location")}</Label>
+              <Input
+                id="job-location"
+                name="location"
+                maxLength={200}
+                defaultValue={job?.location}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="job-openings">{t("openings")}</Label>
+              <Input
+                id="job-openings"
+                name="openings"
+                type="number"
+                inputMode="numeric"
+                min={1}
+                max={999}
+                required
+                defaultValue={job?.openings ?? 1}
+              />
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">

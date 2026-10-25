@@ -1,26 +1,36 @@
 import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
-import { Flag, Star } from "lucide-react";
+import { Inbox, UserRound } from "lucide-react";
 import { z } from "zod";
 import { ScoreBadge } from "@/components/assessments/score-badge";
 import { CandidateDrawerLoader } from "@/components/candidates/candidate-drawer-loader";
 import { NewCandidateDialog } from "@/components/candidates/new-candidate-dialog";
 import { EmptyState } from "@/components/empty-state";
 import { FilterBar } from "@/components/filters/filter-bar";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { FoldSection } from "@/components/fold-section";
+import { ProfileLinks } from "@/components/profile-links";
+import { Signal } from "@/components/signals";
+import { STUCK_DAYS, daysSince, isActive } from "@/lib/data/dashboard";
 import { STAGES, type Stage } from "@/lib/data/schemas";
 import { getScope } from "@/lib/data/scope";
 import { latestScores, scoreKey } from "@/lib/data/scores";
 import { parseMarks } from "@/lib/marks";
 import { PHASE_STYLE, isMismatch } from "@/lib/phase-style";
 import { cn, initials } from "@/lib/utils";
+
+/** Applications this new show in the list at the top. */
+const NEW_DAYS = 7;
+const STORAGE_KEY = "ats.candidates.sections";
+
+/** Hired at the top, then down the process, with rejected last. */
+const ORDER: Stage[] = [
+  "hired",
+  "offer",
+  "interview",
+  "screening",
+  "applied",
+  "rejected",
+];
 
 export default async function CandidatesPage({
   searchParams,
@@ -36,9 +46,7 @@ export default async function CandidatesPage({
   const params = await searchParams;
   const { q, candidate } = params;
   const t = await getTranslations("Candidates");
-  const c = await getTranslations("Common");
   const s = await getTranslations("Stages");
-  const m = await getTranslations("Marks");
   const ai = await getTranslations("Assessment");
   const format = await getFormatter();
   const scope = await getScope();
@@ -63,35 +71,71 @@ export default async function CandidatesPage({
       scope.jobs().order("title"),
       scope
         .applications()
-        .select("id, candidate_id, job_id, stage, starred, flagged, mismatch"),
+        .select(
+          "id, candidate_id, job_id, stage, stage_changed_at, created_at, starred, flagged, mismatch",
+        ),
       latestScores(scope),
     ]);
+  const now = Date.now();
+  const byId = new Map((candidates ?? []).map((c) => [c.id, c]));
   const jobTitle = new Map((jobs ?? []).map((j) => [j.id, j.title]));
 
-  type App = NonNullable<typeof apps>[number] & {
+  type Row = NonNullable<typeof apps>[number] & {
+    cand: NonNullable<typeof candidates>[number];
     score: number | null;
     mismatch: boolean;
+    days: number;
   };
-  const appsOf = new Map<string, App[]>();
-  for (const a of apps ?? []) {
+  const rows: Row[] = (apps ?? []).flatMap((a) => {
+    const cand = byId.get(a.candidate_id);
+    if (!cand) return [];
     const appScore = score.get(scoreKey(a.candidate_id, a.job_id)) ?? null;
-    const row = {
-      ...a,
-      score: appScore,
-      mismatch: isMismatch(a.mismatch, appScore),
-    };
-    appsOf.set(a.candidate_id, [...(appsOf.get(a.candidate_id) ?? []), row]);
-  }
-  const matches = (a: App) =>
-    (!jobFilter.size || jobFilter.has(a.job_id)) &&
-    (!phase || a.stage === phase) &&
-    (!marks.has("starred") || a.starred) &&
-    (!marks.has("flagged") || a.flagged) &&
-    (!marks.has("mismatch") || a.mismatch);
+    return [
+      {
+        ...a,
+        cand,
+        score: appScore,
+        mismatch: isMismatch(a.mismatch, appScore),
+        days: daysSince(a.stage_changed_at, now),
+      },
+    ];
+  });
+  const matches = (r: Row) =>
+    (!jobFilter.size || jobFilter.has(r.job_id)) &&
+    (!phase || r.stage === phase) &&
+    (!marks.has("starred") || r.starred) &&
+    (!marks.has("flagged") || r.flagged) &&
+    (!marks.has("mismatch") || r.mismatch);
   const filtering = jobFilter.size > 0 || marks.size > 0 || phase !== null;
-  const list = (candidates ?? []).filter(
-    (cand) => !filtering || (appsOf.get(cand.id) ?? []).some(matches),
-  );
+  const shown = rows
+    .filter(matches)
+    .sort(
+      (a, b) =>
+        ORDER.indexOf(a.stage) - ORDER.indexOf(b.stage) ||
+        a.cand.full_name.localeCompare(b.cand.full_name, "sv"),
+    );
+
+  const fresh = shown
+    .filter((r) => daysSince(r.created_at, now) < NEW_DAYS)
+    .sort((a, b) => b.created_at.localeCompare(a.created_at));
+  const byJob = new Map<string, Row[]>();
+  for (const r of shown) {
+    const list = byJob.get(r.job_id);
+    if (list) list.push(r);
+    else byJob.set(r.job_id, [r]);
+  }
+  const perJob = (jobs ?? [])
+    .map((job) => ({ job, rows: byJob.get(job.id) ?? [] }))
+    .filter((g) => g.rows.length || (!filtering && !term));
+  // Candidates with no application yet; hidden while filtering on jobs or marks.
+  const withApps = new Set(rows.map((r) => r.candidate_id));
+  const loose = filtering
+    ? []
+    : (candidates ?? []).filter((c) => !withApps.has(c.id));
+  const count = new Set([
+    ...shown.map((r) => r.candidate_id),
+    ...loose.map((c) => c.id),
+  ]).size;
 
   const drawerHref = (id: string) => {
     const next = new URLSearchParams(
@@ -104,15 +148,156 @@ export default async function CandidatesPage({
     return `/candidates?${next}`;
   };
 
+  const person = (
+    cand: { id: string; full_name: string; email: string | null },
+    tone: string,
+    sub?: string,
+  ) => (
+    <Link
+      href={drawerHref(cand.id)}
+      scroll={false}
+      className="flex min-w-0 items-center gap-3"
+    >
+      <span
+        className={cn(
+          "flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
+          tone,
+        )}
+        aria-hidden
+      >
+        {initials(cand.full_name)}
+      </span>
+      <span className="min-w-0">
+        <span className="block truncate font-medium hover:underline">
+          {cand.full_name}
+        </span>
+        <span className="text-muted-foreground block truncate text-xs">
+          {sub ?? cand.email ?? ""}
+        </span>
+      </span>
+    </Link>
+  );
+
+  const signals = (r: Row) => (
+    <span className="flex items-center gap-2.5">
+      {r.starred && <Signal kind="starred" />}
+      {r.flagged && <Signal kind="flagged" />}
+      {r.mismatch && <Signal kind="mismatch" />}
+      {r.score === null &&
+        r.cand.cv_path &&
+        (r.stage === "applied" || r.stage === "screening") && (
+          <Signal kind="unassessed" />
+        )}
+      {isActive(r.stage) && (
+        <Signal kind={r.days > STUCK_DAYS ? "stuck" : "days"} days={r.days} />
+      )}
+    </span>
+  );
+
+  const phaseChip = (stage: Stage) => (
+    <span
+      className={cn(
+        "inline-flex h-5 items-center gap-1.5 rounded-full px-2 text-xs font-medium whitespace-nowrap",
+        PHASE_STYLE[stage].soft,
+      )}
+    >
+      <span
+        className={cn("size-1.5 rounded-full", PHASE_STYLE[stage].dot)}
+        aria-hidden
+      />
+      {s(stage)}
+    </span>
+  );
+
+  const list = (items: Row[], withJob: boolean) => (
+    <ul className="divide-border/60 divide-y">
+      {items.map((r) => (
+        <li
+          key={r.id}
+          className={cn(
+            "hover:bg-muted/40 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 rounded-lg px-2 py-2 text-sm md:grid-cols-[minmax(0,1.4fr)_7.5rem_minmax(0,1fr)_4rem] lg:grid-cols-[minmax(0,1.4fr)_7.5rem_minmax(0,1fr)_9.5rem]",
+            r.stage === "rejected" && "opacity-55 grayscale-[0.6]",
+            r.mismatch && r.stage !== "rejected" && "bg-rose-500/[0.05]",
+          )}
+        >
+          {person(
+            r.cand,
+            r.mismatch
+              ? "bg-rose-500/10 text-rose-700 ring-1 ring-rose-500/20 ring-inset dark:text-rose-300"
+              : PHASE_STYLE[r.stage].soft,
+            withJob ? jobTitle.get(r.job_id) : undefined,
+          )}
+          <span className="justify-self-end md:justify-self-start">
+            {phaseChip(r.stage)}
+          </span>
+          <span className="hidden items-center gap-3 md:flex">
+            {r.score !== null && (
+              <ScoreBadge
+                score={r.score}
+                label={ai("scoreLabel", { score: r.score })}
+              />
+            )}
+            {signals(r)}
+          </span>
+          <span className="col-span-2 flex items-center gap-3 md:col-span-1 md:justify-end">
+            <span className="flex items-center gap-3 md:hidden">
+              {r.score !== null && (
+                <ScoreBadge
+                  score={r.score}
+                  label={ai("scoreLabel", { score: r.score })}
+                />
+              )}
+              {signals(r)}
+            </span>
+            <ProfileLinks
+              linkedinUrl={r.cand.linkedin_url}
+              repoUrl={r.cand.repo_url}
+            />
+            <span className="text-muted-foreground hidden w-20 text-right text-xs lg:inline">
+              {format.dateTime(new Date(r.created_at), {
+                day: "numeric",
+                month: "short",
+              })}
+            </span>
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+
+  const phaseCounts = (items: Row[]) => {
+    const count = new Map<Stage, number>();
+    for (const r of items) count.set(r.stage, (count.get(r.stage) ?? 0) + 1);
+    return (
+      <span className="hidden items-center gap-1 sm:flex">
+        {ORDER.map((st) => {
+          const n = count.get(st) ?? 0;
+          return n ? (
+            <span
+              key={st}
+              title={`${s(st)}: ${n}`}
+              className={cn(
+                "inline-flex min-w-6 justify-center rounded-full px-1.5 text-xs leading-5 font-medium tabular-nums",
+                PHASE_STYLE[st].soft,
+              )}
+            >
+              {n}
+            </span>
+          ) : null;
+        })}
+      </span>
+    );
+  };
+
   return (
-    <div className="mx-auto grid w-full max-w-7xl gap-6">
+    <div className="mx-auto grid w-full max-w-7xl gap-4">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">
             {t("heading")}
           </h1>
           <p className="text-muted-foreground text-sm">
-            {t("count", { count: list.length })}
+            {t("count", { count })}
           </p>
         </div>
         <NewCandidateDialog
@@ -124,118 +309,72 @@ export default async function CandidatesPage({
         marks
         phases
       />
-      {list.length ? (
-        <div className="bg-card overflow-hidden rounded-xl border">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/50">
-                <TableHead>{c("name")}</TableHead>
-                <TableHead>{t("jobs")}</TableHead>
-                <TableHead className="hidden md:table-cell">
-                  {t("location")}
-                </TableHead>
-                <TableHead className="hidden lg:table-cell">
-                  {c("created")}
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {list.map((cand) => {
-                const candApps = appsOf.get(cand.id) ?? [];
-                const mismatchAll =
-                  candApps.length > 0 && candApps.every((a) => a.mismatch);
-                return (
-                  <TableRow
-                    key={cand.id}
-                    className={cn(
-                      mismatchAll && "bg-rose-50/60 dark:bg-rose-950/20",
-                    )}
-                  >
-                    <TableCell>
-                      <Link
-                        href={drawerHref(cand.id)}
-                        scroll={false}
-                        className="flex items-center gap-3"
-                      >
-                        <span
-                          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-violet-100 text-xs font-semibold text-violet-800 dark:bg-violet-950 dark:text-violet-200"
-                          aria-hidden
-                        >
-                          {initials(cand.full_name)}
-                        </span>
-                        <span className="min-w-0">
-                          <span className="flex items-center gap-1 font-medium hover:underline">
-                            {cand.full_name}
-                            {candApps.some((a) => a.starred) && (
-                              <Star
-                                className="size-3.5 fill-amber-400 text-amber-500"
-                                aria-label={m("starred")}
-                              />
-                            )}
-                            {candApps.some((a) => a.flagged) && (
-                              <Flag
-                                className="size-3.5 fill-current text-rose-600 dark:text-rose-400"
-                                aria-label={m("flagged")}
-                              />
-                            )}
-                          </span>
-                          {cand.email && (
-                            <span className="text-muted-foreground block max-w-56 truncate text-xs">
-                              {cand.email}
-                            </span>
-                          )}
-                        </span>
-                      </Link>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1.5">
-                        {candApps.map((a) => (
-                          <span
-                            key={a.id}
-                            title={`${jobTitle.get(a.job_id)} · ${s(a.stage)}`}
-                            className={cn(
-                              "inline-flex h-6 max-w-56 items-center gap-1.5 rounded-full px-2 text-xs",
-                              PHASE_STYLE[a.stage].soft,
-                              a.mismatch &&
-                                "ring-1 ring-rose-400 dark:ring-rose-700",
-                            )}
-                          >
-                            <span
-                              className={cn(
-                                "size-1.5 shrink-0 rounded-full",
-                                PHASE_STYLE[a.stage].dot,
-                              )}
-                              aria-hidden
-                            />
-                            <span className="truncate">
-                              {jobTitle.get(a.job_id)}
-                            </span>
-                            <span className="opacity-70">{s(a.stage)}</span>
-                            {a.score !== null && (
-                              <ScoreBadge
-                                score={a.score}
-                                label={ai("scoreLabel", { score: a.score })}
-                                className="h-4 px-1.5"
-                              />
-                            )}
-                          </span>
-                        ))}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground hidden md:table-cell">
-                      {cand.location ?? ""}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground hidden lg:table-cell">
-                      {format.dateTime(new Date(cand.created_at), {
-                        dateStyle: "medium",
-                      })}
-                    </TableCell>
-                  </TableRow>
-                );
+
+      {shown.length || loose.length ? (
+        <>
+          {fresh.length > 0 && (
+            <FoldSection
+              id="new"
+              storageKey={STORAGE_KEY}
+              title={t("newHeading")}
+              meta={t("newNote", { days: NEW_DAYS })}
+              icon={
+                <span className="flex size-8 items-center justify-center rounded-lg bg-sky-500/10 text-sky-600 ring-1 ring-sky-500/20 dark:text-sky-300">
+                  <Inbox className="size-4" />
+                </span>
+              }
+              aside={
+                <span className="rounded-full bg-sky-500/10 px-2 text-xs leading-5 font-medium text-sky-700 tabular-nums ring-1 ring-sky-500/20 ring-inset dark:text-sky-300">
+                  {fresh.length}
+                </span>
+              }
+              className="bg-gradient-to-b from-sky-500/[0.05] to-transparent"
+            >
+              {list(fresh, true)}
+            </FoldSection>
+          )}
+          {perJob.map(({ job, rows: items }) => (
+            <FoldSection
+              key={job.id}
+              id={job.id}
+              storageKey={STORAGE_KEY}
+              title={job.title}
+              meta={t("count", {
+                count: new Set(items.map((r) => r.candidate_id)).size,
               })}
-            </TableBody>
-          </Table>
-        </div>
+              aside={phaseCounts(items)}
+            >
+              {items.length ? (
+                list(items, false)
+              ) : (
+                <p className="text-muted-foreground px-2 py-3 text-sm">
+                  {t("noApplicants")}
+                </p>
+              )}
+            </FoldSection>
+          ))}
+          {loose.length > 0 && (
+            <FoldSection
+              id="none"
+              storageKey={STORAGE_KEY}
+              title={t("noJobHeading")}
+              meta={t("count", { count: loose.length })}
+              icon={
+                <span className="bg-muted text-muted-foreground flex size-8 items-center justify-center rounded-lg">
+                  <UserRound className="size-4" />
+                </span>
+              }
+            >
+              <ul className="divide-border/60 divide-y">
+                {loose.map((cand) => (
+                  <li key={cand.id} className="px-2 py-2 text-sm">
+                    {person(cand, "bg-muted text-muted-foreground")}
+                  </li>
+                ))}
+              </ul>
+            </FoldSection>
+          )}
+        </>
       ) : (
         <EmptyState
           title={filtering || term ? t("noMatches") : t("empty")}

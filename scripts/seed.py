@@ -37,6 +37,7 @@ USERS = [
 
 JOBS = {
     "frontend": {
+        "openings": 2,
         "title": "Frontendutvecklare",
         "location": "Stockholm (hybrid)",
         "employment_type": "full_time",
@@ -49,6 +50,7 @@ JOBS = {
         ),
     },
     "backend": {
+        "openings": 2,
         "title": "Backendutvecklare",
         "location": "Stockholm",
         "employment_type": "full_time",
@@ -61,6 +63,7 @@ JOBS = {
         ),
     },
     "designer": {
+        "openings": 1,
         "title": "Produktdesigner",
         "location": "Stockholm (hybrid)",
         "employment_type": "full_time",
@@ -72,6 +75,7 @@ JOBS = {
         ),
     },
     "csm": {
+        "openings": 2,
         "title": "Customer Success Manager",
         "location": "Stockholm",
         "employment_type": "full_time",
@@ -101,6 +105,20 @@ MARKS = {
     "Maja Svensson": {"starred": True},
     "Fredrik Lund": {"flagged": True},
     "Ida Wallin": {"flagged": True},
+    # Short of the requirements: they stay in Applied, marked, not rejected
+    "Viktor Nyström": {"mismatch": True},
+    "Daniel Kovács": {"mismatch": True},
+    "Sofia Ekström": {"mismatch": True},
+}
+# Code profiles for some of the developers
+REPOS = {
+    "Elin Sandberg": "https://github.com/elinsandberg",
+    "Oskar Holm": "https://github.com/oskarholm",
+    "Linnea Berg": "https://github.com/linneaberg",
+    "Karin Åberg": "https://gitlab.com/karinaberg",
+    "Mohammed Rahimi": "https://github.com/mrahimi",
+    "Fredrik Lund": "https://github.com/fredriklund",
+    "Petra Lindholm": "https://github.com/petralindholm",
 }
 
 CANDIDATES = [
@@ -168,7 +186,7 @@ CANDIDATES = [
         "Supporttekniker, IT Partner",
         "Datavetenskap, Mälardalens universitet",
         "danielkovac",
-        [("frontend", "rejected", 9)],
+        [("frontend", "applied", 9)],
     ),
     (
         "Karin Åberg",
@@ -278,7 +296,7 @@ CANDIDATES = [
         "Webbdesigner, Kommunikationsbyrån",
         "Medieteknik, Södertörns högskola",
         "norakarlsson",
-        [("designer", "rejected", 7)],
+        [("designer", "rejected", 3)],
     ),
     (
         "Emma Johansson",
@@ -543,6 +561,7 @@ def seed(db: Client, password: str) -> None:
                     "created_by": recruiter,
                     "created_at": created.isoformat(),
                     "linkedin_url": f"https://www.linkedin.com/in/{linkedin}" if linkedin else None,
+                    "repo_url": REPOS.get(name),
                     "notes": "",
                 }
             )

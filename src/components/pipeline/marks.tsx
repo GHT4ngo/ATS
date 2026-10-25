@@ -25,7 +25,13 @@ export function MarkButtons({
   starred,
   flagged,
   size = "sm",
-}: Marks & { applicationId: string; size?: "sm" | "md" }) {
+  quiet = false,
+}: Marks & {
+  applicationId: string;
+  size?: "sm" | "md";
+  /** On a card: unset marks only show on hover or focus, where hover exists. */
+  quiet?: boolean;
+}) {
   const t = useTranslations("Marks");
   const e = useTranslations("Errors");
   const [marks, setMarks] = useState<Marks>({ starred, flagged });
@@ -57,9 +63,12 @@ export function MarkButtons({
 
   const icon = size === "sm" ? "size-3.5" : "size-4";
   const button = cn(
-    "focus-visible:ring-ring inline-flex items-center justify-center rounded-md outline-none focus-visible:ring-2",
-    size === "sm" ? "size-6" : "size-8 border",
+    "focus-visible:ring-ring inline-flex items-center justify-center rounded-md transition-opacity outline-none focus-visible:ring-2",
+    size === "sm" ? "size-5" : "size-8 border",
   );
+  const hidden =
+    quiet &&
+    "[@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover/card:opacity-100 [@media(hover:hover)]:focus-visible:opacity-100";
 
   return (
     <span className="flex items-center gap-0.5">
@@ -72,7 +81,7 @@ export function MarkButtons({
           button,
           marks.starred
             ? "text-amber-500"
-            : "text-muted-foreground/60 hover:text-amber-500",
+            : ["text-muted-foreground/60 hover:text-amber-500", hidden],
         )}
         onPointerDown={(ev) => ev.stopPropagation()}
         onKeyDown={(ev) => ev.stopPropagation()}
@@ -90,7 +99,7 @@ export function MarkButtons({
           button,
           marks.flagged
             ? "text-rose-600 dark:text-rose-400"
-            : "text-muted-foreground/60 hover:text-rose-600",
+            : ["text-muted-foreground/60 hover:text-rose-600", hidden],
         )}
         onPointerDown={(ev) => ev.stopPropagation()}
         onKeyDown={(ev) => ev.stopPropagation()}
@@ -128,7 +137,7 @@ export function MismatchMenu({
         className={cn(
           "inline-flex h-6 items-center gap-1 rounded-full px-2 text-xs font-medium",
           effective
-            ? "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-200"
+            ? "bg-rose-500/10 text-rose-700 ring-1 ring-rose-500/20 ring-inset dark:text-rose-300"
             : "bg-muted text-muted-foreground",
         )}
       >

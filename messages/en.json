@@ -111,10 +111,10 @@
     "shortcut": "Ctrl K",
     "menu": "Menu",
     "assistant": "Assistant",
-    "customers": "Customers",
     "previewing": "Customer preview: {name}",
     "previewNote": "You see the app as the customer does. Changes are logged under you as admin.",
-    "exitPreview": "Exit preview"
+    "exitPreview": "Exit preview",
+    "users": "Users"
   },
   "Dashboard": {
     "welcome": "Welcome, {name}",
@@ -123,7 +123,6 @@
     "openJobs": "Open jobs",
     "activeCandidates": "Active candidates",
     "funnel": "Pipeline funnel",
-    "toCustomers": "Go to customers",
     "range": "Period",
     "rangeShort": "{days} d",
     "rangeDays": "Last {days} days",
@@ -138,23 +137,17 @@
     "seriesInterviews": "Interviews",
     "funnelNote": "Where every application is right now",
     "attention": "Needs attention",
-    "reason": {
-      "flagged": "Flagged",
-      "stuck": "{days} days in stage",
-      "unassessed": "Not assessed"
-    },
     "attentionEmpty": "Nothing waiting. Nice work.",
     "andMore": "and {count} more",
     "standouts": "Standouts",
-    "starred": "Starred",
     "score": "AI score {score}",
     "standoutsEmpty": "Star candidates or assess CVs and they show up here.",
     "team": "Team",
     "teamNote": "Moves in the last {days} days",
-    "inactive": "Inactive",
     "moves": "{count, plural, one {# move} other {# moves}}",
     "teamEmpty": "No users in this organization.",
-    "weekOf": "Week of {date}"
+    "weekOf": "Week of {date}",
+    "toUsers": "Go to users"
   },
   "Settings": {
     "title": "Settings",
@@ -175,7 +168,7 @@
     "slug": "Identifier",
     "noOrganizations": "No organizations yet.",
     "usersTitle": "Users",
-    "usersDescription": "Every account on the platform.",
+    "usersDescription": "Administrators first, then the customer organizations.",
     "newUser": "New user",
     "temporaryPassword": "Temporary password",
     "generatePassword": "Generate",
@@ -193,16 +186,14 @@
     "adminNoOrganization": "Internal",
     "confirmDeactivateTitle": "Deactivate {name}?",
     "confirmDeactivateBody": "They will no longer be able to sign in. You can reactivate them later.",
-    "customersTitle": "Customers",
-    "customersDescription": "Organizations and their users.",
     "addUser": "Add user",
     "noUsers": "No users yet.",
-    "sinceDate": "since {date}",
     "openOrganization": "Open",
     "userCount": "{count, plural, one {# user} other {# users}}",
     "openJobCount": "{count, plural, one {# open job} other {# open jobs}}",
     "administrators": "Administrators",
-    "unassigned": "Without an organization"
+    "unassigned": "Without an organization",
+    "actionsFor": "Actions for {name}"
   },
   "Stages": {
     "applied": "Applied",
@@ -238,14 +229,23 @@
     },
     "candidates": "Candidates",
     "candidatesCount": "{count, plural, one {# candidate} other {# candidates}}",
-    "emptyHint": "Create the first job with the button above."
+    "emptyHint": "Create the first job with the button above.",
+    "openings": "Openings",
+    "hiredOf": "{hired} of {openings} openings filled",
+    "filledHeading": "Filled jobs",
+    "filledNote": "Every opening has been filled.",
+    "reopen": "Reopen",
+    "reopenHint": "Adds an opening and opens the job again",
+    "allFilled": "Every job is filled",
+    "allFilledHint": "Create a new job or reopen a filled one."
   },
   "Filters": {
     "search": "Search candidates",
     "jobs": "Filter by job",
     "clear": "Clear",
     "marks": "Marks",
-    "phase": "Phase"
+    "phase": "Phase",
+    "allPhases": "All phases"
   },
   "Candidates": {
     "heading": "Candidates",
@@ -279,18 +279,35 @@
       "created": "Candidate created",
       "updated": "Profile updated",
       "notes": "Notes updated",
-      "assessed": "{job}: AI assessment, score {score}"
+      "assessed": "{job}: AI assessment, score {score}",
+      "archived": "{job}: removed from the board",
+      "restored": "{job}: back on the board"
     },
-    "daysShort": "{days}d",
     "linkedin": "LinkedIn",
-    "linkedinShort": "in",
     "count": "{count, plural, one {# candidate} other {# candidates}}",
     "noMatches": "No candidates match the filters",
     "noMatchesHint": "Try removing a filter.",
-    "emptyHint": "Add the first candidate with the button above."
+    "emptyHint": "Add the first candidate with the button above.",
+    "repo": "Code profile",
+    "newHeading": "New applicants",
+    "newNote": "Applications from the last {days} days",
+    "noApplicants": "No applicants yet.",
+    "noJobHeading": "Without a job"
   },
   "Pipeline": {
-    "heading": "Pipeline"
+    "heading": "Pipeline",
+    "remove": "Remove {name} from the board",
+    "removeHint": "Remove from the board. The application stays in the history.",
+    "removed": "{name} was removed from the board",
+    "undo": "Undo",
+    "fold": "Fold {name}",
+    "unfold": "Unfold {name}",
+    "cardCount": "{count, plural, one {# candidate} other {# candidates}}",
+    "hiredOf": "{hired} of {openings} hired",
+    "noJobs": "No jobs yet",
+    "noJobsHint": "Create a job under Jobs and it gets its own board here.",
+    "noMatches": "No cards match the filters",
+    "noMatchesHint": "Try removing a filter."
   },
   "Assessment": {
     "heading": "AI assessment",
@@ -373,7 +390,15 @@
       "starred": "Starred",
       "flagged": "Flagged",
       "mismatch": "Not a match"
-    },
-    "mismatchShort": "No match"
+    }
+  },
+  "Signals": {
+    "starred": "Starred",
+    "flagged": "Flagged, needs attention",
+    "mismatch": "Does not meet the requirements for the job",
+    "unassessed": "CV not assessed with AI yet",
+    "days": "{days, plural, one {# day} other {# days}} in this stage",
+    "stuck": "No movement for {days} days",
+    "removal": "Leaves the board in {days, plural, one {# day} other {# days}}"
   }
 }

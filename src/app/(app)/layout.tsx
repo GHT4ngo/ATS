@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { LogOut } from "lucide-react";
+import { Eye, LogOut } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { logout } from "@/app/actions/auth";
 import {
@@ -8,7 +8,11 @@ import {
 } from "@/app/actions/admin";
 import { AppShell } from "@/components/app/app-shell";
 import { DevMenu } from "@/components/app/dev-menu";
-import { LanguageToggle, ThemeToggle } from "@/components/app/preferences";
+import {
+  LanguageToggle,
+  Preferences,
+  ThemeToggle,
+} from "@/components/app/preferences";
 import { OrgSwitcher } from "@/components/app/org-switcher";
 import { SettingsDialog } from "@/components/app/settings-dialog";
 import { Button } from "@/components/ui/button";
@@ -47,18 +51,16 @@ export default async function AppLayout({
     ...(adminUi
       ? [
           {
-            href: "/admin/customers",
-            icon: "customers",
-            label: t("customers"),
+            href: "/admin/users",
+            icon: "users",
+            label: t("users"),
           },
         ]
       : []),
   ];
 
-  const tools = (
+  const settings = (
     <>
-      <ThemeToggle />
-      <LanguageToggle />
       <SettingsDialog
         fullName={profile.full_name}
         locale={profile.locale as "sv" | "en"}
@@ -73,16 +75,30 @@ export default async function AppLayout({
       )}
     </>
   );
+  const signOut = (
+    <form action={logout}>
+      <Button
+        type="submit"
+        variant="ghost"
+        size="icon-sm"
+        aria-label={t("signOut")}
+        title={t("signOut")}
+      >
+        <LogOut className="size-4" />
+      </Button>
+    </form>
+  );
 
   let banner: React.ReactNode;
   if (preview && activeOrg) {
     banner = (
-      <div className="bg-violet-600 text-white dark:bg-violet-900 dark:text-violet-50">
+      <div className="border-b border-emerald-500/20 bg-emerald-500/10 text-emerald-900 dark:text-emerald-100">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-1.5 text-sm">
-          <span className="font-medium">
+          <span className="flex items-center gap-2 font-medium">
+            <Eye className="size-4 text-emerald-600 dark:text-emerald-400" />
             {t("previewing", { name: activeOrg.name })}
           </span>
-          <span className="opacity-80">{t("previewNote")}</span>
+          <span className="opacity-75">{t("previewNote")}</span>
           <form action={exitCustomerPreview} className="ml-auto">
             <button type="submit" className="font-medium underline">
               {t("exitPreview")}
@@ -93,9 +109,12 @@ export default async function AppLayout({
     );
   } else if (isAdmin && activeOrg) {
     banner = (
-      <div className="bg-amber-100 text-amber-950 dark:bg-amber-950 dark:text-amber-100">
+      <div className="border-b border-sky-500/20 bg-sky-500/10 text-sky-900 dark:text-sky-100">
         <div className="flex items-center gap-3 px-4 py-1.5 text-sm">
-          <span>{t("viewingAs", { name: activeOrg.name })}</span>
+          <span className="flex items-center gap-2">
+            <Eye className="size-4 text-sky-600 dark:text-sky-400" />
+            {t("viewingAs", { name: activeOrg.name })}
+          </span>
           <form action={setActingOrganization.bind(null, "")}>
             <button type="submit" className="underline">
               {t("exitViewing")}
@@ -117,18 +136,10 @@ export default async function AppLayout({
       banner={banner}
       compactFooter={
         <div className="flex flex-col items-center gap-1">
-          {tools}
-          <form action={logout}>
-            <Button
-              type="submit"
-              variant="ghost"
-              size="icon-sm"
-              aria-label={t("signOut")}
-              title={t("signOut")}
-            >
-              <LogOut className="size-4" />
-            </Button>
-          </form>
+          <ThemeToggle />
+          <LanguageToggle />
+          {settings}
+          {signOut}
         </div>
       }
       footer={
@@ -139,20 +150,14 @@ export default async function AppLayout({
               activeId={activeOrg?.id ?? null}
             />
           )}
-          <div className="flex items-center gap-1">{tools}</div>
-          <span className="text-muted-foreground truncate text-sm">
-            {profile.full_name || profile.email}
-          </span>
-          <form action={logout}>
-            <Button
-              type="submit"
-              variant="outline"
-              size="sm"
-              className="w-full"
-            >
-              {t("signOut")}
-            </Button>
-          </form>
+          <Preferences />
+          <div className="flex items-center gap-1 border-t pt-3">
+            <span className="text-muted-foreground min-w-0 flex-1 truncate text-sm">
+              {profile.full_name || profile.email}
+            </span>
+            {settings}
+            {signOut}
+          </div>
         </div>
       }
     >

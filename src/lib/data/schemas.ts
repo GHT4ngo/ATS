@@ -40,6 +40,7 @@ export const jobSchema = z.object({
   location: z.string().trim().max(200).default(""),
   employmentType: z.enum(EMPLOYMENT_TYPES),
   status: z.enum(JOB_STATUSES),
+  openings: z.coerce.number().int().min(1).max(999).default(1),
 });
 
 const optionalText = (max: number) =>
@@ -60,6 +61,12 @@ export const candidateSchema = z.object({
     z
       .string()
       .refine((v) => /^https?:\/\/([a-z0-9-]+\.)*linkedin\.com\//i.test(v))
+      .nullable(),
+  ),
+  repoUrl: optionalText(500).pipe(
+    z
+      .string()
+      .refine((v) => /^https:\/\/[^\s/]+\.[^\s/]+\//i.test(v))
       .nullable(),
   ),
   jobIds: z.array(z.uuid()).default([]),

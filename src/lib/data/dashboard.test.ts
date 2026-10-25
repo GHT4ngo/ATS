@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { buildSeries, dayStart, parseRange, periodCounts } from "./dashboard";
+import {
+  buildSeries,
+  dayStart,
+  onBoard,
+  parseRange,
+  periodCounts,
+} from "./dashboard";
 
 const now = Date.parse("2026-10-24T15:00:00Z");
 const none = { applications: [], interviews: [], hires: [] };
@@ -86,5 +92,31 @@ describe("periodCounts", () => {
       new Date(s[0].start).toISOString(),
     ]);
     expect(r.current).toBe(1);
+  });
+});
+
+describe("onBoard", () => {
+  const day = 86_400_000;
+  const ago = (days: number) => new Date(now - days * day).toISOString();
+
+  it("keeps rejected cards for a week", () => {
+    const card = { stage: "rejected" as const, archived_at: null };
+    expect(onBoard({ ...card, stage_changed_at: ago(6.5) }, now)).toBe(true);
+    expect(onBoard({ ...card, stage_changed_at: ago(7) }, now)).toBe(false);
+  });
+
+  it("hides archived cards and keeps old cards in other stages", () => {
+    expect(
+      onBoard(
+        { stage: "hired", stage_changed_at: ago(1), archived_at: ago(0) },
+        now,
+      ),
+    ).toBe(false);
+    expect(
+      onBoard(
+        { stage: "applied", stage_changed_at: ago(40), archived_at: null },
+        now,
+      ),
+    ).toBe(true);
   });
 });

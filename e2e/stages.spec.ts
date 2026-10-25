@@ -76,7 +76,15 @@ test("a recruiter adds job stages and moves a card into one", async ({
     .eq("organization_id", orgId)
     .eq("full_name", "Maja Ek")
     .single();
+  test.setTimeout(90_000);
   const cand = maja!.id;
+  const { data: boRow } = await admin
+    .from("candidates")
+    .select("id")
+    .eq("organization_id", orgId)
+    .eq("full_name", "Bo Lind")
+    .single();
+  const bo = boRow!.id;
   await page.goto("/login");
   await page.getByLabel("E-post").fill(email);
   await page.getByLabel("Lösenord").fill(PASSWORD);
@@ -141,23 +149,17 @@ test("a recruiter adds job stages and moves a card into one", async ({
     })
     .toEqual({ stage: "screening", job_stages: { name: "Telefonintervju" } });
 
-  // The all jobs board keeps the phases and shows the stage name on the card
-  await page.goto("/pipeline");
-  const card = page
-    .getByRole("region", { name: "Screening" })
-    .getByRole("button", { name: /Maja/ });
-  await expect(card).toContainText("Telefonintervju");
-
-  // Reordering inside a phase column keeps the card in its own stage
-  const { data: caseStage } = await admin
+  // Reordering inside a stage keeps the card there and logs no move
+  const { data: interviewStage } = await admin
     .from("job_stages")
     .select("id")
     .eq("job_id", jobId)
-    .eq("name", "Case")
+    .eq("phase", "interview")
+    .is("name", null)
     .single();
   await admin
     .from("applications")
-    .update({ stage_id: caseStage!.id, position: 5 })
+    .update({ stage_id: interviewStage!.id, position: 5 })
     .eq("candidate_id", cand);
   const movesBefore = (
     await admin
@@ -168,9 +170,7 @@ test("a recruiter adds job stages and moves a card into one", async ({
   ).data?.length;
   await page.reload();
   const interview = page.getByRole("region", { name: "Intervju", exact: true });
-  await expect(interview.getByRole("button", { name: /Maja/ })).toContainText(
-    "Case",
-  );
+  await expect(interview.getByRole("button", { name: /Maja/ })).toBeVisible();
   await interview.getByRole("button", { name: /Maja/ }).focus();
   await page.keyboard.press("Space");
   await page.waitForTimeout(300);
@@ -184,7 +184,7 @@ test("a recruiter adds job stages and moves a card into one", async ({
         .select("position, stage_id")
         .eq("candidate_id", cand)
         .single();
-      return data!.position < 1 && data!.stage_id === caseStage!.id;
+      return data!.position < 1 && data!.stage_id === interviewStage!.id;
     })
     .toBe(true);
   const movesAfter = (
@@ -195,4 +195,29 @@ test("a recruiter adds job stages and moves a card into one", async ({
       .eq("action", "moved")
   ).data?.length;
   expect(movesAfter).toBe(movesBefore);
+
+  // Hired lanes start folded; a hired card can be cleared off the board
+  await admin
+    .from("applications")
+    .update({ stage: "hired" })
+    .eq("candidate_id", bo);
+  await page.reload();
+  // One opening, now filled: the job's board starts folded too
+  await page.getByRole("button", { name: /^Säljare/ }).click();
+  await page.getByRole("button", { name: "Fäll ut Anställd" }).click();
+  await page
+    .getByRole("button", { name: "Ta bort Bo Lind från tavlan", exact: true })
+    .click();
+  await expect(page.getByText("Bo Lind togs bort från tavlan")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Bo Lind" })).toHaveCount(0);
+  await expect
+    .poll(async () => {
+      const { data } = await admin
+        .from("applications")
+        .select("archived_at")
+        .eq("candidate_id", bo)
+        .single();
+      return data!.archived_at !== null;
+    })
+    .toBe(true);
 });
