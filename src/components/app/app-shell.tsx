@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { AgentPanel } from "@/components/agent/agent-panel";
 import { Button } from "@/components/ui/button";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { SIDEBAR_COOKIE } from "@/lib/sidebar";
 import { cn } from "@/lib/utils";
 import { CommandPalette } from "./command-palette";
@@ -150,62 +151,64 @@ export function AppShell({
   );
 
   return (
-    <div className="flex min-h-screen">
-      <a
-        href="#main"
-        className="bg-background sr-only z-50 rounded-md p-2 focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
-      >
-        {t("skipToContent")}
-      </a>
-      <aside
-        className={cn(
-          "bg-sidebar sticky top-0 hidden h-screen shrink-0 border-r md:block",
-          collapsed ? "w-14" : "w-64",
-        )}
-      >
-        {sidebar(collapsed, false)}
-      </aside>
+    <TooltipProvider delay={250}>
+      <div className="flex min-h-screen">
+        <a
+          href="#main"
+          className="bg-background sr-only z-50 rounded-md p-2 focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
+        >
+          {t("skipToContent")}
+        </a>
+        <aside
+          className={cn(
+            "bg-sidebar sticky top-0 hidden h-screen shrink-0 border-r md:block",
+            collapsed ? "w-14" : "w-64",
+          )}
+        >
+          {sidebar(collapsed, false)}
+        </aside>
 
-      <DialogPrimitive.Root open={mobileOpen} onOpenChange={setMobileOpen}>
-        <DialogPrimitive.Portal>
-          <DialogPrimitive.Backdrop className="fixed inset-0 z-40 bg-black/40 md:hidden" />
-          <DialogPrimitive.Popup
-            aria-label={t("menu")}
-            className="bg-sidebar fixed inset-y-0 left-0 z-50 w-64 border-r outline-none md:hidden"
-          >
-            {sidebar(false, true)}
-          </DialogPrimitive.Popup>
-        </DialogPrimitive.Portal>
-      </DialogPrimitive.Root>
+        <DialogPrimitive.Root open={mobileOpen} onOpenChange={setMobileOpen}>
+          <DialogPrimitive.Portal>
+            <DialogPrimitive.Backdrop className="fixed inset-0 z-40 bg-black/40 md:hidden" />
+            <DialogPrimitive.Popup
+              aria-label={t("menu")}
+              className="bg-sidebar fixed inset-y-0 left-0 z-50 w-64 border-r outline-none md:hidden"
+            >
+              {sidebar(false, true)}
+            </DialogPrimitive.Popup>
+          </DialogPrimitive.Portal>
+        </DialogPrimitive.Root>
 
-      <CommandPalette
-        open={paletteOpen}
-        onOpenChange={setPaletteOpen}
-        pages={links}
-        onNavigate={() => setMobileOpen(false)}
-      />
+        <CommandPalette
+          open={paletteOpen}
+          onOpenChange={setPaletteOpen}
+          pages={links}
+          onNavigate={() => setMobileOpen(false)}
+        />
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        <div className="flex items-center gap-2 border-b px-4 py-2 md:hidden">
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={() => setMobileOpen(true)}
-            aria-label={t("openMenu")}
-          >
-            <Menu className="size-4" />
-          </Button>
-          <span className="font-semibold">{appName}</span>
+        <div className="flex min-w-0 flex-1 flex-col">
+          <div className="flex items-center gap-2 border-b px-4 py-2 md:hidden">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => setMobileOpen(true)}
+              aria-label={t("openMenu")}
+            >
+              <Menu className="size-4" />
+            </Button>
+            <span className="font-semibold">{appName}</span>
+          </div>
+          {banner}
+          <main id="main" className="w-full min-w-0 flex-1 px-4 py-6 md:px-6">
+            {children}
+          </main>
         </div>
-        {banner}
-        <main id="main" className="w-full min-w-0 flex-1 px-4 py-6 md:px-6">
-          {children}
-        </main>
+        {/* Stays mounted while closed, so the conversation survives. */}
+        {assistant && (
+          <AgentPanel open={assistantOpen} onClose={closeAssistant} />
+        )}
       </div>
-      {/* Stays mounted while closed, so the conversation survives. */}
-      {assistant && (
-        <AgentPanel open={assistantOpen} onClose={closeAssistant} />
-      )}
-    </div>
+    </TooltipProvider>
   );
 }

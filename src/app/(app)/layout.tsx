@@ -92,7 +92,7 @@ export default async function AppLayout({
   let banner: React.ReactNode;
   if (preview && activeOrg) {
     banner = (
-      <div className="border-b border-emerald-500/20 bg-emerald-500/10 text-emerald-900 backdrop-blur dark:text-emerald-100">
+      <div className="border-b border-emerald-500/20 bg-emerald-500/10 text-emerald-900 dark:text-emerald-100">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-1.5 text-sm">
           <span className="flex items-center gap-2 font-medium">
             <Eye className="size-4 text-emerald-600 dark:text-emerald-400" />
@@ -109,7 +109,7 @@ export default async function AppLayout({
     );
   } else if (isAdmin && activeOrg) {
     banner = (
-      <div className="border-b border-sky-500/20 bg-sky-500/10 text-sky-900 backdrop-blur dark:text-sky-100">
+      <div className="border-b border-sky-500/20 bg-sky-500/10 text-sky-900 dark:text-sky-100">
         <div className="flex items-center gap-3 px-4 py-1.5 text-sm">
           <span className="flex items-center gap-2">
             <Eye className="size-4 text-sky-600 dark:text-sky-400" />

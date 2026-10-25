@@ -84,7 +84,8 @@ function CardBody({
     <>
       <div
         className={cn(
-          "flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
+          // Narrow lanes give the name the room instead.
+          "hidden size-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold @[13rem]:flex",
           card.mismatch
             ? "bg-rose-500/10 text-rose-700 ring-1 ring-rose-500/20 ring-inset dark:text-rose-300"
             : PHASE_STYLE[card.stage].soft,
@@ -110,19 +111,6 @@ function CardBody({
               {card.name}
             </span>
           )}
-          {drawerHref ? (
-            <MarkButtons
-              applicationId={card.id}
-              starred={card.starred}
-              flagged={card.flagged}
-              quiet
-            />
-          ) : (
-            <span className="flex gap-1">
-              {card.starred && <Signal kind="starred" />}
-              {card.flagged && <Signal kind="flagged" />}
-            </span>
-          )}
           {done && onRemove && (
             <Tooltip>
               <TooltipTrigger
@@ -143,7 +131,7 @@ function CardBody({
             </Tooltip>
           )}
         </div>
-        <div className="mt-1.5 flex items-center gap-2.5">
+        <div className="mt-1 flex items-center gap-2.5">
           {card.score !== null && (
             <ScoreBadge
               score={card.score}
@@ -167,11 +155,25 @@ function CardBody({
               days={card.days}
             />
           )}
-          <ProfileLinks
-            linkedinUrl={card.linkedinUrl}
-            repoUrl={card.repoUrl}
-            className="ml-auto"
-          />
+          <span className="ml-auto flex items-center gap-1.5">
+            {drawerHref ? (
+              <MarkButtons
+                applicationId={card.id}
+                starred={card.starred}
+                flagged={card.flagged}
+                quiet
+              />
+            ) : (
+              <span className="flex gap-1">
+                {card.starred && <Signal kind="starred" />}
+                {card.flagged && <Signal kind="flagged" />}
+              </span>
+            )}
+            <ProfileLinks
+              linkedinUrl={card.linkedinUrl}
+              repoUrl={card.repoUrl}
+            />
+          </span>
         </div>
       </div>
     </>
@@ -290,7 +292,7 @@ function Column({
     <section
       aria-label={column.label}
       className={cn(
-        "ring-foreground/5 flex min-w-52 flex-1 basis-0 flex-col gap-2 rounded-xl p-2 ring-1 transition-shadow",
+        "ring-foreground/5 @container flex min-w-40 flex-1 basis-0 flex-col gap-2 rounded-xl p-2 ring-1 transition-shadow",
         style.wash,
         isOver && "ring-ring/50 ring-2",
       )}

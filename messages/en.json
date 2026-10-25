@@ -138,20 +138,13 @@
     "seriesInterviews": "Interviews",
     "funnelNote": "Where every application is right now",
     "attention": "Needs attention",
-    "reason": {
-      "flagged": "Flagged",
-      "stuck": "{days} days in stage",
-      "unassessed": "Not assessed"
-    },
     "attentionEmpty": "Nothing waiting. Nice work.",
     "andMore": "and {count} more",
     "standouts": "Standouts",
-    "starred": "Starred",
     "score": "AI score {score}",
     "standoutsEmpty": "Star candidates or assess CVs and they show up here.",
     "team": "Team",
     "teamNote": "Moves in the last {days} days",
-    "inactive": "Inactive",
     "moves": "{count, plural, one {# move} other {# moves}}",
     "teamEmpty": "No users in this organization.",
     "weekOf": "Week of {date}"
@@ -200,7 +193,8 @@
     "userCount": "{count, plural, one {# user} other {# users}}",
     "openJobCount": "{count, plural, one {# open job} other {# open jobs}}",
     "administrators": "Administrators",
-    "unassigned": "Without an organization"
+    "unassigned": "Without an organization",
+    "actionsFor": "Actions for {name}"
   },
   "Stages": {
     "applied": "Applied",
@@ -289,9 +283,7 @@
       "archived": "{job}: removed from the board",
       "restored": "{job}: back on the board"
     },
-    "daysShort": "{days}d",
     "linkedin": "LinkedIn",
-    "linkedinShort": "in",
     "count": "{count, plural, one {# candidate} other {# candidates}}",
     "noMatches": "No candidates match the filters",
     "noMatchesHint": "Try removing a filter.",
@@ -398,8 +390,7 @@
       "starred": "Starred",
       "flagged": "Flagged",
       "mismatch": "Not a match"
-    },
-    "mismatchShort": "No match"
+    }
   },
   "Signals": {
     "starred": "Starred",

@@ -145,11 +145,9 @@
 
 .dark {
   --elevation:
-    inset 0 1px 0 oklch(1 0 0 / 0.05),
-    0 8px 24px -8px oklch(0 0 0 / 0.5);
+    inset 0 1px 0 oklch(1 0 0 / 0.05), 0 8px 24px -8px oklch(0 0 0 / 0.5);
   --elevation-hover:
-    inset 0 1px 0 oklch(1 0 0 / 0.08),
-    0 16px 36px -12px oklch(0 0 0 / 0.65);
+    inset 0 1px 0 oklch(1 0 0 / 0.08), 0 16px 36px -12px oklch(0 0 0 / 0.65);
   --glow: oklch(0.702 0.183 293 / 0.08);
 }
 
@@ -169,5 +167,55 @@
       transparent 70%
     );
     background-repeat: no-repeat;
+  }
+}
+
+/* Motion on the dashboard: lines draw in, areas and bars grow. */
+@keyframes chart-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes chart-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes bar-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.chart-line {
+  stroke-dasharray: 1;
+  animation: chart-draw 1.1s cubic-bezier(0.3, 0.7, 0.2, 1) both;
+}
+
+.chart-area {
+  animation: chart-fade 1.4s ease-out both;
+}
+
+.bar-grow {
+  transform-origin: left;
+  animation: bar-grow 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chart-line,
+  .chart-area,
+  .bar-grow {
+    animation: none;
   }
 }

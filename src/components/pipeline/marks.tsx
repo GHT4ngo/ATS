@@ -64,7 +64,7 @@ export function MarkButtons({
   const icon = size === "sm" ? "size-3.5" : "size-4";
   const button = cn(
     "focus-visible:ring-ring inline-flex items-center justify-center rounded-md transition-opacity outline-none focus-visible:ring-2",
-    size === "sm" ? "size-6" : "size-8 border",
+    size === "sm" ? "size-5" : "size-8 border",
   );
   const hidden =
     quiet &&

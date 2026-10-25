@@ -60,7 +60,7 @@ export function FoldSection({
     <section
       aria-label={title}
       className={cn(
-        "bg-card/70 ring-foreground/[0.07] elevated rounded-2xl ring-1 backdrop-blur-sm",
+        "bg-card/70 ring-foreground/[0.07] elevated min-w-0 rounded-2xl ring-1",
         className,
       )}
     >

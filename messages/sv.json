@@ -138,20 +138,13 @@
     "seriesInterviews": "Intervjuer",
     "funnelNote": "Var alla ansökningar är just nu",
     "attention": "Behöver uppmärksamhet",
-    "reason": {
-      "flagged": "Flaggad",
-      "stuck": "{days} dagar i steget",
-      "unassessed": "Ej bedömd"
-    },
     "attentionEmpty": "Inget som väntar. Snyggt.",
     "andMore": "och {count} till",
     "standouts": "Utmärker sig",
-    "starred": "Stjärnmärkt",
     "score": "AI-poäng {score}",
     "standoutsEmpty": "Stjärnmärk kandidater eller bedöm CV:n så visas de här.",
     "team": "Team",
     "teamNote": "Flyttar de senaste {days} dagarna",
-    "inactive": "Inaktiv",
     "moves": "{count, plural, one {# flytt} other {# flyttar}}",
     "teamEmpty": "Inga användare i organisationen.",
     "weekOf": "Veckan från {date}"
@@ -200,7 +193,8 @@
     "userCount": "{count, plural, one {# användare} other {# användare}}",
     "openJobCount": "{count, plural, one {# öppen tjänst} other {# öppna tjänster}}",
     "administrators": "Administratörer",
-    "unassigned": "Utan organisation"
+    "unassigned": "Utan organisation",
+    "actionsFor": "Åtgärder för {name}"
   },
   "Stages": {
     "applied": "Ansökt",
@@ -289,9 +283,7 @@
       "archived": "{job}: borttagen från tavlan",
       "restored": "{job}: tillbaka på tavlan"
     },
-    "daysShort": "{days} d",
     "linkedin": "LinkedIn",
-    "linkedinShort": "in",
     "count": "{count, plural, one {# kandidat} other {# kandidater}}",
     "noMatches": "Inga kandidater matchar filtren",
     "noMatchesHint": "Prova att ta bort ett filter.",
@@ -398,8 +390,7 @@
       "starred": "Stjärnmärkta",
       "flagged": "Flaggade",
       "mismatch": "Uppfyller inte kraven"
-    },
-    "mismatchShort": "Matchar inte"
+    }
   },
   "Signals": {
     "starred": "Stjärnmärkt",

@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
+import { KeyRound, MoreHorizontal, UserCheck, UserX } from "lucide-react";
 import { resetUserPassword, setUserActive } from "@/app/actions/admin";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { FormMessage, SubmitButton } from "@/components/form-bits";
@@ -12,8 +13,13 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { TemporaryPasswordField } from "./temporary-password-field";
 
 export function UserActions({
@@ -54,11 +60,42 @@ export function UserActions({
   }
 
   return (
-    <div className="flex justify-end gap-2">
+    <div className="flex justify-end">
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label={t("actionsFor", { name })}
+              title={t("actionsFor", { name })}
+              disabled={pending}
+            />
+          }
+        >
+          <MoreHorizontal className="size-4" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-52">
+          <DropdownMenuItem onClick={() => setOpen(true)}>
+            <KeyRound className="size-4" />
+            {t("resetPassword")}
+          </DropdownMenuItem>
+          {!isSelf && (
+            <DropdownMenuItem
+              variant={isActive ? "destructive" : "default"}
+              onClick={() => (isActive ? setConfirmOpen(true) : toggleActive())}
+            >
+              {isActive ? (
+                <UserX className="size-4" />
+              ) : (
+                <UserCheck className="size-4" />
+              )}
+              {isActive ? t("deactivate") : t("reactivate")}
+            </DropdownMenuItem>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger render={<Button variant="outline" size="sm" />}>
-          {t("resetPassword")}
-        </DialogTrigger>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t("resetPasswordFor", { name })}</DialogTitle>
@@ -75,16 +112,6 @@ export function UserActions({
           </form>
         </DialogContent>
       </Dialog>
-      {!isSelf && (
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={pending}
-          onClick={() => (isActive ? setConfirmOpen(true) : toggleActive())}
-        >
-          {isActive ? t("deactivate") : t("reactivate")}
-        </Button>
-      )}
       <ConfirmDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}

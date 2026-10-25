@@ -116,7 +116,7 @@ export function FilterBar({
   );
 
   return (
-    <div className="bg-card/70 ring-foreground/[0.07] elevated flex flex-wrap items-center gap-1 rounded-xl p-1 ring-1 backdrop-blur-sm">
+    <div className="bg-card/70 ring-foreground/[0.07] elevated flex flex-wrap items-center gap-1 rounded-xl p-1 ring-1">
       <label className="relative flex min-w-0 flex-1 items-center sm:w-56 sm:flex-none">
         <Search
           className="text-muted-foreground pointer-events-none absolute left-2.5 size-4"

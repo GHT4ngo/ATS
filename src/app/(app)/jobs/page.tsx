@@ -74,20 +74,23 @@ export default async function JobsPage() {
         <TableHeader>
           <TableRow className="bg-muted/40">
             <TableHead>{t("title")}</TableHead>
-            <TableHead>{t("statusLabel")}</TableHead>
+            {!done && <TableHead>{t("statusLabel")}</TableHead>}
             <TableHead>{t("openings")}</TableHead>
-            {STAGES.map((st) => (
-              <TableHead key={st} className="hidden text-right xl:table-cell">
-                <span className="inline-flex items-center gap-1.5">
-                  <span
-                    className={cn("size-2 rounded-full", PHASE_STYLE[st].dot)}
-                    aria-hidden
-                  />
-                  {s(st)}
-                </span>
-              </TableHead>
-            ))}
-            <TableHead className="xl:hidden">{t("candidates")}</TableHead>
+            {!done &&
+              STAGES.map((st) => (
+                <TableHead key={st} className="hidden text-right xl:table-cell">
+                  <span className="inline-flex items-center gap-1.5">
+                    <span
+                      className={cn("size-2 rounded-full", PHASE_STYLE[st].dot)}
+                      aria-hidden
+                    />
+                    {s(st)}
+                  </span>
+                </TableHead>
+              ))}
+            {!done && (
+              <TableHead className="xl:hidden">{t("candidates")}</TableHead>
+            )}
             <TableHead />
           </TableRow>
         </TableHeader>
@@ -109,13 +112,15 @@ export default async function JobsPage() {
                       .join(" · ")}
                   </div>
                 </TableCell>
-                <TableCell>
-                  <JobStatusSelect
-                    jobId={job.id}
-                    status={job.status}
-                    label={t("statusLabel")}
-                  />
-                </TableCell>
+                {!done && (
+                  <TableCell>
+                    <JobStatusSelect
+                      jobId={job.id}
+                      status={job.status}
+                      label={t("statusLabel")}
+                    />
+                  </TableCell>
+                )}
                 <TableCell>
                   <span
                     className="flex items-center gap-2"
@@ -139,52 +144,55 @@ export default async function JobsPage() {
                     </span>
                   </span>
                 </TableCell>
-                {STAGES.map((st) => (
-                  <TableCell
-                    key={st}
-                    className="hidden text-right xl:table-cell"
-                  >
-                    {row[st] ? (
-                      <Link
-                        href={`/candidates?jobs=${job.id}&phase=${st}`}
-                        aria-label={`${s(st)}: ${row[st]}`}
-                        className={cn(
-                          "inline-flex min-w-7 justify-center rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums",
-                          PHASE_STYLE[st].soft,
-                        )}
-                      >
-                        {row[st]}
-                      </Link>
-                    ) : (
-                      <span className="text-muted-foreground/50 px-2 text-xs tabular-nums">
-                        0
-                      </span>
-                    )}
+                {!done &&
+                  STAGES.map((st) => (
+                    <TableCell
+                      key={st}
+                      className="hidden text-right xl:table-cell"
+                    >
+                      {row[st] ? (
+                        <Link
+                          href={`/candidates?jobs=${job.id}&phase=${st}`}
+                          aria-label={`${s(st)}: ${row[st]}`}
+                          className={cn(
+                            "inline-flex min-w-7 justify-center rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums",
+                            PHASE_STYLE[st].soft,
+                          )}
+                        >
+                          {row[st]}
+                        </Link>
+                      ) : (
+                        <span className="text-muted-foreground/50 px-2 text-xs tabular-nums">
+                          0
+                        </span>
+                      )}
+                    </TableCell>
+                  ))}
+                {!done && (
+                  <TableCell className="xl:hidden">
+                    <Link
+                      href={board}
+                      className="bg-muted flex h-1.5 w-24 overflow-hidden rounded-full"
+                      aria-label={t("candidatesCount", { count: total })}
+                      title={STAGES.map(
+                        (st) => `${s(st)}: ${row[st] ?? 0}`,
+                      ).join(", ")}
+                    >
+                      {STAGES.map((st) =>
+                        row[st] ? (
+                          <span
+                            key={st}
+                            className={PHASE_STYLE[st].dot}
+                            style={{ width: `${(row[st] / total) * 100}%` }}
+                          />
+                        ) : null,
+                      )}
+                    </Link>
+                    <span className="text-muted-foreground text-xs tabular-nums">
+                      {t("candidatesCount", { count: total })}
+                    </span>
                   </TableCell>
-                ))}
-                <TableCell className="xl:hidden">
-                  <Link
-                    href={board}
-                    className="bg-muted flex h-1.5 w-24 overflow-hidden rounded-full"
-                    aria-label={t("candidatesCount", { count: total })}
-                    title={STAGES.map((st) => `${s(st)}: ${row[st] ?? 0}`).join(
-                      ", ",
-                    )}
-                  >
-                    {STAGES.map((st) =>
-                      row[st] ? (
-                        <span
-                          key={st}
-                          className={PHASE_STYLE[st].dot}
-                          style={{ width: `${(row[st] / total) * 100}%` }}
-                        />
-                      ) : null,
-                    )}
-                  </Link>
-                  <span className="text-muted-foreground text-xs tabular-nums">
-                    {t("candidatesCount", { count: total })}
-                  </span>
-                </TableCell>
+                )}
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
                     {done && (
@@ -200,11 +208,13 @@ export default async function JobsPage() {
                         </Button>
                       </form>
                     )}
-                    <JobStagesDialog
-                      jobId={job.id}
-                      jobTitle={job.title}
-                      stages={stagesOf(job.id)}
-                    />
+                    {!done && (
+                      <JobStagesDialog
+                        jobId={job.id}
+                        jobTitle={job.title}
+                        stages={stagesOf(job.id)}
+                      />
+                    )}
                     <JobFormDialog job={job} />
                   </div>
                 </TableCell>

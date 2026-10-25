@@ -89,9 +89,10 @@ test("customer signs in, sees the team and cannot reach the admin pages", async 
 }) => {
   await signIn(page, emails.customer);
   await expect(page).toHaveURL(/\/dashboard$/);
-  await expect(page.getByText(emails.mate)).toBeVisible();
-  await expect(page.getByText(emails.customer)).toBeVisible();
-  await expect(page.getByRole("link", { name: "Kunder" })).toHaveCount(0);
+  await expect(
+    page.getByRole("listitem").filter({ hasText: "E2E Teammate" }),
+  ).toBeVisible();
+  await expect(page.getByRole("link", { name: "Användare" })).toHaveCount(0);
 
   await page.goto("/admin/users");
   await expect(page).toHaveURL(/\/dashboard$/);
@@ -144,11 +145,14 @@ test("admin creates an organization and a user, acts as the customer and deactiv
   await page.getByRole("option", { name: `E2E Org ${run}` }).click();
   await expect(page.getByText(`Visar som E2E Org ${run}`)).toBeVisible();
   await page.goto("/dashboard");
-  await expect(page.getByText(emails.created)).toBeVisible();
+  await expect(
+    page.getByRole("listitem").filter({ hasText: "E2E Created" }),
+  ).toBeVisible();
 
   // Deactivate the new user.
   await page.goto("/admin/users");
-  await row.getByRole("button", { name: "Inaktivera" }).click();
+  await row.getByRole("button", { name: /^Åtgärder för/ }).click();
+  await page.getByRole("menuitem", { name: "Inaktivera" }).click();
   await page
     .getByRole("dialog")
     .getByRole("button", { name: "Inaktivera" })
@@ -166,11 +170,11 @@ test("admin turns on developer mode and previews the app as a customer", async (
   await page.getByRole("button", { name: "Utvecklarverktyg" }).click();
   await page.getByRole("menuitem", { name: `E2E Org ${run}` }).click();
   await expect(page.getByText(`Kundvy: E2E Org ${run}`)).toBeVisible();
-  await expect(page.getByRole("link", { name: "Kunder" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Användare" })).toHaveCount(0);
   await expect(page.getByLabel("Agera som kund")).toHaveCount(0);
 
   await page.getByRole("button", { name: "Avsluta kundvy" }).click();
-  await expect(page.getByRole("link", { name: "Kunder" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Användare" })).toBeVisible();
   await expect(page.getByText(`Visar som E2E Org ${run}`)).toBeVisible();
 });
 
