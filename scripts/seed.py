@@ -110,15 +110,23 @@ MARKS = {
     "Daniel Kovács": {"mismatch": True},
     "Sofia Ekström": {"mismatch": True},
 }
+
+
+# Profile handles get a suffix that no real account is likely to have, so the
+# demo never links an invented candidate to a real person's profile.
+def demo_handle(handle: str) -> str:
+    return f"{handle}-nordlys-demo"
+
+
 # Code profiles for some of the developers
 REPOS = {
-    "Elin Sandberg": "https://github.com/elinsandberg",
-    "Oskar Holm": "https://github.com/oskarholm",
-    "Linnea Berg": "https://github.com/linneaberg",
-    "Karin Åberg": "https://gitlab.com/karinaberg",
-    "Mohammed Rahimi": "https://github.com/mrahimi",
-    "Fredrik Lund": "https://github.com/fredriklund",
-    "Petra Lindholm": "https://github.com/petralindholm",
+    "Elin Sandberg": f"https://github.com/{demo_handle('elinsandberg')}",
+    "Oskar Holm": f"https://github.com/{demo_handle('oskarholm')}",
+    "Linnea Berg": f"https://github.com/{demo_handle('linneaberg')}",
+    "Karin Åberg": f"https://gitlab.com/{demo_handle('karinaberg')}",
+    "Mohammed Rahimi": f"https://github.com/{demo_handle('mrahimi')}",
+    "Fredrik Lund": f"https://github.com/{demo_handle('fredriklund')}",
+    "Petra Lindholm": f"https://github.com/{demo_handle('petralindholm')}",
 }
 
 CANDIDATES = [
@@ -406,7 +414,7 @@ def cv_pdf(c: tuple, email: str, phone: str, job_title: str) -> bytes:
     pdf.set_font("Helvetica", "", 10)
     contact = [email, phone, location]
     if linkedin:
-        contact.append(f"linkedin.com/in/{linkedin}")
+        contact.append(f"linkedin.com/in/{demo_handle(linkedin)}")
     pdf.cell(0, 6, "  |  ".join(contact), new_x="LMARGIN", new_y="NEXT")
 
     def section(title: str, body: str) -> None:
@@ -546,7 +554,8 @@ def seed(db: Client, password: str) -> None:
         for a, b in (("å", "a"), ("ä", "a"), ("ö", "o"), ("á", "a")):
             email = email.replace(a, b)
         email = f"{email}@example.com"
-        phone = f"070-{100 + i:03d} {10 + i:02d} {30 + i:02d}"
+        # PTS reserves 070-174 06 05 to 070-174 06 99 for fiction.
+        phone = f"070-174 06 {5 + i:02d}"
         days_ago = max(d for _, _, d in apps) + 3 + 2 * len(STAGES)
         created = now - timedelta(days=days_ago, hours=i)
         cand = (
@@ -560,7 +569,9 @@ def seed(db: Client, password: str) -> None:
                     "location": location,
                     "created_by": recruiter,
                     "created_at": created.isoformat(),
-                    "linkedin_url": f"https://www.linkedin.com/in/{linkedin}" if linkedin else None,
+                    "linkedin_url": (
+                        f"https://www.linkedin.com/in/{demo_handle(linkedin)}" if linkedin else None
+                    ),
                     "repo_url": REPOS.get(name),
                     "notes": "",
                 }
