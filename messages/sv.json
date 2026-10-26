@@ -285,6 +285,7 @@
     },
     "linkedin": "LinkedIn",
     "count": "{count, plural, one {# kandidat} other {# kandidater}}",
+    "filledNote": "Alla tjänster tillsatta · {count, plural, one {# kandidat} other {# kandidater}}",
     "noMatches": "Inga kandidater matchar filtren",
     "noMatchesHint": "Prova att ta bort ett filter.",
     "emptyHint": "Lägg till den första kandidaten med knappen ovan.",

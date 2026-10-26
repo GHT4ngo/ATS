@@ -285,6 +285,7 @@
     },
     "linkedin": "LinkedIn",
     "count": "{count, plural, one {# candidate} other {# candidates}}",
+    "filledNote": "All openings filled · {count, plural, one {# candidate} other {# candidates}}",
     "noMatches": "No candidates match the filters",
     "noMatchesHint": "Try removing a filter.",
     "emptyHint": "Add the first candidate with the button above.",
