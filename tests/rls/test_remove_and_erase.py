@@ -49,6 +49,10 @@ def pair(world: World, service: Client):
     service.table("jobs").delete().eq("id", ids["job"]).execute()
 
 
+def erase_args(row_id: str, actor: str | None, reason: str = "request") -> dict:
+    return {"p_id": row_id, "p_actor": actor, "p_reason": reason}
+
+
 def visible(client: Client, table: str, row_id: str) -> bool:
     return bool(client.table(table).select("id").eq("id", row_id).execute().data)
 
@@ -165,7 +169,13 @@ def test_erase_and_purge_are_service_role_only(world: World, login, pair):
     for user in (world.customer_a, world.admin):
         for fn in ("erase_candidate", "purge_job"):
             with pytest.raises(APIError):
-                login(user).rpc(fn, {"p_id": pair["cand"]}).execute()
+                login(user).rpc(fn, erase_args(pair["cand"], user.id)).execute()
+        for fn, args in (
+            ("expired_candidates", {"p_removed_days": 30, "p_retention_months": 24}),
+            ("expired_jobs", {"p_removed_days": 30}),
+        ):
+            with pytest.raises(APIError):
+                login(user).rpc(fn, args).execute()
 
 
 def test_erase_deletes_candidate_and_its_log(world: World, service, pair):
@@ -178,7 +188,7 @@ def test_erase_deletes_candidate_and_its_log(world: World, service, pair):
             "payload": {"name": "Temp"},
         }
     ).execute()
-    assert service.rpc("erase_candidate", {"p_id": pair["cand"]}).execute().data is True
+    assert service.rpc("erase_candidate", erase_args(pair["cand"], world.customer_a.id)).execute().data is True
     assert service.table("candidates").select("id").eq("id", pair["cand"]).execute().data == []
     assert service.table("applications").select("id").eq("id", pair["app"]).execute().data == []
     logs = (
@@ -193,8 +203,110 @@ def test_erase_deletes_candidate_and_its_log(world: World, service, pair):
 
 
 def test_purge_deletes_job_and_its_log(world: World, service, pair):
-    assert service.rpc("purge_job", {"p_id": pair["job"]}).execute().data is True
+    assert service.rpc("purge_job", erase_args(pair["job"], None, "removed")).execute().data is True
     assert service.table("jobs").select("id").eq("id", pair["job"]).execute().data == []
     logs = service.table("activity_log").select("id").eq("entity_id", pair["app"]).execute()
     assert logs.data == []
     assert service.table("candidates").select("id").eq("id", pair["cand"]).execute().data
+
+
+def erasures(service: Client, org: Org) -> list[dict]:
+    return service.table("erasure_log").select("*").eq("organization_id", org.id).execute().data
+
+
+def test_erase_is_recorded_without_personal_data(world: World, service, login, pair):
+    before = len(erasures(service, world.org_a))
+    service.rpc("erase_candidate", erase_args(pair["cand"], world.customer_a.id)).execute()
+    rows = erasures(service, world.org_a)
+    assert len(rows) == before + 1
+    last = max(rows, key=lambda r: r["id"])
+    assert (last["entity"], last["reason"], last["erased_by"]) == (
+        "candidate",
+        "request",
+        world.customer_a.id,
+    )
+    assert set(last) == {"id", "organization_id", "entity", "reason", "erased_by", "erased_at"}
+    # Erasing a candidate that is already gone records nothing.
+    again = service.rpc("erase_candidate", erase_args(pair["cand"], None)).execute()
+    assert again.data is False
+    assert len(erasures(service, world.org_a)) == before + 1
+
+
+def test_erasure_log_read_by_own_org_only(world: World, service, login, pair):
+    service.rpc("purge_job", erase_args(pair["job"], None, "removed")).execute()
+    own = login(world.customer_a).table("erasure_log").select("id").execute().data
+    other = login(world.customer_b).table("erasure_log").select("organization_id").execute()
+    assert own
+    assert all(r["organization_id"] == world.org_b.id for r in other.data)
+    assert login(world.admin).table("erasure_log").select("id").execute().data
+
+
+def test_erasure_log_cannot_be_written_by_users(world: World, login):
+    for user in (world.customer_a, world.admin):
+        with pytest.raises(APIError):
+            login(user).table("erasure_log").insert(
+                {"organization_id": world.org_a.id, "entity": "job", "reason": "request"}
+            ).execute()
+
+
+def expired(service: Client) -> dict[str, str]:
+    rows = service.rpc(
+        "expired_candidates", {"p_removed_days": 30, "p_retention_months": 24}
+    ).execute()
+    return {r["id"]: r["reason"] for r in rows.data}
+
+
+
+OLD = "2020-01-01T00:00:00Z"
+
+
+def test_expired_candidates(world: World, service: Client):
+    job = world.org_a.job_id
+    old = service.table("candidates").insert(
+        {"organization_id": world.org_a.id, "full_name": "Old", "updated_at": OLD}
+    ).execute().data[0]["id"]
+    service.table("applications").insert(
+        {
+            "organization_id": world.org_a.id,
+            "candidate_id": old,
+            "job_id": job,
+            "created_at": OLD,
+            "updated_at": OLD,
+        }
+    ).execute()
+    # Old profile, but an application that moved recently.
+    busy = service.table("candidates").insert(
+        {"organization_id": world.org_a.id, "full_name": "Busy", "updated_at": OLD}
+    ).execute().data[0]["id"]
+    service.table("applications").insert(
+        {"organization_id": world.org_a.id, "candidate_id": busy, "job_id": job}
+    ).execute()
+    gone = service.table("candidates").insert(
+        {"organization_id": world.org_a.id, "full_name": "Gone"}
+    ).execute().data[0]["id"]
+    service.table("candidates").update({"removed_at": OLD}).eq("id", gone).execute()
+    fresh = service.table("candidates").insert(
+        {"organization_id": world.org_a.id, "full_name": "Fresh"}
+    ).execute().data[0]["id"]
+    service.table("candidates").update({"removed_at": "now()"}).eq("id", fresh).execute()
+    try:
+        found = expired(service)
+        assert found.get(old) == "retention"
+        assert found.get(gone) == "removed"
+        assert busy not in found
+        assert fresh not in found
+        assert world.org_a.candidate_id not in found
+    finally:
+        service.table("candidates").delete().in_("id", [old, busy, gone, fresh]).execute()
+
+
+def test_expired_jobs(world: World, service: Client):
+    ids = make_pair(service, world.org_a)
+    try:
+        service.table("jobs").update({"removed_at": OLD}).eq("id", ids["job"]).execute()
+        rows = service.rpc("expired_jobs", {"p_removed_days": 30}).execute().data
+        assert ids["job"] in {r["id"] for r in rows}
+        assert world.org_a.job_id not in {r["id"] for r in rows}
+    finally:
+        service.table("candidates").delete().eq("id", ids["cand"]).execute()
+        service.table("jobs").delete().eq("id", ids["job"]).execute()

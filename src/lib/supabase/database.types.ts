@@ -183,6 +183,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"erasure_log": {
+                  Row: {
+                    "entity": string,"erased_at": string,"erased_by": string | null,"id": number,"organization_id": string,"reason": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "entity": string,"erased_at"?: string,"erased_by"?: string | null,"id"?: never,"organization_id": string,"reason": string
+                  }
+                  Update: {
+                    "entity"?: string,"erased_at"?: string,"erased_by"?: string | null,"id"?: never,"organization_id"?: string,"reason"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "erasure_log_erased_by_fkey"
+      columns: ["erased_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "erasure_log_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"job_stages": {
                   Row: {
                     "created_at": string,"id": string,"job_id": string,"name": string | null,"organization_id": string,"phase": Database["public"]['Enums']["application_stage"],"position": number
@@ -320,13 +346,23 @@ isOneToOne: false
 { Args: Record<PropertyKey, never>; Returns: string
                            },
 "erase_candidate":
-{ Args: { "p_id": string }; Returns: boolean
+{ Args: { "p_actor": string,"p_id": string,"p_reason": string }; Returns: boolean
+                           },
+"expired_candidates":
+{ Args: { "p_removed_days": number,"p_retention_months": number }; Returns: {
+              "id": string,"organization_id": string,"reason": string
+            }[]
+                           },
+"expired_jobs":
+{ Args: { "p_removed_days": number }; Returns: {
+              "id": string,"organization_id": string
+            }[]
                            },
 "is_admin":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
 "purge_job":
-{ Args: { "p_id": string }; Returns: boolean
+{ Args: { "p_actor": string,"p_id": string,"p_reason": string }; Returns: boolean
                            },
 "remove_candidate":
 { Args: { "p_id": string }; Returns: boolean

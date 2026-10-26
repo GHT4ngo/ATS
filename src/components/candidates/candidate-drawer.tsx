@@ -13,7 +13,7 @@ import {
 import { ConfirmButton } from "@/components/confirm-button";
 import { MarkButtons, MismatchMenu } from "@/components/pipeline/marks";
 import { ProfileLinks } from "@/components/profile-links";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -118,6 +118,12 @@ export function CandidateDrawer({
     if (a.action === "created") return t("activity.created");
     if (a.action === "updated") return t("activity.updated");
     if (a.action === "notes") return t("activity.notes");
+    if (
+      a.action === "removed" ||
+      a.action === "reinstated" ||
+      a.action === "exported"
+    )
+      return t(`activity.${a.action}`);
     return a.action;
   };
 
@@ -295,6 +301,13 @@ export function CandidateDrawer({
           <h3 className="font-medium">{r("heading")}</h3>
           <p className="text-muted-foreground text-xs">{r("candidateHint")}</p>
           <div className="flex flex-wrap gap-2">
+            <a
+              href={`/api/candidates/${candidate.id}/export`}
+              download
+              className={buttonVariants({ variant: "outline", size: "sm" })}
+            >
+              {r("export")}
+            </a>
             <ConfirmButton
               label={r("remove")}
               title={r("removeCandidateTitle", { name: candidate.full_name })}

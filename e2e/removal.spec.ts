@@ -110,8 +110,17 @@ test("customers remove and erase, admins restore and purge", async ({
     .single();
   expect(rut!.removed_at).not.toBeNull();
 
-  // Erase Erik: the row, the application and the CV file all go
+  // Export Erik's data before erasing him
   await page.goto(`/candidates?candidate=${ids["Erik Ek"]}`);
+  const download = page.waitForEvent("download");
+  await page.getByRole("link", { name: "Exportera data" }).click();
+  const file = await (await download).path();
+  const exported = JSON.parse(readFileSync(file, "utf8"));
+  expect(exported.candidate.full_name).toBe("Erik Ek");
+  expect(exported.candidate.has_cv_file).toBe(true);
+  expect(exported.applications[0].job).toBe("Backendutvecklare");
+
+  // Erase Erik: the row, the application and the CV file all go
   await page.getByRole("button", { name: "Radera permanent" }).click();
   const erase = page.getByRole("dialog", { name: /Radera Erik Ek/ });
   const button = erase.getByRole("button", { name: "Radera permanent" });
@@ -168,4 +177,44 @@ test("customers remove and erase, admins restore and purge", async ({
       return data?.length;
     })
     .toBe(0);
+
+  // The erasure is recorded without personal data
+  const { data: log } = await admin
+    .from("erasure_log")
+    .select("entity, reason")
+    .eq("organization_id", orgId)
+    .order("id");
+  expect(log).toEqual([
+    { entity: "candidate", reason: "request" },
+    { entity: "job", reason: "request" },
+  ]);
+});
+
+test("the daily retention job needs its secret and erases expired rows", async ({
+  request,
+}) => {
+  expect((await request.get("/api/cron/retention")).status()).toBe(401);
+  expect(
+    (
+      await request.get("/api/cron/retention", {
+        headers: { authorization: "Bearer wrong" },
+      })
+    ).status(),
+  ).toBe(401);
+
+  // Rut was removed long ago
+  await admin
+    .from("candidates")
+    .update({ removed_at: "2020-01-01T00:00:00Z" })
+    .eq("id", ids["Rut Ras"]);
+  const res = await request.get("/api/cron/retention", {
+    headers: { authorization: `Bearer ${process.env.CRON_SECRET}` },
+  });
+  expect(res.status()).toBe(200);
+  expect((await res.json()).candidates).toBeGreaterThanOrEqual(1);
+  const { data } = await admin
+    .from("candidates")
+    .select("id")
+    .eq("id", ids["Rut Ras"]);
+  expect(data).toEqual([]);
 });

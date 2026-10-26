@@ -5,6 +5,7 @@ import { z } from "zod";
 import type { ActionState } from "@/lib/auth/schemas";
 import { getViewMode } from "@/lib/auth/session";
 import { getScope } from "@/lib/data/scope";
+import { eraseCandidateData, purgeJobData } from "@/lib/data/erase";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 function revalidate() {
@@ -65,28 +66,15 @@ export async function eraseCandidate(id: string): Promise<ActionState> {
   if (!parsed.success) return { error: "invalidInput" };
   if (!(await erasable(scope, parsed.data))) return { error: "generic" };
 
-  const admin = createAdminClient();
-  const { data, error } = await admin.rpc("erase_candidate", {
-    p_id: parsed.data,
-  });
-  if (error || !data) return { error: "generic" };
-
-  // The row is gone either way; a file left behind is reported so it can be
-  // cleaned up by hand.
-  const folder = `${scope.orgId}/${parsed.data}`;
-  const { data: files, error: listError } = await admin.storage
-    .from("cvs")
-    .list(folder);
-  const { error: removeError } = files?.length
-    ? await admin.storage
-        .from("cvs")
-        .remove(files.map((f) => `${folder}/${f.name}`))
-    : { error: null };
+  const result = await eraseCandidateData(
+    scope.orgId,
+    parsed.data,
+    scope.userId,
+    "request",
+  );
+  if (result === "failed" || result === "gone") return { error: "generic" };
   revalidate();
-  if (listError || removeError) {
-    console.error("CV file not erased", folder, listError ?? removeError);
-    return { ok: true, error: "cvEraseFailed" };
-  }
+  if (result === "fileLeft") return { ok: true, error: "cvEraseFailed" };
   return { ok: true };
 }
 
@@ -110,7 +98,7 @@ export async function restoreItem(
   if (error)
     return { error: error.code === "23505" ? "duplicateEmail" : "generic" };
   if (!data?.length) return { error: "generic" };
-  await scope.log(entity, parsed.data, "restored");
+  await scope.log(entity, parsed.data, "reinstated");
   revalidate();
   return { ok: true };
 }
@@ -131,8 +119,8 @@ export async function purgeJob(id: string): Promise<ActionState> {
     .not("removed_at", "is", null)
     .maybeSingle();
   if (!job) return { error: "generic" };
-  const { data, error } = await admin.rpc("purge_job", { p_id: job.id });
-  if (error || !data) return { error: "generic" };
+  if (!(await purgeJobData(job.id, scope.userId, "request")))
+    return { error: "generic" };
   revalidate();
   return { ok: true };
 }
