@@ -89,14 +89,14 @@ isOneToOne: false
                   ]
                 },"candidates": {
                   Row: {
-                    "created_at": string,"created_by": string | null,"cv_path": string | null,"email": string | null,"full_name": string,"id": string,"linkedin_url": string | null,"location": string | null,"notes": string,"organization_id": string,"phone": string | null,"repo_url": string | null,"updated_at": string
+                    "created_at": string,"created_by": string | null,"cv_path": string | null,"email": string | null,"full_name": string,"id": string,"linkedin_url": string | null,"location": string | null,"notes": string,"organization_id": string,"phone": string | null,"removed_at": string | null,"removed_by": string | null,"repo_url": string | null,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"created_by"?: string | null,"cv_path"?: string | null,"email"?: string | null,"full_name": string,"id"?: string,"linkedin_url"?: string | null,"location"?: string | null,"notes"?: string,"organization_id": string,"phone"?: string | null,"repo_url"?: string | null,"updated_at"?: string
+                    "created_at"?: string,"created_by"?: string | null,"cv_path"?: string | null,"email"?: string | null,"full_name": string,"id"?: string,"linkedin_url"?: string | null,"location"?: string | null,"notes"?: string,"organization_id": string,"phone"?: string | null,"removed_at"?: string | null,"removed_by"?: string | null,"repo_url"?: string | null,"updated_at"?: string
                   }
                   Update: {
-                    "created_at"?: string,"created_by"?: string | null,"cv_path"?: string | null,"email"?: string | null,"full_name"?: string,"id"?: string,"linkedin_url"?: string | null,"location"?: string | null,"notes"?: string,"organization_id"?: string,"phone"?: string | null,"repo_url"?: string | null,"updated_at"?: string
+                    "created_at"?: string,"created_by"?: string | null,"cv_path"?: string | null,"email"?: string | null,"full_name"?: string,"id"?: string,"linkedin_url"?: string | null,"location"?: string | null,"notes"?: string,"organization_id"?: string,"phone"?: string | null,"removed_at"?: string | null,"removed_by"?: string | null,"repo_url"?: string | null,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -110,6 +110,12 @@ isOneToOne: false
       columns: ["organization_id"]
 isOneToOne: false
       referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "candidates_removed_by_fkey"
+      columns: ["removed_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
       referencedColumns: ["id"]
     }
                   ]
@@ -205,14 +211,14 @@ isOneToOne: false
                   ]
                 },"jobs": {
                   Row: {
-                    "created_at": string,"created_by": string | null,"description": string,"employment_type": Database["public"]['Enums']["employment_type"],"id": string,"location": string,"openings": number,"organization_id": string,"status": Database["public"]['Enums']["job_status"],"title": string,"updated_at": string
+                    "created_at": string,"created_by": string | null,"description": string,"employment_type": Database["public"]['Enums']["employment_type"],"id": string,"location": string,"openings": number,"organization_id": string,"removed_at": string | null,"removed_by": string | null,"status": Database["public"]['Enums']["job_status"],"title": string,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"created_by"?: string | null,"description"?: string,"employment_type"?: Database["public"]['Enums']["employment_type"],"id"?: string,"location"?: string,"openings"?: number,"organization_id": string,"status"?: Database["public"]['Enums']["job_status"],"title": string,"updated_at"?: string
+                    "created_at"?: string,"created_by"?: string | null,"description"?: string,"employment_type"?: Database["public"]['Enums']["employment_type"],"id"?: string,"location"?: string,"openings"?: number,"organization_id": string,"removed_at"?: string | null,"removed_by"?: string | null,"status"?: Database["public"]['Enums']["job_status"],"title": string,"updated_at"?: string
                   }
                   Update: {
-                    "created_at"?: string,"created_by"?: string | null,"description"?: string,"employment_type"?: Database["public"]['Enums']["employment_type"],"id"?: string,"location"?: string,"openings"?: number,"organization_id"?: string,"status"?: Database["public"]['Enums']["job_status"],"title"?: string,"updated_at"?: string
+                    "created_at"?: string,"created_by"?: string | null,"description"?: string,"employment_type"?: Database["public"]['Enums']["employment_type"],"id"?: string,"location"?: string,"openings"?: number,"organization_id"?: string,"removed_at"?: string | null,"removed_by"?: string | null,"status"?: Database["public"]['Enums']["job_status"],"title"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -226,6 +232,12 @@ isOneToOne: false
       columns: ["organization_id"]
 isOneToOne: false
       referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "jobs_removed_by_fkey"
+      columns: ["removed_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
       referencedColumns: ["id"]
     }
                   ]
@@ -307,8 +319,20 @@ isOneToOne: false
 "current_org_id":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
+"erase_candidate":
+{ Args: { "p_id": string }; Returns: boolean
+                           },
 "is_admin":
 { Args: Record<PropertyKey, never>; Returns: boolean
+                           },
+"purge_job":
+{ Args: { "p_id": string }; Returns: boolean
+                           },
+"remove_candidate":
+{ Args: { "p_id": string }; Returns: boolean
+                           },
+"remove_job":
+{ Args: { "p_id": string }; Returns: boolean
                            },
 "reorder_job_stage":
 { Args: { "p_direction": string,"p_stage": string }; Returns: undefined
