@@ -169,6 +169,21 @@ Toned down colours and a pipeline per job. Branch `feat/phase-11-polish`, PR #11
 * [x] Reseed the production demo (25 Oct, new password kept outside the repo)
 * [x] New README screenshots and storyboard
 
+## Phase 12: Removal and GDPR (Mon 26)
+
+Remove, erase and retention after a GDPR check. Branch `feat/remove-and-erase`.
+
+* [x] Filled jobs fold and move last on the Candidates page; readable dropdowns in dark mode
+* [x] Remove candidates and jobs: hidden for everyone by RLS, listed for admins under Removed with restore and permanent delete
+* [x] Erase a candidate permanently at once (row, applications, assessments, history, CV file), for customers and admins
+* [x] Export a candidate's data as JSON (access and portability)
+* [x] Erasure log without personal data
+* [x] Nightly retention job: removed rows after 30 days, inactive candidates after 24 months
+* [x] Vercel functions moved from Washington (`iad1`) to Dublin (`dub1`), next to the database
+* [x] [docs/privacy.md](./docs/privacy.md): roles, processors, rights, retention, the AI Act
+* [x] Review with `/code-review medium`, 8 findings fixed
+* [ ] Apply the migrations in production and set `CRON_SECRET` in Vercel
+
 ## Assumptions (for the email)
 
 * B2B: each customer is an **organization**, and an organization can have several users.

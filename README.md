@@ -65,6 +65,8 @@ All seven are live, covered by end to end tests and backed by row level security
 |:---|:---|
 | ![The pipeline in dark mode](docs/screenshots/pipeline-dark.png) | ![The stage editor](docs/screenshots/stages-editor-dark.png) |
 
+**Remove, erase and retention.** Recruiters can remove a candidate or a job, which hides it for everyone; an admin sees it under Removed and can restore it or delete it for good. For GDPR, a candidate's data can be exported as JSON or erased permanently at once, CV file and history included, and every erasure is recorded without personal data. A nightly job erases removed rows after 30 days and candidates with no activity for 24 months. See [docs/privacy.md](./docs/privacy.md).
+
 **Polish.** Swedish and English behind flags, dark, light and system theme, a collapsible sidebar, a command palette (Ctrl K) over pages, candidates and jobs, keyboard drag and drop, skeleton loading states, error and 404 pages, and a responsive layout down to phone width.
 
 ## Architecture
@@ -72,7 +74,7 @@ All seven are live, covered by end to end tests and backed by row level security
 ```mermaid
 flowchart LR
   B[Browser] --> N
-  subgraph N[Next.js 15 on Vercel]
+  subgraph N[Next.js 15 on Vercel EU]
     SC[Server components]
     SA[Server actions with zod]
     AG["/api/agent stream"]
@@ -83,13 +85,13 @@ flowchart LR
   AG -->|tool loop| O[Claude Opus 5.5]
 ```
 
-**Data model.** `organizations` (the customers), `profiles` (users, with role and organization), `jobs` (with a number of openings), `job_stages`, `candidates`, `applications` (a candidate in a job, with stage, position, marks and an archived time), `cv_assessments`, `activity_log` and a private `cvs` storage bucket. Composite foreign keys make sure a row can only point at rows of its own organization, and a CV path must sit in its own candidate's folder.
+**Data model.** `organizations` (the customers), `profiles` (users, with role and organization), `jobs` (with a number of openings), `job_stages`, `candidates`, `applications` (a candidate in a job, with stage, position, marks and an archived time), `cv_assessments`, `activity_log`, `erasure_log` and a private `cvs` storage bucket. Composite foreign keys make sure a row can only point at rows of its own organization, and a CV path must sit in its own candidate's folder.
 
 **Security.**
 
 * Row level security on every table, with a pytest test for each policy (about a hundred cases in `tests/rls/`).
 * Every query goes through one scope helper (`src/lib/data/scope.ts`) that pins it to the active organization. That is what makes "act as customer" safe for admins, who can see every organization through RLS.
-* The service role key is server only. It creates accounts, writes AI assessments (users can read but never write a score) and claims the lock that stops two assessments of the same candidate from running at once.
+* The service role key is server only. It creates accounts, writes AI assessments (users can read but never write a score), erases data, runs the retention job and claims the lock that stops two assessments of the same candidate from running at once.
 * Server actions validate every input with zod; deactivated users are blocked in the database as well as in the app.
 
 **AI.**
@@ -104,8 +106,8 @@ flowchart LR
 |:------|:---------------|
 | ESLint, TypeScript, Prettier | the whole codebase |
 | Vitest | prompt building and conversation history handling |
-| pytest (`tests/rls/`) | every RLS policy, the stage triggers, the assessment locks |
-| Playwright (`e2e/`) | the full v1 flow from admin to customer, auth, CV assessment, the assistant, custom stages |
+| pytest (`tests/rls/`) | every RLS policy, the stage triggers, the assessment locks, removal and erasure |
+| Playwright (`e2e/`) | the full v1 flow from admin to customer, auth, CV assessment, the assistant, custom stages, remove, export, erase and the retention job |
 | `scripts/eval_assessment.py` | AI score consistency on sample CVs |
 
 GitHub Actions runs everything except the paid eval on every pull request. Each phase was reviewed before merging; the findings and fixes are logged in [REVIEW.md](./REVIEW.md). The plan and the decisions behind it are in [PLAN.md](./PLAN.md). The assumptions behind the product are in [docs/assumptions-email.md](./docs/assumptions-email.md), and the demo script in [docs/demo-storyboard.md](./docs/demo-storyboard.md).

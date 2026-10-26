@@ -12,6 +12,8 @@ function localSupabase() {
     NEXT_PUBLIC_SUPABASE_URL: status.API_URL as string,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: status.ANON_KEY as string,
     SUPABASE_SERVICE_ROLE_KEY: status.SERVICE_ROLE_KEY as string,
+    // A fixed secret for the retention job, so the tests can call it.
+    CRON_SECRET: "e2e-cron-secret",
   };
 }
 

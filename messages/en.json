@@ -281,10 +281,14 @@
       "notes": "Notes updated",
       "assessed": "{job}: AI assessment, score {score}",
       "archived": "{job}: removed from the board",
-      "restored": "{job}: back on the board"
+      "restored": "{job}: back on the board",
+      "removed": "Removed",
+      "reinstated": "Restored by an admin",
+      "exported": "Personal data exported"
     },
     "linkedin": "LinkedIn",
     "count": "{count, plural, one {# candidate} other {# candidates}}",
+    "filledNote": "All openings filled · {count, plural, one {# candidate} other {# candidates}}",
     "noMatches": "No candidates match the filters",
     "noMatchesHint": "Try removing a filter.",
     "emptyHint": "Add the first candidate with the button above.",
@@ -400,5 +404,39 @@
     "days": "{days, plural, one {# day} other {# days}} in this stage",
     "stuck": "No movement for {days} days",
     "removal": "Leaves the board in {days, plural, one {# day} other {# days}}"
+  },
+  "Confirm": {
+    "cancel": "Cancel",
+    "typeToConfirm": "Type {text} to confirm."
+  },
+  "Removal": {
+    "heading": "Personal data",
+    "candidateHint": "Export downloads everything stored about the candidate, for a request to see their data. Remove hides the candidate, and it is erased for good after 30 days unless an admin restores it. Erase deletes the candidate, the CV and the history at once, for a request to be forgotten.",
+    "jobHint": "Remove hides the job and its applications. An admin can restore it within 30 days.",
+    "remove": "Remove",
+    "erase": "Erase permanently",
+    "purge": "Delete permanently",
+    "restore": "Restore",
+    "removeCandidateTitle": "Remove {name}?",
+    "removeCandidateBody": "The candidate and their applications disappear from the lists, the board and the dashboard. An admin can restore them within 30 days; after that they are erased for good.",
+    "removeJobTitle": "Remove {title}?",
+    "removeJobBody": "The job and all its applications disappear from the lists, the board and the dashboard. The candidates stay. An admin can restore the job within 30 days; after that it is deleted for good.",
+    "eraseTitle": "Erase {name} permanently?",
+    "eraseBody": "The candidate, the CV file, every application, every CV assessment and the history about them are deleted at once. This cannot be undone.",
+    "purgeTitle": "Delete {title} permanently?",
+    "purgeBody": "The job, its stages, its applications and their CV assessments are deleted. The candidates stay. This cannot be undone.",
+    "restoreTitle": "Restore {name}?",
+    "restoreCandidateBody": "The candidate and their applications come back for everyone in the organization.",
+    "restoreJobBody": "The job and its applications come back for everyone in the organization.",
+    "removedCandidate": "Candidate removed",
+    "removedJob": "Job removed",
+    "erased": "Candidate erased",
+    "purged": "Job deleted",
+    "restored": "Restored",
+    "removedHeading": "Removed",
+    "removedNote": "{count, plural, one {# item} other {# items}} only admins can see",
+    "removedBy": "Removed {date} by {name}",
+    "unknownUser": "unknown user",
+    "export": "Export data"
   }
 }

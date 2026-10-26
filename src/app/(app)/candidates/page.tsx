@@ -1,17 +1,21 @@
 import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
-import { Inbox, UserRound } from "lucide-react";
+import { getViewMode } from "@/lib/auth/session";
+import { CircleCheck, Inbox, UserRound } from "lucide-react";
 import { z } from "zod";
 import { ScoreBadge } from "@/components/assessments/score-badge";
 import { CandidateDrawerLoader } from "@/components/candidates/candidate-drawer-loader";
 import { NewCandidateDialog } from "@/components/candidates/new-candidate-dialog";
 import { EmptyState } from "@/components/empty-state";
+import { RemovedSection } from "@/components/removed-section";
 import { FilterBar } from "@/components/filters/filter-bar";
 import { FoldSection } from "@/components/fold-section";
 import { ProfileLinks } from "@/components/profile-links";
 import { Signal } from "@/components/signals";
 import { STUCK_DAYS, daysSince, isActive } from "@/lib/data/dashboard";
 import { STAGES, type Stage } from "@/lib/data/schemas";
+import { hiresByJob, isFilled } from "@/lib/data/openings";
+import { removedItems } from "@/lib/data/removed";
 import { getScope } from "@/lib/data/scope";
 import { latestScores, scoreKey } from "@/lib/data/scores";
 import { parseMarks } from "@/lib/marks";
@@ -50,6 +54,10 @@ export default async function CandidatesPage({
   const ai = await getTranslations("Assessment");
   const format = await getFormatter();
   const scope = await getScope();
+  const { adminUi } = await getViewMode();
+  const removedQuery = adminUi
+    ? removedItems(scope.orgId, "candidate")
+    : Promise.resolve([]);
 
   const jobFilter = new Set(
     (params.jobs ?? "")
@@ -65,7 +73,7 @@ export default async function CandidatesPage({
   const term = q?.trim().replace(/[%_,()]/g, " ");
   if (term) query = query.ilike("full_name", `%${term}%`);
 
-  const [{ data: candidates }, { data: jobs }, { data: apps }, score] =
+  const [{ data: candidates }, { data: jobs }, { data: apps }, score, removed] =
     await Promise.all([
       query,
       scope.jobs().order("title"),
@@ -75,6 +83,7 @@ export default async function CandidatesPage({
           "id, candidate_id, job_id, stage, stage_changed_at, created_at, starred, flagged, mismatch",
         ),
       latestScores(scope),
+      removedQuery,
     ]);
   const now = Date.now();
   const byId = new Map((candidates ?? []).map((c) => [c.id, c]));
@@ -124,9 +133,17 @@ export default async function CandidatesPage({
     if (list) list.push(r);
     else byJob.set(r.job_id, [r]);
   }
+  // Jobs with all openings filled fold up and sink below the rest.
+  const hires = hiresByJob(apps ?? []);
   const perJob = (jobs ?? [])
-    .map((job) => ({ job, rows: byJob.get(job.id) ?? [] }))
+    .map((job) => ({
+      job,
+      rows: byJob.get(job.id) ?? [],
+      filled: isFilled(job, hires),
+    }))
     .filter((g) => g.rows.length || (!filtering && !term));
+  const hiring = perJob.filter((g) => !g.filled);
+  const filled = perJob.filter((g) => g.filled);
   // Candidates with no application yet; hidden while filtering on jobs or marks.
   const withApps = new Set(rows.map((r) => r.candidate_id));
   const loose = filtering
@@ -289,6 +306,46 @@ export default async function CandidatesPage({
     );
   };
 
+  const jobSection = ({
+    job,
+    rows: items,
+    filled: done,
+  }: (typeof perJob)[number]) => (
+    <FoldSection
+      key={job.id}
+      id={job.id}
+      storageKey={STORAGE_KEY}
+      title={job.title}
+      meta={
+        done
+          ? t("filledNote", {
+              count: new Set(items.map((r) => r.candidate_id)).size,
+            })
+          : t("count", {
+              count: new Set(items.map((r) => r.candidate_id)).size,
+            })
+      }
+      icon={
+        done ? (
+          <span className="flex size-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 ring-1 ring-emerald-500/20 dark:text-emerald-300">
+            <CircleCheck className="size-4" />
+          </span>
+        ) : undefined
+      }
+      aside={phaseCounts(items)}
+      foldedByDefault={done}
+      className={done ? "bg-card/50" : undefined}
+    >
+      {items.length ? (
+        list(items, false)
+      ) : (
+        <p className="text-muted-foreground px-2 py-3 text-sm">
+          {t("noApplicants")}
+        </p>
+      )}
+    </FoldSection>
+  );
+
   return (
     <div className="mx-auto grid w-full max-w-7xl gap-4">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -333,26 +390,7 @@ export default async function CandidatesPage({
               {list(fresh, true)}
             </FoldSection>
           )}
-          {perJob.map(({ job, rows: items }) => (
-            <FoldSection
-              key={job.id}
-              id={job.id}
-              storageKey={STORAGE_KEY}
-              title={job.title}
-              meta={t("count", {
-                count: new Set(items.map((r) => r.candidate_id)).size,
-              })}
-              aside={phaseCounts(items)}
-            >
-              {items.length ? (
-                list(items, false)
-              ) : (
-                <p className="text-muted-foreground px-2 py-3 text-sm">
-                  {t("noApplicants")}
-                </p>
-              )}
-            </FoldSection>
-          ))}
+          {hiring.map(jobSection)}
           {loose.length > 0 && (
             <FoldSection
               id="none"
@@ -374,6 +412,7 @@ export default async function CandidatesPage({
               </ul>
             </FoldSection>
           )}
+          {filled.map(jobSection)}
         </>
       ) : (
         <EmptyState
@@ -381,6 +420,11 @@ export default async function CandidatesPage({
           hint={filtering || term ? t("noMatchesHint") : t("emptyHint")}
         />
       )}
+      <RemovedSection
+        entity="candidate"
+        items={removed}
+        storageKey={STORAGE_KEY}
+      />
       {candidate && (
         <CandidateDrawerLoader key={candidate} candidateId={candidate} />
       )}

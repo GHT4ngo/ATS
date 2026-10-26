@@ -4,6 +4,8 @@ import { useActionState, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { createJob, updateJob } from "@/app/actions/jobs";
+import { removeItem } from "@/app/actions/removed";
+import { ConfirmButton } from "@/components/confirm-button";
 import {
   FormMessage,
   SubmitButton,
@@ -34,6 +36,7 @@ export type JobFormValues = {
 
 export function JobFormDialog({ job }: { job?: JobFormValues }) {
   const t = useTranslations("Jobs");
+  const r = useTranslations("Removal");
   const [open, setOpen] = useState(false);
   const [state, action, pending] = useActionState(
     job ? updateJob.bind(null, job.id) : createJob,
@@ -142,6 +145,20 @@ export function JobFormDialog({ job }: { job?: JobFormValues }) {
           <FormMessage state={state} />
           <SubmitButton pending={pending}>{t("save")}</SubmitButton>
         </form>
+        {job && (
+          <div className="flex items-center justify-between gap-3 border-t pt-4">
+            <p className="text-muted-foreground text-xs">{r("jobHint")}</p>
+            <ConfirmButton
+              label={r("remove")}
+              title={r("removeJobTitle", { title: job.title })}
+              description={r("removeJobBody")}
+              confirmLabel={r("remove")}
+              success={r("removedJob")}
+              run={() => removeItem("job", job.id)}
+              onDone={() => setOpen(false)}
+            />
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

@@ -281,10 +281,14 @@
       "notes": "Anteckningarna uppdaterades",
       "assessed": "{job}: AI-bedömning, poäng {score}",
       "archived": "{job}: borttagen från tavlan",
-      "restored": "{job}: tillbaka på tavlan"
+      "restored": "{job}: tillbaka på tavlan",
+      "removed": "Borttagen",
+      "reinstated": "Återställd av en admin",
+      "exported": "Personuppgifterna exporterades"
     },
     "linkedin": "LinkedIn",
     "count": "{count, plural, one {# kandidat} other {# kandidater}}",
+    "filledNote": "Alla tjänster tillsatta · {count, plural, one {# kandidat} other {# kandidater}}",
     "noMatches": "Inga kandidater matchar filtren",
     "noMatchesHint": "Prova att ta bort ett filter.",
     "emptyHint": "Lägg till den första kandidaten med knappen ovan.",
@@ -400,5 +404,39 @@
     "days": "{days, plural, one {# dag} other {# dagar}} i steget",
     "stuck": "Har stått still i {days} dagar",
     "removal": "Tas bort från tavlan om {days, plural, one {# dag} other {# dagar}}"
+  },
+  "Confirm": {
+    "cancel": "Avbryt",
+    "typeToConfirm": "Skriv {text} för att bekräfta."
+  },
+  "Removal": {
+    "heading": "Personuppgifter",
+    "candidateHint": "Exportera laddar ner allt som sparats om kandidaten, för en begäran om registerutdrag. Ta bort döljer kandidaten, som raderas för gott efter 30 dagar om ingen admin återställer den. Radera tar bort kandidaten, CV:t och historiken direkt, för en begäran om att bli glömd.",
+    "jobHint": "Ta bort döljer jobbet och dess ansökningar. En admin kan återställa det inom 30 dagar.",
+    "remove": "Ta bort",
+    "erase": "Radera permanent",
+    "purge": "Radera permanent",
+    "restore": "Återställ",
+    "removeCandidateTitle": "Ta bort {name}?",
+    "removeCandidateBody": "Kandidaten och kandidatens ansökningar försvinner från listorna, tavlan och översikten. En admin kan återställa dem inom 30 dagar, sedan raderas de för gott.",
+    "removeJobTitle": "Ta bort {title}?",
+    "removeJobBody": "Jobbet och alla dess ansökningar försvinner från listorna, tavlan och översikten. Kandidaterna finns kvar. En admin kan återställa jobbet inom 30 dagar, sedan raderas det för gott.",
+    "eraseTitle": "Radera {name} permanent?",
+    "eraseBody": "Kandidaten, CV filen, alla ansökningar, alla CV bedömningar och historiken om dem raderas direkt. Det går inte att ångra.",
+    "purgeTitle": "Radera {title} permanent?",
+    "purgeBody": "Jobbet, dess steg, dess ansökningar och deras CV bedömningar raderas. Kandidaterna finns kvar. Det går inte att ångra.",
+    "restoreTitle": "Återställ {name}?",
+    "restoreCandidateBody": "Kandidaten och kandidatens ansökningar kommer tillbaka för alla i organisationen.",
+    "restoreJobBody": "Jobbet och dess ansökningar kommer tillbaka för alla i organisationen.",
+    "removedCandidate": "Kandidaten är borttagen",
+    "removedJob": "Jobbet är borttaget",
+    "erased": "Kandidaten är raderad",
+    "purged": "Jobbet är raderat",
+    "restored": "Återställd",
+    "removedHeading": "Borttaget",
+    "removedNote": "{count, plural, one {# post} other {# poster}} som bara admins ser",
+    "removedBy": "Borttaget {date} av {name}",
+    "unknownUser": "okänd användare",
+    "export": "Exportera data"
   }
 }
