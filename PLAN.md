@@ -182,7 +182,7 @@ Remove, erase and retention after a GDPR check. Branch `feat/remove-and-erase`.
 * [x] Vercel functions moved from Washington (`iad1`) to Dublin (`dub1`), next to the database
 * [x] [docs/privacy.md](./docs/privacy.md): roles, processors, rights, retention, the AI Act
 * [x] Review with `/code-review medium`, 8 findings fixed
-* [ ] Apply the migrations in production and set `CRON_SECRET` in Vercel
+* [x] Apply the migrations in production and set `CRON_SECRET` in Vercel
 
 ## Assumptions (for the email)
 
