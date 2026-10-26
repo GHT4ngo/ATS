@@ -65,7 +65,8 @@
     "agentFailed": "Assistenten stötte på ett problem. Försök igen.",
     "conversationTooLong": "Konversationen är för lång. Starta en ny för att fortsätta.",
     "stageLast": "Varje fas behöver minst ett steg.",
-    "stageInUse": "Flytta kandidaterna från steget innan du tar bort det."
+    "stageInUse": "Flytta kandidaterna från steget innan du tar bort det.",
+    "cvEraseFailed": "Kandidaten är raderad, men CV filen kunde inte tas bort. Kontakta support."
   },
   "Auth": {
     "loginTitle": "Logga in",
@@ -401,5 +402,38 @@
     "days": "{days, plural, one {# dag} other {# dagar}} i steget",
     "stuck": "Har stått still i {days} dagar",
     "removal": "Tas bort från tavlan om {days, plural, one {# dag} other {# dagar}}"
+  },
+  "Confirm": {
+    "cancel": "Avbryt",
+    "typeToConfirm": "Skriv {text} för att bekräfta."
+  },
+  "Removal": {
+    "heading": "Ta bort",
+    "candidateHint": "Ta bort döljer kandidaten för alla. En admin kan återställa den. Radera tar bort kandidaten, CV:t och historiken för gott, till exempel efter en begäran enligt GDPR.",
+    "jobHint": "Ta bort döljer jobbet och dess ansökningar. En admin kan återställa det.",
+    "remove": "Ta bort",
+    "erase": "Radera permanent",
+    "purge": "Radera permanent",
+    "restore": "Återställ",
+    "removeCandidateTitle": "Ta bort {name}?",
+    "removeCandidateBody": "Kandidaten och kandidatens ansökningar försvinner från listorna, tavlan och översikten. En admin kan återställa dem.",
+    "removeJobTitle": "Ta bort {title}?",
+    "removeJobBody": "Jobbet och alla dess ansökningar försvinner från listorna, tavlan och översikten. Kandidaterna finns kvar. En admin kan återställa jobbet.",
+    "eraseTitle": "Radera {name} permanent?",
+    "eraseBody": "Kandidaten, CV filen, alla ansökningar, alla CV bedömningar och historiken om dem raderas direkt. Det går inte att ångra.",
+    "purgeTitle": "Radera {title} permanent?",
+    "purgeBody": "Jobbet, dess steg, dess ansökningar och deras CV bedömningar raderas. Kandidaterna finns kvar. Det går inte att ångra.",
+    "restoreTitle": "Återställ {name}?",
+    "restoreCandidateBody": "Kandidaten och kandidatens ansökningar kommer tillbaka för alla i organisationen.",
+    "restoreJobBody": "Jobbet och dess ansökningar kommer tillbaka för alla i organisationen.",
+    "removedCandidate": "Kandidaten är borttagen",
+    "removedJob": "Jobbet är borttaget",
+    "erased": "Kandidaten är raderad",
+    "purged": "Jobbet är raderat",
+    "restored": "Återställd",
+    "removedHeading": "Borttaget",
+    "removedNote": "{count, plural, one {# post} other {# poster}} som bara admins ser",
+    "removedBy": "Borttaget {date} av {name}",
+    "unknownUser": "okänd användare"
   }
 }

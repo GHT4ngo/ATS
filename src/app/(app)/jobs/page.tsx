@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { CircleCheck, RotateCcw } from "lucide-react";
 import { reopenJob } from "@/app/actions/jobs";
+import { getViewMode } from "@/lib/auth/session";
 import { getTranslations } from "next-intl/server";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/empty-state";
+import { RemovedSection } from "@/components/removed-section";
 import { JobFormDialog } from "@/components/jobs/job-form-dialog";
 import {
   JobStagesDialog,
@@ -21,6 +23,7 @@ import {
 import { STAGES, compareStages } from "@/lib/data/schemas";
 import { hiresByJob, isFilled } from "@/lib/data/openings";
 import { allRows } from "@/lib/data/paging";
+import { removedItems } from "@/lib/data/removed";
 import { getScope } from "@/lib/data/scope";
 import { PHASE_STYLE } from "@/lib/phase-style";
 import { cn } from "@/lib/utils";
@@ -29,6 +32,8 @@ export default async function JobsPage() {
   const t = await getTranslations("Jobs");
   const s = await getTranslations("Stages");
   const scope = await getScope();
+  const { adminUi } = await getViewMode();
+  const removed = adminUi ? await removedItems(scope.orgId, "job") : [];
 
   const [{ data: jobs }, { data: apps }, { data: stages }] = await Promise.all([
     scope.jobs().order("created_at", { ascending: false }),
@@ -260,6 +265,11 @@ export default async function JobsPage() {
       ) : (
         <EmptyState title={t("empty")} hint={t("emptyHint")} />
       )}
+      <RemovedSection
+        entity="job"
+        items={removed}
+        storageKey="ats.jobs.sections"
+      />
     </div>
   );
 }

@@ -65,7 +65,8 @@
     "agentFailed": "The assistant ran into a problem. Try again.",
     "conversationTooLong": "The conversation is too long. Start a new one to continue.",
     "stageLast": "Every phase needs at least one stage.",
-    "stageInUse": "Move the candidates out of this stage before deleting it."
+    "stageInUse": "Move the candidates out of this stage before deleting it.",
+    "cvEraseFailed": "The candidate was erased, but the CV file could not be deleted. Contact support."
   },
   "Auth": {
     "loginTitle": "Sign in",
@@ -401,5 +402,38 @@
     "days": "{days, plural, one {# day} other {# days}} in this stage",
     "stuck": "No movement for {days} days",
     "removal": "Leaves the board in {days, plural, one {# day} other {# days}}"
+  },
+  "Confirm": {
+    "cancel": "Cancel",
+    "typeToConfirm": "Type {text} to confirm."
+  },
+  "Removal": {
+    "heading": "Remove",
+    "candidateHint": "Remove hides the candidate from everyone. An admin can restore it. Erase deletes the candidate, the CV and the history for good, for example after a GDPR request.",
+    "jobHint": "Remove hides the job and its applications. An admin can restore it.",
+    "remove": "Remove",
+    "erase": "Erase permanently",
+    "purge": "Delete permanently",
+    "restore": "Restore",
+    "removeCandidateTitle": "Remove {name}?",
+    "removeCandidateBody": "The candidate and their applications disappear from the lists, the board and the dashboard. An admin can restore them.",
+    "removeJobTitle": "Remove {title}?",
+    "removeJobBody": "The job and all its applications disappear from the lists, the board and the dashboard. The candidates stay. An admin can restore the job.",
+    "eraseTitle": "Erase {name} permanently?",
+    "eraseBody": "The candidate, the CV file, every application, every CV assessment and the history about them are deleted at once. This cannot be undone.",
+    "purgeTitle": "Delete {title} permanently?",
+    "purgeBody": "The job, its stages, its applications and their CV assessments are deleted. The candidates stay. This cannot be undone.",
+    "restoreTitle": "Restore {name}?",
+    "restoreCandidateBody": "The candidate and their applications come back for everyone in the organization.",
+    "restoreJobBody": "The job and its applications come back for everyone in the organization.",
+    "removedCandidate": "Candidate removed",
+    "removedJob": "Job removed",
+    "erased": "Candidate erased",
+    "purged": "Job deleted",
+    "restored": "Restored",
+    "removedHeading": "Removed",
+    "removedNote": "{count, plural, one {# item} other {# items}} only admins can see",
+    "removedBy": "Removed {date} by {name}",
+    "unknownUser": "unknown user"
   }
 }

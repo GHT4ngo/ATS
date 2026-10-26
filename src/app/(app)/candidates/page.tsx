@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
+import { getViewMode } from "@/lib/auth/session";
 import { CircleCheck, Inbox, UserRound } from "lucide-react";
 import { z } from "zod";
 import { ScoreBadge } from "@/components/assessments/score-badge";
 import { CandidateDrawerLoader } from "@/components/candidates/candidate-drawer-loader";
 import { NewCandidateDialog } from "@/components/candidates/new-candidate-dialog";
 import { EmptyState } from "@/components/empty-state";
+import { RemovedSection } from "@/components/removed-section";
 import { FilterBar } from "@/components/filters/filter-bar";
 import { FoldSection } from "@/components/fold-section";
 import { ProfileLinks } from "@/components/profile-links";
@@ -13,6 +15,7 @@ import { Signal } from "@/components/signals";
 import { STUCK_DAYS, daysSince, isActive } from "@/lib/data/dashboard";
 import { STAGES, type Stage } from "@/lib/data/schemas";
 import { hiresByJob, isFilled } from "@/lib/data/openings";
+import { removedItems } from "@/lib/data/removed";
 import { getScope } from "@/lib/data/scope";
 import { latestScores, scoreKey } from "@/lib/data/scores";
 import { parseMarks } from "@/lib/marks";
@@ -51,6 +54,8 @@ export default async function CandidatesPage({
   const ai = await getTranslations("Assessment");
   const format = await getFormatter();
   const scope = await getScope();
+  const { adminUi } = await getViewMode();
+  const removed = adminUi ? await removedItems(scope.orgId, "candidate") : [];
 
   const jobFilter = new Set(
     (params.jobs ?? "")
@@ -412,6 +417,11 @@ export default async function CandidatesPage({
           hint={filtering || term ? t("noMatchesHint") : t("emptyHint")}
         />
       )}
+      <RemovedSection
+        entity="candidate"
+        items={removed}
+        storageKey={STORAGE_KEY}
+      />
       {candidate && (
         <CandidateDrawerLoader key={candidate} candidateId={candidate} />
       )}
