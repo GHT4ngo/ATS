@@ -65,8 +65,7 @@
     "agentFailed": "Assistenten stötte på ett problem. Försök igen.",
     "conversationTooLong": "Konversationen är för lång. Starta en ny för att fortsätta.",
     "stageLast": "Varje fas behöver minst ett steg.",
-    "stageInUse": "Flytta kandidaterna från steget innan du tar bort det.",
-    "cvEraseFailed": "Kandidaten är raderad, men CV filen kunde inte tas bort. Kontakta support."
+    "stageInUse": "Flytta kandidaterna från steget innan du tar bort det."
   },
   "Auth": {
     "loginTitle": "Logga in",

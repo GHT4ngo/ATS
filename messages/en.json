@@ -65,8 +65,7 @@
     "agentFailed": "The assistant ran into a problem. Try again.",
     "conversationTooLong": "The conversation is too long. Start a new one to continue.",
     "stageLast": "Every phase needs at least one stage.",
-    "stageInUse": "Move the candidates out of this stage before deleting it.",
-    "cvEraseFailed": "The candidate was erased, but the CV file could not be deleted. Contact support."
+    "stageInUse": "Move the candidates out of this stage before deleting it."
   },
   "Auth": {
     "loginTitle": "Sign in",

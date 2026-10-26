@@ -37,7 +37,7 @@ Anthropic and Vercel are US companies, so transfers rely on their data processin
 |:------|:----|
 | Access and portability (Art. 15 and 20) | **Export data** in the candidate profile downloads a JSON file with everything stored about the candidate. **Open CV** downloads the CV. The export is logged. |
 | Rectification (Art. 16) | **Edit profile** in the candidate profile. |
-| Erasure (Art. 17) | **Erase permanently** in the candidate profile deletes the candidate, the CV file, the applications, the AI assessments and the history about them at once, and records the erasure in `erasure_log`. |
+| Erasure (Art. 17) | **Erase permanently** in the candidate profile deletes the CV file first, then the candidate, the applications, the AI assessments and the history about them in one transaction, and records the erasure in `erasure_log`. If the file cannot be deleted, nothing is, so the erase can simply be tried again. |
 | Objection to automated decisions (Art. 22) | Nothing is decided automatically. The AI score is advice, the app says so, and a low score only tints the card; a person moves or rejects every candidate. |
 
 **Remove is not erase.** Remove hides a candidate or a job and lets an admin restore it. Use Erase for a request to be forgotten.
@@ -56,7 +56,7 @@ Both limits are constants in `src/lib/data/erase.ts`. Every erasure is recorded 
 ## Security
 
 * Row level security on every table, with a pytest test for each policy, keeps each organization's data apart.
-* CVs live in a private bucket and are opened through links that expire after 60 seconds.
+* CVs live in a private bucket and are opened through links that expire after 60 seconds. A removed candidate's CV is locked as well, and history entries about removed rows are hidden with them.
 * The service role key is server only. It writes AI assessments, erases data and runs the retention job, always after the server has checked the caller.
 * The retention job only runs with the `CRON_SECRET` bearer token.
 

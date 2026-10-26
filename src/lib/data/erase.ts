@@ -9,27 +9,19 @@ export const REMOVED_DAYS = 30;
 export const RETENTION_MONTHS = 24;
 
 /**
- * Erases a candidate for good: the row, the applications, the CV assessments,
- * the log entries about them and the CV file, and records the erasure without
- * personal data. Service role: the caller checks who may do this. Returns
- * "gone" when there was nothing to erase.
+ * Erases a candidate for good: the CV file first, then in one transaction the
+ * row, the applications, the CV assessments and the log entries about them,
+ * and records the erasure without personal data. If the file cannot be
+ * deleted nothing else is, so the erase can be tried again. Service role: the
+ * caller checks who may do this. False when nothing was erased.
  */
 export async function eraseCandidateData(
   orgId: string,
   candidateId: string,
   actor: string | null,
   reason: ErasureReason,
-): Promise<"ok" | "gone" | "failed" | "fileLeft"> {
+): Promise<boolean> {
   const admin = createAdminClient();
-  const { data, error } = await admin.rpc("erase_candidate", {
-    p_id: candidateId,
-    // null for the daily retention job, which acts as nobody.
-    p_actor: actor as string,
-    p_reason: reason,
-  });
-  if (error) return "failed";
-  if (!data) return "gone";
-
   const folder = `${orgId}/${candidateId}`;
   const { data: files, error: listError } = await admin.storage
     .from("cvs")
@@ -41,9 +33,17 @@ export async function eraseCandidateData(
     : { error: null };
   if (listError || removeError) {
     console.error("CV file not erased", folder, listError ?? removeError);
-    return "fileLeft";
+    return false;
   }
-  return "ok";
+
+  const { data, error } = await admin.rpc("erase_candidate", {
+    p_id: candidateId,
+    // null for the daily retention job, which acts as nobody.
+    p_actor: actor as string,
+    p_reason: reason,
+  });
+  if (error) console.error("Candidate not erased", candidateId, error);
+  return !error && Boolean(data);
 }
 
 /** Deletes a job for good, with its stages and applications. Service role. */

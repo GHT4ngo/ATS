@@ -9,6 +9,18 @@ import {
 } from "@/lib/data/erase";
 import { createAdminClient } from "@/lib/supabase/admin";
 
+const MAX_PER_RUN = 200;
+const BATCH = 5;
+
+async function inBatches(runs: (() => Promise<boolean>)[]) {
+  const results: boolean[] = [];
+  for (let i = 0; i < runs.length; i += BATCH)
+    results.push(
+      ...(await Promise.all(runs.slice(i, i + BATCH).map((r) => r()))),
+    );
+  return results;
+}
+
 /**
  * Daily retention job, called by Vercel Cron with the CRON_SECRET as a bearer
  * token. Erases candidates and jobs removed more than REMOVED_DAYS ago, and
@@ -38,20 +50,28 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "lookup" }, { status: 500 });
   }
 
+  // A few at a time, and at most MAX_PER_RUN a night, so a large backlog
+  // cannot run past the function time limit; the rest waits for tomorrow.
   const counts = { candidates: 0, jobs: 0, failed: 0 };
-  for (const c of candidates.data) {
-    const result = await eraseCandidateData(
-      c.organization_id,
-      c.id,
-      null,
-      c.reason as ErasureReason,
+  const candidateRuns = candidates.data
+    .slice(0, MAX_PER_RUN)
+    .map(
+      (c) => () =>
+        eraseCandidateData(
+          c.organization_id,
+          c.id,
+          null,
+          c.reason as ErasureReason,
+        ),
     );
-    if (result === "ok") counts.candidates++;
-    else if (result !== "gone") counts.failed++;
-  }
-  for (const j of jobs.data) {
-    if (await purgeJobData(j.id, null, "removed")) counts.jobs++;
+  for (const ok of await inBatches(candidateRuns))
+    if (ok) counts.candidates++;
     else counts.failed++;
-  }
+  const jobRuns = jobs.data
+    .slice(0, MAX_PER_RUN)
+    .map((j) => () => purgeJobData(j.id, null, "removed"));
+  for (const ok of await inBatches(jobRuns))
+    if (ok) counts.jobs++;
+    else counts.failed++;
   return NextResponse.json(counts, { status: counts.failed ? 500 : 200 });
 }

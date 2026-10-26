@@ -28,12 +28,29 @@ export async function removeItem(
   if (!parsed.success) return { error: "invalidInput" };
   const { data, error } = await scope.supabase.rpc(
     entity === "candidate" ? "remove_candidate" : "remove_job",
-    { p_id: parsed.data },
+    { p_id: parsed.data, p_org: scope.orgId },
   );
   if (error || !data) return { error: "generic" };
-  await scope.log(entity, parsed.data, "removed");
+  const { error: logError } = await scope.log(entity, parsed.data, "removed");
+  if (logError) console.error("Removal log failed", logError);
   revalidate();
   return { ok: true };
+}
+
+/** A removed row in the active organization. Service role, for admins only. */
+async function isRemoved(
+  table: "candidates" | "jobs",
+  id: string,
+  orgId: string,
+) {
+  const { data } = await createAdminClient()
+    .from(table)
+    .select("id")
+    .eq("id", id)
+    .eq("organization_id", orgId)
+    .not("removed_at", "is", null)
+    .maybeSingle();
+  return Boolean(data);
 }
 
 /** The candidate in the active organization, removed or not, if this caller may erase it. */
@@ -46,14 +63,7 @@ async function erasable(
   if (own) return true;
   // Admins may also erase one that has been removed.
   if (!(await getViewMode()).adminUi) return false;
-  const { data } = await createAdminClient()
-    .from("candidates")
-    .select("id")
-    .eq("id", id)
-    .eq("organization_id", scope.orgId)
-    .not("removed_at", "is", null)
-    .maybeSingle();
-  return Boolean(data);
+  return isRemoved("candidates", id, scope.orgId);
 }
 
 /**
@@ -72,9 +82,8 @@ export async function eraseCandidate(id: string): Promise<ActionState> {
     scope.userId,
     "request",
   );
-  if (result === "failed" || result === "gone") return { error: "generic" };
+  if (!result) return { error: "generic" };
   revalidate();
-  if (result === "fileLeft") return { ok: true, error: "cvEraseFailed" };
   return { ok: true };
 }
 
@@ -98,7 +107,12 @@ export async function restoreItem(
   if (error)
     return { error: error.code === "23505" ? "duplicateEmail" : "generic" };
   if (!data?.length) return { error: "generic" };
-  await scope.log(entity, parsed.data, "reinstated");
+  const { error: logError } = await scope.log(
+    entity,
+    parsed.data,
+    "reinstated",
+  );
+  if (logError) console.error("Restore log failed", logError);
   revalidate();
   return { ok: true };
 }
@@ -110,16 +124,9 @@ export async function purgeJob(id: string): Promise<ActionState> {
   if (!parsed.success) return { error: "invalidInput" };
   if (!(await getViewMode()).adminUi) return { error: "generic" };
 
-  const admin = createAdminClient();
-  const { data: job } = await admin
-    .from("jobs")
-    .select("id")
-    .eq("id", parsed.data)
-    .eq("organization_id", scope.orgId)
-    .not("removed_at", "is", null)
-    .maybeSingle();
-  if (!job) return { error: "generic" };
-  if (!(await purgeJobData(job.id, scope.userId, "request")))
+  if (!(await isRemoved("jobs", parsed.data, scope.orgId)))
+    return { error: "generic" };
+  if (!(await purgeJobData(parsed.data, scope.userId, "request")))
     return { error: "generic" };
   revalidate();
   return { ok: true };

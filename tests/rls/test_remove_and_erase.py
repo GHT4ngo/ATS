@@ -5,6 +5,7 @@ import uuid
 import pytest
 from conftest import Org, World
 from postgrest.exceptions import APIError
+from storage3.exceptions import StorageApiError
 
 from supabase import Client
 
@@ -59,7 +60,12 @@ def visible(client: Client, table: str, row_id: str) -> bool:
 
 def test_customer_removes_candidate_and_it_disappears(world: World, login, service, pair):
     client = login(world.customer_a)
-    assert client.rpc("remove_candidate", {"p_id": pair["cand"]}).execute().data is True
+    assert (
+        client.rpc("remove_candidate", {"p_id": pair["cand"], "p_org": world.org_a.id})
+        .execute()
+        .data
+        is True
+    )
     row = service.table("candidates").select("*").eq("id", pair["cand"]).single().execute()
     assert row.data["removed_at"] is not None
     assert row.data["removed_by"] == world.customer_a.id
@@ -67,12 +73,20 @@ def test_customer_removes_candidate_and_it_disappears(world: World, login, servi
         assert not visible(login(user), "candidates", pair["cand"])
         assert not visible(login(user), "applications", pair["app"])
     # Removing twice reports nothing removed.
-    assert client.rpc("remove_candidate", {"p_id": pair["cand"]}).execute().data is False
+    assert (
+        client.rpc("remove_candidate", {"p_id": pair["cand"], "p_org": world.org_a.id})
+        .execute()
+        .data
+        is False
+    )
 
 
 def test_removed_job_hides_applications_and_stages(world: World, login, pair):
     client = login(world.customer_a)
-    assert client.rpc("remove_job", {"p_id": pair["job"]}).execute().data is True
+    assert (
+        client.rpc("remove_job", {"p_id": pair["job"], "p_org": world.org_a.id}).execute().data
+        is True
+    )
     assert not visible(client, "jobs", pair["job"])
     assert not visible(client, "applications", pair["app"])
     assert visible(client, "candidates", pair["cand"])
@@ -92,7 +106,7 @@ def test_removed_candidate_hides_assessments(world: World, login, service, pair)
         }
     ).execute()
     client = login(world.customer_a)
-    client.rpc("remove_candidate", {"p_id": pair["cand"]}).execute()
+    client.rpc("remove_candidate", {"p_id": pair["cand"], "p_org": world.org_a.id}).execute()
     for table in ("cv_assessments", "latest_cv_assessments"):
         rows = client.table(table).select("id").eq("candidate_id", pair["cand"]).execute()
         assert rows.data == []
@@ -102,8 +116,19 @@ def test_customer_cannot_remove_other_org(world: World, login, service):
     ids = make_pair(service, world.org_b)
     try:
         client = login(world.customer_a)
-        assert client.rpc("remove_candidate", {"p_id": ids["cand"]}).execute().data is False
-        assert client.rpc("remove_job", {"p_id": ids["job"]}).execute().data is False
+        assert (
+            client.rpc("remove_candidate", {"p_id": ids["cand"], "p_org": world.org_a.id})
+            .execute()
+            .data
+            is False
+        )
+        assert (
+            client.rpc("remove_job", {"p_id": ids["job"], "p_org": world.org_a.id}).execute().data
+            is False
+        )
+        # Naming the other organization does not help either.
+        for args in ({"p_id": ids["cand"], "p_org": world.org_b.id},):
+            assert client.rpc("remove_candidate", args).execute().data is False
         row = service.table("candidates").select("removed_at").eq("id", ids["cand"]).single()
         assert row.execute().data["removed_at"] is None
     finally:
@@ -129,14 +154,10 @@ def test_cannot_insert_removed_rows(world: World, login):
 
 def test_removed_rows_cannot_be_changed(world: World, login, pair):
     client = login(world.customer_a)
-    client.rpc("remove_candidate", {"p_id": pair["cand"]}).execute()
-    result = (
-        client.table("candidates").update({"notes": "x"}).eq("id", pair["cand"]).execute()
-    )
+    client.rpc("remove_candidate", {"p_id": pair["cand"], "p_org": world.org_a.id}).execute()
+    result = client.table("candidates").update({"notes": "x"}).eq("id", pair["cand"]).execute()
     assert result.data == []
-    result = (
-        client.table("applications").update({"rating": 3}).eq("id", pair["app"]).execute()
-    )
+    result = client.table("applications").update({"rating": 3}).eq("id", pair["app"]).execute()
     assert result.data == []
 
 
@@ -146,7 +167,7 @@ def test_removed_email_can_be_reused(world: World, login, service):
     client = login(world.customer_a)
     new_id = None
     try:
-        client.rpc("remove_candidate", {"p_id": ids["cand"]}).execute()
+        client.rpc("remove_candidate", {"p_id": ids["cand"], "p_org": world.org_a.id}).execute()
         new = (
             client.table("candidates")
             .insert({"organization_id": world.org_a.id, "full_name": "Again", "email": email})
@@ -155,9 +176,7 @@ def test_removed_email_can_be_reused(world: World, login, service):
         new_id = new.data[0]["id"]
         # Restoring the old row now clashes with the new one.
         with pytest.raises(APIError):
-            service.table("candidates").update({"removed_at": None}).eq(
-                "id", ids["cand"]
-            ).execute()
+            service.table("candidates").update({"removed_at": None}).eq("id", ids["cand"]).execute()
     finally:
         if new_id:
             service.table("candidates").delete().eq("id", new_id).execute()
@@ -188,7 +207,10 @@ def test_erase_deletes_candidate_and_its_log(world: World, service, pair):
             "payload": {"name": "Temp"},
         }
     ).execute()
-    assert service.rpc("erase_candidate", erase_args(pair["cand"], world.customer_a.id)).execute().data is True
+    assert (
+        service.rpc("erase_candidate", erase_args(pair["cand"], world.customer_a.id)).execute().data
+        is True
+    )
     assert service.table("candidates").select("id").eq("id", pair["cand"]).execute().data == []
     assert service.table("applications").select("id").eq("id", pair["app"]).execute().data == []
     logs = (
@@ -256,15 +278,17 @@ def expired(service: Client) -> dict[str, str]:
     return {r["id"]: r["reason"] for r in rows.data}
 
 
-
 OLD = "2020-01-01T00:00:00Z"
 
 
 def test_expired_candidates(world: World, service: Client):
     job = world.org_a.job_id
-    old = service.table("candidates").insert(
-        {"organization_id": world.org_a.id, "full_name": "Old", "updated_at": OLD}
-    ).execute().data[0]["id"]
+    old = (
+        service.table("candidates")
+        .insert({"organization_id": world.org_a.id, "full_name": "Old", "updated_at": OLD})
+        .execute()
+        .data[0]["id"]
+    )
     service.table("applications").insert(
         {
             "organization_id": world.org_a.id,
@@ -275,19 +299,28 @@ def test_expired_candidates(world: World, service: Client):
         }
     ).execute()
     # Old profile, but an application that moved recently.
-    busy = service.table("candidates").insert(
-        {"organization_id": world.org_a.id, "full_name": "Busy", "updated_at": OLD}
-    ).execute().data[0]["id"]
+    busy = (
+        service.table("candidates")
+        .insert({"organization_id": world.org_a.id, "full_name": "Busy", "updated_at": OLD})
+        .execute()
+        .data[0]["id"]
+    )
     service.table("applications").insert(
         {"organization_id": world.org_a.id, "candidate_id": busy, "job_id": job}
     ).execute()
-    gone = service.table("candidates").insert(
-        {"organization_id": world.org_a.id, "full_name": "Gone"}
-    ).execute().data[0]["id"]
+    gone = (
+        service.table("candidates")
+        .insert({"organization_id": world.org_a.id, "full_name": "Gone"})
+        .execute()
+        .data[0]["id"]
+    )
     service.table("candidates").update({"removed_at": OLD}).eq("id", gone).execute()
-    fresh = service.table("candidates").insert(
-        {"organization_id": world.org_a.id, "full_name": "Fresh"}
-    ).execute().data[0]["id"]
+    fresh = (
+        service.table("candidates")
+        .insert({"organization_id": world.org_a.id, "full_name": "Fresh"})
+        .execute()
+        .data[0]["id"]
+    )
     service.table("candidates").update({"removed_at": "now()"}).eq("id", fresh).execute()
     try:
         found = expired(service)
@@ -310,3 +343,92 @@ def test_expired_jobs(world: World, service: Client):
     finally:
         service.table("candidates").delete().eq("id", ids["cand"]).execute()
         service.table("jobs").delete().eq("id", ids["job"]).execute()
+
+
+def test_admin_removes_only_in_the_named_org(world: World, login, service):
+    ids = make_pair(service, world.org_b)
+    try:
+        admin = login(world.admin)
+        wrong = {"p_id": ids["cand"], "p_org": world.org_a.id}
+        assert admin.rpc("remove_candidate", wrong).execute().data is False
+        right = {"p_id": ids["cand"], "p_org": world.org_b.id}
+        assert admin.rpc("remove_candidate", right).execute().data is True
+    finally:
+        service.table("candidates").delete().eq("id", ids["cand"]).execute()
+        service.table("jobs").delete().eq("id", ids["job"]).execute()
+
+
+def test_removed_candidate_hides_activity(world: World, login, service, pair):
+    client = login(world.customer_a)
+    cand_log = {"entity": "candidate", "entity_id": pair["cand"]}
+    service.table("activity_log").insert(
+        {"organization_id": world.org_a.id, "action": "created", **cand_log}
+    ).execute()
+
+    def seen() -> int:
+        rows = (
+            client.table("activity_log")
+            .select("id")
+            .in_("entity_id", [pair["cand"], pair["app"]])
+            .execute()
+        )
+        return len(rows.data)
+
+    assert seen() == 2
+    client.rpc("remove_candidate", {"p_id": pair["cand"], "p_org": world.org_a.id}).execute()
+    assert seen() == 0
+    assert (
+        len(
+            login(world.admin)
+            .table("activity_log")
+            .select("id")
+            .in_("entity_id", [pair["cand"], pair["app"]])
+            .execute()
+            .data
+        )
+        == 0
+    )
+
+
+def test_removed_job_hides_its_activity(world: World, login, service, pair):
+    client = login(world.customer_a)
+    service.table("activity_log").insert(
+        {
+            "organization_id": world.org_a.id,
+            "entity": "job",
+            "entity_id": pair["job"],
+            "action": "created",
+        }
+    ).execute()
+    assert client.table("activity_log").select("id").eq("entity_id", pair["job"]).execute().data
+    client.rpc("remove_job", {"p_id": pair["job"], "p_org": world.org_a.id}).execute()
+    assert (
+        client.table("activity_log").select("id").eq("entity_id", pair["job"]).execute().data == []
+    )
+
+
+PDF = b"%PDF-1.4\n%test\n"
+
+
+def test_removed_candidate_cv_is_locked(world: World, login, service, pair):
+    path = f"{world.org_a.id}/{pair['cand']}/cv.pdf"
+    service.storage.from_("cvs").upload(path, PDF, {"content-type": "application/pdf"})
+    try:
+        client = login(world.customer_a)
+        assert client.storage.from_("cvs").download(path) == PDF
+        client.rpc("remove_candidate", {"p_id": pair["cand"], "p_org": world.org_a.id}).execute()
+        for user in (world.customer_a, world.admin):
+            bucket = login(user).storage.from_("cvs")
+            with pytest.raises(StorageApiError):
+                bucket.download(path)
+            with pytest.raises(StorageApiError):
+                bucket.upload(
+                    f"{world.org_a.id}/{pair['cand']}/new.pdf",
+                    PDF,
+                    {"content-type": "application/pdf"},
+                )
+            # A delete matches no object, so the file stays.
+            bucket.remove([path])
+        assert service.storage.from_("cvs").download(path) == PDF
+    finally:
+        service.storage.from_("cvs").remove([path])

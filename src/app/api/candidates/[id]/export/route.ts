@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getScope } from "@/lib/data/scope";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
  * Everything stored about one candidate, as a JSON download, for a GDPR
  * access or portability request. The CV file is downloaded on its own from
- * the profile. RLS limits this to candidates the caller can see.
+ * the profile. The caller must be able to see the candidate; the rest is
+ * read through the service role, so rows hidden by a removed job are still
+ * included while they are stored.
  */
 export async function GET(
   _: Request,
@@ -23,11 +26,16 @@ export async function GET(
   if (!candidate)
     return NextResponse.json({ error: "notFound" }, { status: 404 });
 
+  const admin = createAdminClient();
   const [{ data: apps }, { data: jobs }, { data: assessments }] =
     await Promise.all([
-      scope.applications().eq("candidate_id", candidate.id),
-      scope.jobs(),
-      scope.supabase
+      admin
+        .from("applications")
+        .select("*")
+        .eq("organization_id", scope.orgId)
+        .eq("candidate_id", candidate.id),
+      admin.from("jobs").select("id, title").eq("organization_id", scope.orgId),
+      admin
         .from("cv_assessments")
         .select(
           "job_id, score, summary, strengths, gaps, skill_matches, interview_questions, model, created_at",
@@ -43,7 +51,7 @@ export async function GET(
       ? [`and(entity.eq.application,entity_id.in.(${appIds.join(",")}))`]
       : []),
   ].join(",");
-  const { data: log } = await scope.supabase
+  const { data: log } = await admin
     .from("activity_log")
     .select("entity, action, payload, created_at")
     .eq("organization_id", scope.orgId)
@@ -83,11 +91,13 @@ export async function GET(
     })),
     activity: log ?? [],
   };
+  // An ASCII name for old clients, the real one in filename*.
   const name = candidate.full_name.replace(/[^\p{L}\p{N}]+/gu, "_");
+  const ascii = name.normalize("NFD").replace(/[^A-Za-z0-9_]/g, "");
   return new NextResponse(JSON.stringify(body, null, 2), {
     headers: {
       "Content-Type": "application/json; charset=utf-8",
-      "Content-Disposition": `attachment; filename="candidate_${encodeURIComponent(name)}.json"`,
+      "Content-Disposition": `attachment; filename="candidate_${ascii}.json"; filename*=UTF-8''candidate_${encodeURIComponent(name)}.json`,
       "Cache-Control": "no-store",
     },
   });

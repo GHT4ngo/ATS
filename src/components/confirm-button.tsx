@@ -16,6 +16,8 @@ import {
 import { Input } from "@/components/ui/input";
 import type { ActionState } from "@/lib/auth/schemas";
 
+const squash = (text: string) => text.trim().replace(/\s+/g, " ");
+
 /**
  * A button that asks before it runs an action. With `confirmText`, the user
  * has to type that text first, for actions that cannot be undone.
@@ -48,7 +50,9 @@ export function ConfirmButton({
   const [open, setOpen] = useState(false);
   const [typed, setTyped] = useState("");
   const [pending, startTransition] = useTransition();
-  const blocked = confirmText !== undefined && typed.trim() !== confirmText;
+  // Extra spaces do not count, so a name stored with a double space matches.
+  const blocked =
+    confirmText !== undefined && squash(typed) !== squash(confirmText);
 
   return (
     <Dialog
@@ -68,7 +72,7 @@ export function ConfirmButton({
         </DialogHeader>
         {confirmText !== undefined && (
           <label className="grid gap-2 text-sm">
-            {c("typeToConfirm", { text: confirmText })}
+            {c("typeToConfirm", { text: squash(confirmText) })}
             <Input
               value={typed}
               onChange={(ev) => setTyped(ev.target.value)}

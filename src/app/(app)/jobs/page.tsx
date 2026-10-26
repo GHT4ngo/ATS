@@ -33,20 +33,24 @@ export default async function JobsPage() {
   const s = await getTranslations("Stages");
   const scope = await getScope();
   const { adminUi } = await getViewMode();
-  const removed = adminUi ? await removedItems(scope.orgId, "job") : [];
+  const removedQuery = adminUi
+    ? removedItems(scope.orgId, "job")
+    : Promise.resolve([]);
 
-  const [{ data: jobs }, { data: apps }, { data: stages }] = await Promise.all([
-    scope.jobs().order("created_at", { ascending: false }),
-    allRows((from, to) =>
-      scope.supabase
-        .from("applications")
-        .select("job_id, stage, stage_id")
-        .eq("organization_id", scope.orgId)
-        .order("id")
-        .range(from, to),
-    ),
-    scope.jobStages(),
-  ]);
+  const [{ data: jobs }, { data: apps }, { data: stages }, removed] =
+    await Promise.all([
+      scope.jobs().order("created_at", { ascending: false }),
+      allRows((from, to) =>
+        scope.supabase
+          .from("applications")
+          .select("job_id, stage, stage_id")
+          .eq("organization_id", scope.orgId)
+          .order("id")
+          .range(from, to),
+      ),
+      scope.jobStages(),
+      removedQuery,
+    ]);
   const perStage = new Map<string, number>();
   for (const a of apps)
     perStage.set(a.stage_id, (perStage.get(a.stage_id) ?? 0) + 1);

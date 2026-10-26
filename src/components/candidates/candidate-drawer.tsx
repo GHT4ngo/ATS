@@ -304,7 +304,7 @@ export function CandidateDrawer({
             <a
               href={`/api/candidates/${candidate.id}/export`}
               download
-              className={buttonVariants({ variant: "outline", size: "sm" })}
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
             >
               {r("export")}
             </a>

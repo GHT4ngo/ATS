@@ -345,6 +345,9 @@ isOneToOne: false
 "current_org_id":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
+"cv_folder_removed":
+{ Args: { "p_name": string }; Returns: boolean
+                           },
 "erase_candidate":
 { Args: { "p_actor": string,"p_id": string,"p_reason": string }; Returns: boolean
                            },
@@ -365,10 +368,10 @@ isOneToOne: false
 { Args: { "p_actor": string,"p_id": string,"p_reason": string }; Returns: boolean
                            },
 "remove_candidate":
-{ Args: { "p_id": string }; Returns: boolean
+{ Args: { "p_id": string,"p_org": string }; Returns: boolean
                            },
 "remove_job":
-{ Args: { "p_id": string }; Returns: boolean
+{ Args: { "p_id": string,"p_org": string }; Returns: boolean
                            },
 "reorder_job_stage":
 { Args: { "p_direction": string,"p_stage": string }; Returns: undefined

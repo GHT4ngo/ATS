@@ -55,7 +55,9 @@ export default async function CandidatesPage({
   const format = await getFormatter();
   const scope = await getScope();
   const { adminUi } = await getViewMode();
-  const removed = adminUi ? await removedItems(scope.orgId, "candidate") : [];
+  const removedQuery = adminUi
+    ? removedItems(scope.orgId, "candidate")
+    : Promise.resolve([]);
 
   const jobFilter = new Set(
     (params.jobs ?? "")
@@ -71,7 +73,7 @@ export default async function CandidatesPage({
   const term = q?.trim().replace(/[%_,()]/g, " ");
   if (term) query = query.ilike("full_name", `%${term}%`);
 
-  const [{ data: candidates }, { data: jobs }, { data: apps }, score] =
+  const [{ data: candidates }, { data: jobs }, { data: apps }, score, removed] =
     await Promise.all([
       query,
       scope.jobs().order("title"),
@@ -81,6 +83,7 @@ export default async function CandidatesPage({
           "id, candidate_id, job_id, stage, stage_changed_at, created_at, starred, flagged, mismatch",
         ),
       latestScores(scope),
+      removedQuery,
     ]);
   const now = Date.now();
   const byId = new Map((candidates ?? []).map((c) => [c.id, c]));
