@@ -12,10 +12,10 @@ Här är min leverans av mini ATS:et.
 
 * **Live:** https://ats.t4ngo.com
 * **Repo:** https://github.com/GHT4ngo/ATS
-* **Demo (5 min):** [länk till Loom]
+* **Demo (5 min):** https://www.loom.com/share/28df443482ab4677bf72156088720c45
 * **Admininloggning:** skickas i ett separat mejl
 
-Alla sju användarberättelser är på plats och testade, liksom bedömningen av CV:n med AI. Jag har också byggt en rekryteringsassistent och egna pipelinesteg per tjänst. README:n i repot visar skärmbilder, arkitektur och hur allt testas.
+Alla sju användarberättelser är på plats och testade, liksom bedömningen av CV:n med AI. Jag har också byggt en rekryteringsassistent, egna pipelinesteg per tjänst och stöd för GDPR: export, radering och gallring. README:n i repot visar skärmbilder, arkitektur och hur allt testas.
 
 ## Antaganden
 
@@ -42,7 +42,9 @@ Alla sju användarberättelser är på plats och testade, liksom bedömningen av
 
 **Drift och data**
 
-* Datan ligger i Supabase i EU av hänsyn till GDPR. Varje tabell har radnivåsäkerhet, så en kund kan aldrig se en annan kunds data.
+* Datan ligger i Supabase på Irland och appen körs hos Vercel i Dublin, av hänsyn till GDPR. Varje tabell har radnivåsäkerhet, så en kund kan aldrig se en annan kunds data.
+* Kunden är personuppgiftsansvarig och vi är personuppgiftsbiträde. Rekryteraren kan exportera allt om en kandidat (registerutdrag) och radera en kandidat direkt, med CV och historik (rätten att bli glömd). Varje radering loggas utan personuppgifter.
+* Ta bort döljer en kandidat eller tjänst och kan ångras av en admin i 30 dagar, sedan raderas den för gott. Kandidater utan aktivitet på 24 månader raderas automatiskt varje natt. Detaljerna finns i `docs/privacy.md`.
 * Språket är svenska som standard, med engelska som alternativ. Användaren väljer språk och tema själv.
 * Demodatan är ett påhittat bolag i Stockholm, Nordlys Tech AB, med fyra tjänster och 23 kandidater med CV:n.
 
@@ -52,7 +54,7 @@ Servern läser ut texten ur PDF:en och skickar den tillsammans med tjänstebeskr
 
 ## Nästa steg
 
-Med mer tid skulle jag börja med inbjudningar och notiser via mejl, en publik karriärsida där sökande hamnar direkt i Ansökt, import och export av kandidater som CSV, och en revisionslogg för admins.
+Med mer tid skulle jag börja med inbjudningar och notiser via mejl, en publik karriärsida där sökande hamnar direkt i Ansökt, import och export av kandidater som CSV, en revisionslogg för admins och skydd mot att två personer skriver över varandras ändringar av samma kandidat.
 
 Hör gärna av dig om du har frågor.
 

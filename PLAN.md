@@ -1,19 +1,18 @@
 # PLAN: Mini ATS
 
-> **Status:** Phases 1 to 8, 10 and 11 merged and live (PR #11 is the latest); Phase 9 deliverables in progress. Next: the v1 delivery.
-> **Deadline:** Friday 30 October 2026. **Live URL:** https://ats.t4ngo.com
+> **Status:** complete. Phases 1 to 12 are merged and live (PR #12 is the latest), and the deliverables are done.
+> **Deadline:** Friday 30 October 2026. **Live URL:** https://ats.t4ngo.com. **Demo video:** [Loom](https://www.loom.com/share/28df443482ab4677bf72156088720c45)
 > Usage budget and model routing: [BUDGET.md](./BUDGET.md). Review process: [REVIEW.md](./REVIEW.md).
 
-## Where we left off (25 Oct)
+## Final state (26 Oct)
 
-* **Production:** all seven migrations applied; Phase 11 (PR #11) is live. The Nordlys Tech demo was reseeded on 25 Oct with openings, code profiles and candidates marked as not meeting the requirements (logins `sara.lindqvist@nordlys.example` and `johan.ek@nordlys.example`, the password the reseed prints is kept outside the repo); `ANTHROPIC_API_KEY` is set on Vercel (Production only, not Preview).
-* **Done in Phase 8:** the recruiter agent (PR #7) and custom pipeline stages per job (PR #8), both reviewed and live.
-* **Open items:**
-  * Send the v1 delivery (admin login, live URL, repo link).
-  * Smoke test one assistant question on the live site (a real CV assessment ran fine on 25 Oct).
+* **Production:** all nine migrations applied. Functions run in Dublin (`dub1`) next to Supabase in Ireland (`eu-west-1`); `ANTHROPIC_API_KEY` and `CRON_SECRET` are set on Vercel (Production). The Nordlys Tech demo (logins `sara.lindqvist@nordlys.example` and `johan.ek@nordlys.example`, password kept outside the repo) has a live CV assessment of Elin Sandberg.
+* **Delivered:** the live app, the repository, the Loom demo and the assumptions email.
+* **Known limits:**
   * The pipeline and candidates pages read one page of up to 1000 applications.
   * The admin organization switcher needs the sidebar expanded.
-* **Next:** review and send the assumptions email, record the Loom video, send the v1 delivery. Phase 9 docs are in `docs/`.
+  * Two people editing the same candidate at once: the last save wins (only the AI assessment is locked).
+  * Erasure does not reach Supabase backups or Anthropic's API retention until they expire (see [docs/privacy.md](./docs/privacy.md)).
 
 ## Goal
 
@@ -129,7 +128,7 @@ Prioritized on 24 Oct: the agent first, then custom pipeline stages; the rest on
 ## Phase 9: Deliverables (Thu 29 and Fri 30)
 
 * [x] Assumptions email (drafted for review before sending): `docs/assumptions-email.md`
-* [x] Storyboard for the 5 minute Loom demo in `docs/demo-storyboard.md` (the user records it, adding one or two candidates live)
+* [x] 5 minute demo video: [Loom](https://www.loom.com/share/28df443482ab4677bf72156088720c45)
 * [x] Final README: screenshots, setup instructions, architecture overview
 
 ## Phase 10: Feedback round (Sat 24 to Sun 25)
@@ -167,7 +166,7 @@ Toned down colours and a pipeline per job. Branch `feat/phase-11-polish`, PR #11
 * [x] Review with `/code-review medium`, 10 findings fixed
 * [x] Apply the migration in production
 * [x] Reseed the production demo (25 Oct, new password kept outside the repo)
-* [x] New README screenshots and storyboard
+* [x] New README screenshots
 
 ## Phase 12: Removal and GDPR (Mon 26)
 

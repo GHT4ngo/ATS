@@ -1,25 +1,22 @@
-<div align="center">
+# Mini ATS
 
-# ATS: Mini Applicant Tracking System
+An applicant tracking system for small and medium sized companies, built with Next.js, Supabase and Claude. An internal admin sets up each customer company and its users; the customer's recruiters post jobs, add candidates and move them through a kanban pipeline, with AI assessment of CVs as decision support.
 
-**A fast, modern applicant tracking system, built to be in the hands of a first customer as quickly as possible.**
+| | |
+|:--|:--|
+| Live application | [ats.t4ngo.com](https://ats.t4ngo.com) |
+| Demo video (5 minutes) | [Loom](https://www.loom.com/share/28df443482ab4677bf72156088720c45) |
+| Plan and decisions | [PLAN.md](./PLAN.md) |
+| Code review log | [REVIEW.md](./REVIEW.md) |
+| Privacy and GDPR | [docs/privacy.md](./docs/privacy.md) |
 
-[![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)](https://nextjs.org)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
-[![Supabase](https://img.shields.io/badge/Supabase-Auth%20%7C%20Postgres-3FCF8E?logo=supabase&logoColor=white)](https://supabase.com)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
-[![Claude](https://img.shields.io/badge/AI-Claude-D97757?logo=anthropic&logoColor=white)](https://www.anthropic.com)
-[![Vercel](https://img.shields.io/badge/Hosted%20on-Vercel-000?logo=vercel)](https://vercel.com)
-
-**Live:** [ats.t4ngo.com](https://ats.t4ngo.com) · **Plan:** [PLAN.md](./PLAN.md) · **Reviews:** [REVIEW.md](./REVIEW.md)
-
-</div>
+**Stack:** Next.js 15 (App Router, TypeScript), Tailwind CSS and shadcn/ui, Supabase (Auth, Postgres with row level security, Storage), the Anthropic API (Claude Sonnet 5.5 and Opus 5.5), Vercel. Hosted in the EU.
 
 ![The pipeline: one board per job with foldable lanes, AI scores, stars, flags and a red tint for candidates who do not meet the requirements](docs/screenshots/pipeline.png)
 
 ## What it does
 
-Mini ATS is a recruiting tool for small and medium sized companies. An internal admin sets up each customer company and its users; the customer's recruiters post jobs, add candidates and move them through a kanban pipeline. Everything is in Swedish by default, with English one click away.
+The interface is in Swedish by default, with English one click away.
 
 ### The brief: seven user stories
 
@@ -80,8 +77,9 @@ flowchart LR
     AG["/api/agent stream"]
   end
   N -->|user session, RLS applies| S[(Supabase EU: Auth, Postgres, Storage)]
-  SA -->|service role, assessments only| S
+  SA -->|service role: assessments, erasure, retention| S
   SA -->|CV text and job| C[Claude Sonnet 5.5]
+  CR[Vercel Cron] -->|nightly retention| N
   AG -->|tool loop| O[Claude Opus 5.5]
 ```
 
@@ -89,7 +87,7 @@ flowchart LR
 
 **Security.**
 
-* Row level security on every table, with a pytest test for each policy (about a hundred cases in `tests/rls/`).
+* Row level security on every table, with a pytest test for each policy (about 140 cases in `tests/rls/`). Removed candidates and jobs are hidden by RLS as well, together with their applications, history and CV files.
 * Every query goes through one scope helper (`src/lib/data/scope.ts`) that pins it to the active organization. That is what makes "act as customer" safe for admins, who can see every organization through RLS.
 * The service role key is server only. It creates accounts, writes AI assessments (users can read but never write a score), erases data, runs the retention job and claims the lock that stops two assessments of the same candidate from running at once.
 * Server actions validate every input with zod; deactivated users are blocked in the database as well as in the app.
@@ -110,7 +108,7 @@ flowchart LR
 | Playwright (`e2e/`) | the full v1 flow from admin to customer, auth, CV assessment, the assistant, custom stages, remove, export, erase and the retention job |
 | `scripts/eval_assessment.py` | AI score consistency on sample CVs |
 
-GitHub Actions runs everything except the paid eval on every pull request. Each phase was reviewed before merging; the findings and fixes are logged in [REVIEW.md](./REVIEW.md). The plan and the decisions behind it are in [PLAN.md](./PLAN.md). The assumptions behind the product are in [docs/assumptions-email.md](./docs/assumptions-email.md), and the demo script in [docs/demo-storyboard.md](./docs/demo-storyboard.md).
+GitHub Actions runs everything except the paid eval on every pull request. Each phase was reviewed before merging; the findings and fixes are logged in [REVIEW.md](./REVIEW.md). The plan and the decisions behind it are in [PLAN.md](./PLAN.md). The assumptions behind the product are in [docs/assumptions-email.md](./docs/assumptions-email.md), and how personal data is handled in [docs/privacy.md](./docs/privacy.md).
 
 ## Getting started
 
@@ -133,7 +131,7 @@ SEED_PASSWORD=choose-one .venv/bin/python scripts/seed.py         # local
 SEED_PASSWORD=choose-one .venv/bin/python scripts/seed.py --prod  # the project in .env.local, asks first
 ```
 
-AI CV assessment needs `ANTHROPIC_API_KEY` in `.env.local`. Without a key, set `AI_FAKE=1` for a fixed test result.
+AI CV assessment needs `ANTHROPIC_API_KEY` in `.env.local`. Without a key, set `AI_FAKE=1` for a fixed test result. The nightly retention job (`/api/cron/retention`) only runs with `CRON_SECRET` as a bearer token.
 
 ### Tests
 
@@ -217,6 +215,4 @@ Bygg ett mini ATS (applicant tracking system) som kan vara live i händerna på 
 
 </details>
 
-<div align="center">
-<sub>Built with the help of <a href="https://claude.com/claude-code">Claude Code</a></sub>
-</div>
+Built with the help of [Claude Code](https://claude.com/claude-code).
